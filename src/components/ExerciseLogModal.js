@@ -6,6 +6,7 @@ import { formatBuildId } from '../utils/buildInfo';
 import {
   calcTotals,
   bestSet,
+  deleteSession,
   getRecords,
   getSessionsAsc,
   getSessionsDesc,
@@ -31,6 +32,7 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
   const [activeTab, setActiveTab] = useState('log'); // 'log' | 'overview'
   const [sets, setSets] = useState([{ reps: '', weight: '' }]);
   const [editingSession, setEditingSession] = useState(null);
+  const [confirmDeleteDate, setConfirmDeleteDate] = useState(null);
   const logScrollRef = useRef(null);
 
   // Always start at the top when opening a new exercise
@@ -96,6 +98,26 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
     setEditingSession({ ...session });
     setActiveTab('log');
     scrollToTop();
+  }
+
+  function handleRequestDelete(sessionDate) {
+    setConfirmDeleteDate(sessionDate);
+  }
+
+  function handleCancelDelete() {
+    setConfirmDeleteDate(null);
+  }
+
+  function handleConfirmDelete() {
+    if (!confirmDeleteDate) return;
+    const updatedLogs = deleteSession(exercise.id, confirmDeleteDate, user?.id);
+    setConfirmDeleteDate(null);
+    if (editingSession?.date === confirmDeleteDate) {
+      setEditingSession(null);
+      setSets([{ reps: '', weight: '' }]);
+    }
+    window.dispatchEvent(new Event('exerciseLogged'));
+    if (onSaved) onSaved(updatedLogs);
   }
 
   function saveSession() {
@@ -351,6 +373,18 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
                           >
                             Edit
                           </button>
+                          <button
+                            type="button"
+                            className="session-delete-btn"
+                            title="Delete session"
+                            aria-label="Delete session"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRequestDelete(session.date);
+                            }}
+                          >
+                            🗑
+                          </button>
                         </div>
                         <div className="session-stats">
                           <span>{session.sets.length} sets</span>
@@ -404,6 +438,22 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
           )}
         </div>
       </div>
+      {confirmDeleteDate && (
+        <div className="confirm-overlay" onClick={handleCancelDelete}>
+          <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="confirm-icon">🗑️</div>
+            <p className="confirm-message">Delete this session? This cannot be undone.</p>
+            <div className="confirm-actions">
+              <button className="btn-danger" onClick={handleConfirmDelete}>
+                Delete
+              </button>
+              <button className="btn-secondary" onClick={handleCancelDelete}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

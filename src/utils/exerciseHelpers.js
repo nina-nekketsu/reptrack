@@ -1,6 +1,6 @@
 // src/utils/exerciseHelpers.js — localStorage helpers + Supabase sync via src/lib/sync.js
 
-import { pushExercise, pushSession } from '../lib/sync';
+import { pushExercise, pushSession, deleteRemoteSession, deleteRemoteExercise } from '../lib/sync';
 
 const defaultExercises = [
   { id: 1, name: 'Bench Press',    muscleGroup: 'Chest',     type: 'Strength' },
@@ -117,4 +117,57 @@ export async function upsertExercise(exercise, userId) {
  */
 export async function upsertSession(exerciseId, session, userId) {
   return pushSession(exerciseId, session, userId);
+}
+
+/**
+ * Delete a single session from localStorage AND Supabase.
+ * @param {string|number} exerciseId
+ * @param {string} sessionDate — ISO date string used as the unique key
+ * @param {string} userId — current user id (for Supabase delete)
+ * @returns {object} updated logs
+ */
+export function deleteSession(exerciseId, sessionDate, userId) {
+  const logs = loadLogs();
+  const sessions = logs[exerciseId] || [];
+  const target = sessions.find((s) => s.date === sessionDate);
+  const updated = {
+    ...logs,
+    [exerciseId]: sessions.filter((s) => s.date !== sessionDate),
+  };
+  saveLogs(updated);
+
+  // Fire-and-forget Supabase delete
+  if (userId && target?.remoteId) {
+    deleteRemoteSession(target.remoteId).catch((err) =>
+      console.warn('[sync] deleteSession failed:', err)
+    );
+  }
+
+  return updated;
+}
+
+/**
+ * Delete an exercise and all its sessions from localStorage AND Supabase.
+ * @param {string|number} exerciseId
+ * @param {string} userId
+ */
+export function deleteExerciseWithSessions(exerciseId, userId) {
+  // Remove from logs
+  const logs = loadLogs();
+  const { [exerciseId]: _removed, ...remainingLogs } = logs;
+  saveLogs(remainingLogs);
+
+  // Remove from exercises list
+  const exercises = loadExercises();
+  const updatedExercises = exercises.filter((e) => String(e.id) !== String(exerciseId));
+  saveExercisesRaw(updatedExercises);
+
+  // Fire-and-forget Supabase delete
+  if (userId) {
+    deleteRemoteExercise(exerciseId, userId).catch((err) =>
+      console.warn('[sync] deleteExercise failed:', err)
+    );
+  }
+
+  return { updatedExercises, updatedLogs: remainingLogs };
 }
