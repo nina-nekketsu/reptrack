@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { pushPlan, pushExercise, pushSettings } from '../lib/sync';
 import './Page.css';
 import './Workouts.css';
 
@@ -371,6 +373,7 @@ function NewPlanModal({ onSave, onClose }) {
 // ═══════════════════════════════════════════
 export default function Workouts() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [plans, setPlans] = useState(loadPlans);
   const [allExercises, setAllExercises] = useState(loadAndMergeExercises);
   const [currentPlanId, setCurrentPlanId] = useState(loadCurrentPlanId);
@@ -425,6 +428,7 @@ export default function Workouts() {
     setCurrentPlanId(id);
     saveCurrentPlanId(id);
     setEditMode(false);
+    if (user) pushSettings(user.id).catch(console.warn);
   }
 
   // ── Create new plan ──
@@ -442,6 +446,7 @@ export default function Workouts() {
     saveCurrentPlanId(plan.id);
     setShowNewPlan(false);
     setEditMode(true);
+    if (user) pushPlan(plan, user.id).catch(console.warn);
   }
 
   // ── Edit exercise prescription ──
@@ -456,6 +461,8 @@ export default function Workouts() {
     setPlans(updated);
     savePlans(updated);
     setEditingPlanEx(null);
+    const changedPlan = updated.find(p => p.id === currentPlanId);
+    if (user && changedPlan) pushPlan(changedPlan, user.id).catch(console.warn);
   }
 
   // ── Remove exercise from plan ──
@@ -466,6 +473,8 @@ export default function Workouts() {
     });
     setPlans(updated);
     savePlans(updated);
+    const changedPlan = updated.find(p => p.id === currentPlanId);
+    if (user && changedPlan) pushPlan(changedPlan, user.id).catch(console.warn);
   }
 
   // ── Add exercise to plan ──
@@ -475,6 +484,7 @@ export default function Workouts() {
       const updatedEx = [...allExercises, ex];
       setAllExercises(updatedEx);
       saveExercises(updatedEx);
+      if (user) pushExercise(ex, user.id).catch(console.warn);
     }
 
     const planEntry = {
@@ -490,6 +500,8 @@ export default function Workouts() {
     setPlans(updated);
     savePlans(updated);
     setShowAddExercise(false);
+    const changedPlan = updated.find(p => p.id === currentPlanId);
+    if (user && changedPlan) pushPlan(changedPlan, user.id).catch(console.warn);
   }
 
   // ── Helpers ──

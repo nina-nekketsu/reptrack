@@ -8,7 +8,9 @@ import {
   getSessionsAsc,
   loadLogs,
   saveLogs,
+  upsertSession,
 } from '../utils/exerciseHelpers';
+import { useAuth } from '../context/AuthContext';
 
 /**
  * Full exercise logging modal — used by both Exercises page and ActiveWorkout page.
@@ -20,6 +22,7 @@ import {
  *   logs       — current logs object (from parent state)
  */
 export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
+  const { user } = useAuth();
   const [sets, setSets] = useState([{ reps: '', weight: '' }]);
   const [graphOpen, setGraphOpen] = useState(false);
   const logScrollRef = useRef(null);
@@ -58,6 +61,13 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
       [exercise.id]: [...(currentLogs[exercise.id] || []), session],
     };
     saveLogs(updated);
+
+    // Sync to Supabase (fire-and-forget, no await to keep UX snappy)
+    if (user) {
+      upsertSession(exercise.id, session, user.id).catch(err =>
+        console.warn('[Supabase] session sync failed:', err)
+      );
+    }
 
     window.dispatchEvent(new Event('exerciseLogged'));
 
@@ -120,9 +130,19 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
     return { set: best, setIndex: bestSetIndex, date: prev.date };
   }
 
+  // ── All sets from the most recent session (for the "Last session sets" table) ──
+  function getLastSessionAllSets() {
+    const sessions = getSessionsDesc(logs, exercise.id);
+    if (sessions.length === 0) return null;
+    const last = sessions[0];
+    if (!last.sets || last.sets.length === 0) return null;
+    return { sets: last.sets, date: last.date };
+  }
+
   const liveTotals = calcTotals(sets);
   const allTimeRecord = getAllTimeRecord();
   const prevSessionBest = getPrevSessionBest();
+  const lastSessionAllSets = getLastSessionAllSets();
   const sessionsAsc = getSessionsAsc(logs, exercise.id);
   const hasHistory = sessionsAsc.length > 0;
 
@@ -197,9 +217,20 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
             + Add Set
           </button>
 
-          {/* ── Insights panel: record + prev session + graph ── */}
+          {/* ── No-history note (shown when localStorage has nothing for this exercise) ── */}
+          {!hasHistory && (
+            <p className="insights-no-history">
+              📭 No history yet on this device/site — log a session to see your record &amp; graph.
+            </p>
+          )}
+
+          {/* ── Insights panel: record + prev session best + last session sets + graph ── */}
           {hasHistory && (
             <div className="insights-panel">
+              {/* Section header */}
+              <div className="insights-panel__header">
+                📊 Your Stats
+              </div>
               <div className="insights-panel__rows">
                 {/* All-time record set */}
                 {allTimeRecord && (
@@ -218,10 +249,10 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
                 {/* Previous session best set */}
                 {prevSessionBest && (
                   <div className="insights-row">
-                    <span className="insights-icon">📅</span>
+                    <span className="insights-icon">⭐</span>
                     <div className="insights-content">
                       <span className="insights-label">
-                        Last session ·{' '}
+                        Last session best ·{' '}
                         {new Date(prevSessionBest.date).toLocaleDateString('nl-NL', {
                           day: 'numeric',
                           month: 'short',
@@ -236,15 +267,56 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
                 )}
               </div>
 
-              {/* Graph toggle */}
-              <button
-                className="insights-graph-toggle"
-                onClick={() => setGraphOpen((v) => !v)}
-                aria-expanded={graphOpen}
-              >
-                <span>{graphOpen ? '▾' : '▸'}</span>
-                <span>{graphOpen ? 'Hide graph' : 'Show progress graph'}</span>
-              </button>
+              {/* Last session — all sets table */}
+              {lastSessionAllSets && (
+                <div className="last-session-sets">
+                  <div className="last-session-sets__header">
+                    <span className="last-session-sets__title">📋 Last session sets</span>
+                    <span className="last-session-sets__date">
+                      {new Date(lastSessionAllSets.date).toLocaleDateString('nl-NL', {
+                        weekday: 'short',
+                        day: 'numeric',
+                        month: 'short',
+                      })}
+                    </span>
+                  </div>
+                  <table className="last-session-sets__table">
+                    <thead>
+                      <tr>
+                        <th>Set</th>
+                        <th>kg</th>
+                        <th>Reps</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {lastSessionAllSets.sets.map((s, i) => (
+                        <tr key={i}>
+                          <td>{i + 1}</td>
+                          <td>{s.weight || '—'}</td>
+                          <td>{s.reps || '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Graph toggle — styled as a solid button */}
+              <div className="insights-graph-toggle-wrap">
+                <button
+                  className={`insights-graph-toggle-btn${graphOpen ? ' insights-graph-toggle-btn--open' : ''}`}
+                  onClick={() => setGraphOpen((v) => !v)}
+                  aria-expanded={graphOpen}
+                >
+                  <span className="insights-graph-toggle-btn__icon">
+                    {graphOpen ? '📉' : '📈'}
+                  </span>
+                  <span>{graphOpen ? 'Hide progress graph' : 'Show progress graph'}</span>
+                  <span className="insights-graph-toggle-btn__caret">
+                    {graphOpen ? '▲' : '▼'}
+                  </span>
+                </button>
+              </div>
 
               {graphOpen && (
                 <div className="insights-graph-body">

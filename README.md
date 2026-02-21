@@ -1,70 +1,163 @@
-# Getting Started with Create React App
+# RepTrack 3
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A mobile-first workout tracking app built with React. Runs as a static site on GitHub Pages. Optionally syncs data to Supabase so your logs follow you across devices.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- Log exercises with sets, reps, and weight
+- Workout plans with editable exercise prescriptions
+- Session timer, progressive overload hints, personal records
+- Works fully offline — data is stored in localStorage
+- Optional Supabase sync: sign in once and your data is wherever you are
 
-### `npm start`
+---
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Local development
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```bash
+npm install
+npm start
+```
 
-### `npm test`
+The app runs without any credentials. It shows a brief setup screen with the option to skip and continue locally.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---
 
-### `npm run build`
+## Setting up Supabase sync
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### 1. Create a Supabase project
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Go to [supabase.com](https://supabase.com) and create a free project.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### 2. Run the schema
 
-### `npm run eject`
+Open the SQL editor in your Supabase project and paste the contents of `supabase/schema.sql`. Run it. This creates five tables with Row Level Security (RLS) enabled — users can only see and modify their own rows.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### 3. Add credentials to `.env`
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Copy `.env.example` to `.env` in the project root:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+```bash
+cp .env.example .env
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Fill in your values from **Project Settings → API** in the Supabase dashboard:
 
-## Learn More
+```env
+REACT_APP_SUPABASE_URL=https://xxxxxxxxxxxx.supabase.co
+REACT_APP_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+> **Never commit `.env` to git.** It is already in `.gitignore`.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### 4. Restart the dev server
 
-### Code Splitting
+```bash
+npm start
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+You will see a sign-in screen. Create an account (email + password) or sign in. On login, remote data is pulled into localStorage. Changes you make (logging sessions, editing plans) are synced back to Supabase automatically.
 
-### Analyzing the Bundle Size
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## GitHub Pages deploy
 
-### Making a Progressive Web App
+### One-time setup
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+1. Make sure `package.json` has the correct `homepage` value:
+   ```json
+   "homepage": "https://<your-github-username>.github.io/<repo-name>"
+   ```
 
-### Advanced Configuration
+2. Add your Supabase credentials as **repository secrets** (or environment variables in your Actions workflow):
+   - `REACT_APP_SUPABASE_URL`
+   - `REACT_APP_SUPABASE_ANON_KEY`
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### Manual deploy
 
-### Deployment
+```bash
+npm run build
+npm run deploy
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+This runs `gh-pages -d build` and pushes the `build/` folder to the `gh-pages` branch.
 
-### `npm run build` fails to minify
+### GitHub Actions (recommended)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Create `.github/workflows/deploy.yml`:
+
+```yaml
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        env:
+          REACT_APP_SUPABASE_URL: ${{ secrets.REACT_APP_SUPABASE_URL }}
+          REACT_APP_SUPABASE_ANON_KEY: ${{ secrets.REACT_APP_SUPABASE_ANON_KEY }}
+        run: npm run build
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build
+```
+
+---
+
+## Architecture
+
+| Concern | Where |
+|---------|-------|
+| Supabase client init | `src/lib/supabase.js` — returns `null` when env vars are absent |
+| Auth state + initial sync | `src/context/AuthContext.js` |
+| Sign in / sign up UI | `src/components/AuthScreen.js` |
+| Setup instructions screen | `src/components/SetupScreen.js` |
+| Sync upsert helpers | `src/utils/exerciseHelpers.js` — `upsertSession`, `upsertPlan`, `upsertExercise` |
+| Schema + RLS | `supabase/schema.sql` |
+
+### Sync flow
+
+1. **On login**: `AuthContext` calls `pullRemoteData(userId)` — fetches exercises, sessions, plans from Supabase and merges into localStorage.
+2. **On local changes**: write to localStorage first (instant UI), then fire-and-forget upsert to Supabase in the background.
+3. **Offline**: app works normally. Changes accumulate in localStorage. Next login will pull the latest remote state.
+
+> Note: this is a last-write-wins sync model, not a full CRDT/conflict-resolution system. It works well for single-user use where you typically log from one device at a time.
+
+---
+
+## Database tables
+
+| Table | Description |
+|-------|-------------|
+| `exercises` | Exercise library (name, muscle group, type) |
+| `exercise_sessions` | One row per logged session |
+| `exercise_sets` | Individual sets within a session |
+| `workout_plans` | Named workout plans |
+| `plan_exercises` | Exercises within a plan (with prescribed sets/reps) |
+
+All tables have RLS policies: `auth.uid() = user_id`.
+
+---
+
+## Tech stack
+
+- [React](https://react.dev) (CRA)
+- [React Router v7](https://reactrouter.com) (HashRouter for GitHub Pages compatibility)
+- [Supabase JS client v2](https://supabase.com/docs/reference/javascript)
+- Deployed on [GitHub Pages](https://pages.github.com) via `gh-pages`

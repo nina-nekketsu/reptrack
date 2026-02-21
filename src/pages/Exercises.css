@@ -140,6 +140,7 @@
   background: rgba(10, 10, 30, 0.55);
   z-index: 200;
   display: flex;
+  /* Default: bottom sheet on mobile */
   align-items: flex-end;
   justify-content: center;
 }
@@ -148,14 +149,15 @@
   background: #fff;
   border-radius: 20px 20px 0 0;
   padding: 24px 20px 32px;
-  width: 100%;
-  max-width: 480px;
+  /* Responsive width: up to 96% of viewport, capped at 520px */
+  width: min(96vw, 520px);
   max-height: 85vh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 10px;
   animation: slideUp 0.22s ease;
+  box-sizing: border-box;
 }
 
 .modal--tall {
@@ -648,18 +650,29 @@
 
 /* ── Log modal: full-height, timer sticky at top ── */
 .modal--log {
-  max-height: 90vh;
+  /* Use 92vh so it fits the viewport with breathing room */
+  max-height: 92vh;
+  /* Responsive: fills narrow phones, capped at 520px on wider screens */
+  width: min(96vw, 520px);
+  /* Round all corners — modal is centered, not a bottom-sheet */
+  border-radius: 20px;
   padding: 0;           /* padding moved to inner zones */
   overflow: hidden;     /* outer shell never scrolls */
   display: flex;
   flex-direction: column;
   gap: 0;
+  box-sizing: border-box;
+}
+
+/* Overlay: center the log modal (not bottom-sheet) so it always fits in view */
+.modal-overlay:has(.modal--log) {
+  align-items: center;
 }
 
 /* Sticky timer zone — always visible, never clipped */
 .modal--log .log-timer-zone {
   flex-shrink: 0;
-  padding: 20px 16px 12px;
+  padding: 16px 16px 12px;
   background: #fff;
   /* subtle separator between timer and scrollable body */
   border-bottom: 1px solid #e8e8ef;
@@ -674,10 +687,12 @@
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  padding: 12px 16px 28px;
+  /* Bottom padding ensures Save/Cancel are reachable past safe-area */
+  padding: 12px 16px max(28px, env(safe-area-inset-bottom, 16px));
   display: flex;
   flex-direction: column;
   gap: 10px;
+  box-sizing: border-box;
 }
 
 /* ══════════════════════════════════════════
@@ -744,26 +759,115 @@
   color: #7777a0;
 }
 
-/* Graph toggle button (inside insights panel) */
-.insights-graph-toggle {
-  width: 100%;
-  background: none;
-  border: none;
-  border-top: 1px solid #e8e8ef;
-  padding: 9px 14px;
-  text-align: left;
+/* ── No-history note ── */
+.insights-no-history {
   font-size: 12px;
-  font-weight: 600;
-  color: #4c4cff;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  transition: background 0.15s;
+  color: #9999b3;
+  background: #f5f5fc;
+  border: 1px dashed #d0d0e8;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin: 0;
+  text-align: center;
+  line-height: 1.5;
 }
 
-.insights-graph-toggle:hover {
-  background: #ececff;
+/* ── Last session sets block ── */
+.last-session-sets {
+  border-top: 1px solid #e8e8ef;
+  padding: 10px 14px 4px;
+}
+
+.last-session-sets__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.last-session-sets__title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #5555aa;
+}
+
+.last-session-sets__date {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9999b3;
+}
+
+.last-session-sets__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.last-session-sets__table th {
+  text-align: left;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #aaaacc;
+  padding: 2px 6px 5px 0;
+}
+
+.last-session-sets__table td {
+  padding: 3px 6px 3px 0;
+  color: #2d2d52;
+  font-weight: 600;
+  border-bottom: 1px solid #f0f0f8;
+  vertical-align: middle;
+}
+
+.last-session-sets__table tr:last-child td {
+  border-bottom: none;
+}
+
+/* ── Graph toggle — solid pill button ── */
+.insights-graph-toggle-wrap {
+  border-top: 1px solid #e8e8ef;
+  padding: 10px 14px;
+}
+
+.insights-graph-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  padding: 9px 16px;
+  background: #4c4cff;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+  box-shadow: 0 2px 8px rgba(76, 76, 255, 0.25);
+}
+
+.insights-graph-toggle-btn:hover {
+  background: #3a3ae0;
+  box-shadow: 0 4px 14px rgba(76, 76, 255, 0.35);
+}
+
+.insights-graph-toggle-btn--open {
+  background: #3a3ae0;
+}
+
+.insights-graph-toggle-btn__icon {
+  font-size: 15px;
+}
+
+.insights-graph-toggle-btn__caret {
+  font-size: 10px;
+  opacity: 0.8;
+  margin-left: auto;
 }
 
 /* Graph body inside the insights panel */
@@ -1081,5 +1185,179 @@
 
 .timer-toggle--on .timer-toggle-knob {
   transform: translateX(18px);
+}
+
+/* ════════════════════════════════════════════════════════════
+   INSIGHTS PANEL — section header & spacing improvements
+   Ensures record / prev / last-session-sets / graph toggle
+   are all clearly visible and not hidden behind overlays.
+════════════════════════════════════════════════════════════ */
+
+/* Section heading inside the insights panel */
+.insights-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: #7777a0;
+  background: #f0f0fa;
+  border-bottom: 1px solid #e0e0f0;
+}
+
+/* Give insights rows a touch more breathing room */
+.insights-row {
+  padding: 11px 14px;
+}
+
+/* Ensure insights value wraps gracefully instead of overflowing */
+.insights-value {
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* ── Modal-actions sticky footer inside scroll body ── */
+/* Keeps Cancel + Save always visible at the bottom of the scroll area
+   without overlapping content — they scroll into view naturally. */
+.modal-actions {
+  /* Already flex column — just ensure it doesn't collapse */
+  flex-shrink: 0;
+}
+
+/* ════════════════════════════════════════════════════════════
+   RESPONSIVE — narrow phones (≤ 420px)
+   Compact timer typography so Start/Rest buttons + rest time
+   are fully visible without the user needing to zoom.
+════════════════════════════════════════════════════════════ */
+@media (max-width: 420px) {
+
+  /* Timer container: tighter padding */
+  .set-timer {
+    padding: 12px 10px 10px;
+    gap: 8px;
+  }
+
+  /* Timer blocks: less internal padding */
+  .timer-block {
+    padding: 7px 8px 6px;
+  }
+
+  /* Shrink the big clock digits */
+  .timer-display--exercise {
+    font-size: 28px;
+    letter-spacing: 1px;
+  }
+
+  .timer-display--rest {
+    font-size: 32px;
+    letter-spacing: 1px;
+  }
+
+  .timer-block--alert .timer-display--rest {
+    font-size: 38px;
+  }
+
+  /* Alert label */
+  .timer-alert-label {
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+
+  /* Timer buttons: slightly shorter */
+  .timer-btn {
+    min-height: 44px;
+    font-size: 13px;
+  }
+
+  /* Timer settings: tighter */
+  .timer-settings {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+
+  .timer-setting-label {
+    font-size: 11px;
+  }
+
+  .timer-setting-input {
+    width: 56px;
+    font-size: 13px;
+  }
+
+  /* PR / insights values */
+  .pr-item__value {
+    font-size: 12px;
+  }
+
+  .pr-item__label {
+    font-size: 8px;
+  }
+
+  .insights-value {
+    font-size: 13px;
+  }
+
+  /* Modal title in timer zone */
+  .modal-title {
+    font-size: 17px;
+  }
+
+  .modal-sub {
+    font-size: 12px;
+  }
+
+  /* Set inputs — slightly smaller on tiny phones */
+  .set-input {
+    font-size: 14px;
+    padding: 8px 6px;
+  }
+
+  /* Live total value */
+  .total-value {
+    font-size: 18px;
+  }
+
+  /* Log timer zone: tighter */
+  .modal--log .log-timer-zone {
+    padding: 12px 12px 10px;
+  }
+
+  /* Scroll body: tighter horizontal padding on small screens */
+  .modal--log .log-scroll-body {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   RESPONSIVE — very narrow phones (≤ 360px)
+   Extra trimming for 360px-wide devices.
+════════════════════════════════════════════════════════════ */
+@media (max-width: 360px) {
+
+  .timer-display--exercise {
+    font-size: 24px;
+  }
+
+  .timer-display--rest {
+    font-size: 28px;
+  }
+
+  .timer-block--alert .timer-display--rest {
+    font-size: 32px;
+  }
+
+  .timer-btn {
+    min-height: 40px;
+    font-size: 12px;
+  }
+
+  /* Stack timer blocks side-by-side to save vertical space */
+  .set-timer > .timer-block {
+    flex: 1;
+  }
 }
 

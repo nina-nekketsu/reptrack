@@ -25,3 +25,276 @@ body {
   margin: 0 auto;
   width: 100%;
 }
+
+/* ── Auth / Setup screens ───────────────────────────────── */
+.auth-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: #0d0d1a;
+}
+
+.auth-card {
+  background: #16162a;
+  border: 1px solid #2a2a4a;
+  border-radius: 20px;
+  padding: 2rem 1.75rem;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.auth-logo {
+  font-size: 2.5rem;
+  text-align: center;
+}
+
+.auth-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #ffffff;
+  text-align: center;
+  letter-spacing: -0.5px;
+}
+
+.auth-subtitle {
+  font-size: 0.85rem;
+  color: #9999b3;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.auth-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #b3b3cc;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.auth-input {
+  background: #1f1f3a;
+  border: 1.5px solid #2a2a4a;
+  border-radius: 10px;
+  padding: 0.7rem 1rem;
+  font-size: 0.95rem;
+  color: #fff;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.auth-input:focus {
+  border-color: #7c6af7;
+}
+
+.auth-error {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #f87171;
+  font-size: 0.82rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: 8px;
+}
+
+.auth-info {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #4ade80;
+  font-size: 0.82rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: 8px;
+}
+
+.auth-submit {
+  background: #7c6af7;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 0.8rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 0.25rem;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.auth-submit:hover:not(:disabled) { background: #6b58e8; }
+.auth-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.auth-toggle {
+  background: none;
+  border: none;
+  color: #7c6af7;
+  font-size: 0.83rem;
+  cursor: pointer;
+  text-align: center;
+  padding: 0.2rem;
+  text-decoration: underline;
+}
+
+/* ── Setup screen extras ─── */
+.setup-info {
+  font-size: 0.85rem;
+  color: #9999b3;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.setup-info code {
+  background: #1f1f3a;
+  padding: 0.1em 0.4em;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: #c4b5fd;
+}
+
+.setup-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  font-size: 0.83rem;
+  color: #b3b3cc;
+  line-height: 1.5;
+}
+
+.setup-steps code {
+  background: #1f1f3a;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  color: #c4b5fd;
+}
+
+.setup-code {
+  background: #0d0d1a;
+  border: 1px solid #2a2a4a;
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.75rem;
+  color: #a5f3fc;
+  white-space: pre-wrap;
+  word-break: break-all;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+/* ── Sync indicator (top bar) ─── */
+.sync-bar {
+  background: #7c6af7;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 0.35rem;
+  letter-spacing: 0.02em;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.sync-bar--error {
+  background: #ef4444;
+}
+
+/* ── Profile page auth section ─── */
+.profile-auth-section {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.profile-user-email {
+  font-size: 0.9rem;
+  color: #9999b3;
+  text-align: center;
+}
+
+.profile-signout-btn {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1.5px solid rgba(239, 68, 68, 0.35);
+  color: #f87171;
+  border-radius: 12px;
+  padding: 0.7rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.profile-signout-btn:hover {
+  background: rgba(239, 68, 68, 0.22);
+}
+
+.profile-sync-status {
+  font-size: 0.78rem;
+  color: #9999b3;
+  text-align: center;
+}
+
+.profile-sync-status.error {
+  color: #f87171;
+}
+
+/* ── Sync indicator (floating pill) ───────────────────── */
+.sync-indicator {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 0.85rem;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  transition: background 0.2s, color 0.2s;
+  pointer-events: none;
+}
+
+.sync-indicator--synced {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border: 1.5px solid rgba(34, 197, 94, 0.3);
+}
+
+.sync-indicator--syncing {
+  background: rgba(124, 106, 247, 0.15);
+  color: #a78bfa;
+  border: 1.5px solid rgba(124, 106, 247, 0.3);
+  animation: sync-spin 1s linear infinite;
+}
+
+.sync-indicator--error {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1.5px solid rgba(239, 68, 68, 0.3);
+}
+
+.sync-indicator--offline {
+  background: rgba(234, 179, 8, 0.15);
+  color: #fbbf24;
+  border: 1.5px solid rgba(234, 179, 8, 0.3);
+}
+
+@keyframes sync-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
