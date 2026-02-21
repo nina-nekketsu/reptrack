@@ -1,27 +1,29 @@
-# Cache busting guard for RepTrack
+# Cache busting for RepTrack
 
 ## Goal
-Guarantee that every GitHub Pages deploy publishes a new build identifier and make it easy for users to refresh when they land on stale code.
+Give every deployment a traceable build ID, surface that metadata inside the app, and prompt users to reload when a newer version lands on GitHub Pages.
 
-## Background
-RepTrack runs as a static React app on GitHub Pages, which means browsers cache the bundle aggressively. When we ship a fix, a user on another device can open the app and keep seeing the old version for several minutes or even hours without a clear sign that something changed. We need a deterministic build ID so both the UI and the deployment flow can prove what bundle is live.
+## Context
+RepTrack is served as a static Create React App on GH Pages. Because the bundle is cached aggressively, new releases can stay hidden until someone discovers the secret "hard refresh" ritual. We already have a `deploy` workflow, but it never stamps the build with a version or signals the UI that a new artifact is available. The goal is to make each build deterministic, expose metadata to the app, and add a lightweight update banner plus docs describing how to force-refresh when a stale bundle is stuck in the browser.
 
-## Implementation
-- `scripts/build-metadata.js` gathers the git commit, the package version, and the build ID (which defaults to the short git SHA or the `REACT_APP_BUILD_ID` environment variable) and writes that data to `public/build.json`.
-- `scripts/build.js` reuses that helper, exports the generated `buildId` via `REACT_APP_BUILD_*` variables, and then runs `react-scripts build`. This ensures the bundle can read the same build ID it just wrote to disk.
-- `public/build.json` is ignored in git so the working tree stays clean, and `deploy:buildid` will re-run the metadata script as part of deploying.
+## Requirements
+- Generate build metadata (`buildId`, `version`, `commit`, `builtAt`) at build time and write it to `public/build-info.json` so the same file ends up inside `build/` and is published to GH Pages.
+- Persist the metadata to `.env.production.local` every time (`node scripts/write-build-info.js`), ensuring `react-scripts build` can read `REACT_APP_BUILD_*` before bundling.
+- Update the React app with an `UpdateBanner` component that fetches `${PUBLIC_URL}/build-info.json?ts=<timestamp>` on load, compares the remote `buildId` to the baked-in `REACT_APP_BUILD_ID`, and shows a reload button when they differ.
+- Surface the build stamp (`Build: <shortsha> · <date>`) in the Profile footer and a tiny marker inside the ExerciseLogModal header so testers can see the current bundle.
+- Provide deterministic deploy scripts: a `prebuild` hook that runs `node scripts/write-build-info.js`, a `build` script that calls `react-scripts build`, a `predeploy` script that runs `npm run build`, and a `deploy` script that checks for a clean tree before running the build + `gh-pages -d build`.
+- Document the change in this file (PRD + acceptance criteria) and update `README.md` with hard-refresh instructions.
 
-## Update prompt
-- The authenticated shell now renders a banner near the top. On production builds, it fetches `${process.env.PUBLIC_URL}/build.json?ts=<timestamp>` and compares the remote `buildId` to the local one baked in at build time.
-- If they differ, the banner says “New version available” alongside a “Reload” button that performs a hard refresh.
-- The Profile footer and Exercise log modal header also display the current build ID so that curious users can see exactly what bundle they are running.
+## Success criteria
+1. `scripts/write-build-info.js` writes `public/build-info.json` and `.env.production.local` with the same metadata every build. The metadata contains `buildId`, `version`, `commit`, and `builtAt`.
+2. The bundled app receives `REACT_APP_BUILD_ID` and friends via the `.env.production.local` file so `localBuildInfo` matches `build-info.json`.
+3. `UpdateBanner` fetches the remote `build-info.json` (with a cache-busting `?ts` query) and renders a banner + reload button when the remote `buildId` differs from the local one.
+4. The Profile footer and ExerciseLogModal header both display the formatted build (commit/date). The UI component does not render in development when no build ID is injected.
+5. `npm run build` runs the new metadata generator, and `npm run deploy` enforces a clean tree before publishing `build/` via `gh-pages -d build`.
+6. `README.md` explains the cache-busting workflow and how to hard-refresh stale bundles when needed.
 
-## Deploy guard
-- `npm run deploy:check-clean` exits early if `git status --porcelain` reports any changes. This keeps us from deploying with stray edits.
-- `deploy:buildid` regenerates `build.json` before the build, and `npm run build` now runs the Node wrapper so the bundle and metadata stay in sync.
-- `npm run deploy` stitches it all together: clean check → build metadata → build → `gh-pages -d build`. That means every production deploy is reproducible and idempotent.
-
-## Verification steps
-- Run `npm run deploy:buildid` and confirm that `public/build.json` contains `buildId`, `version`, and `commit`.
-- Run the wrapped `npm run build` to ensure the new `UpdatePrompt` banner does not fetch in development (because `REACT_APP_BUILD_ID` is missing). Observe the build ID in the Profile page and Exercise Log modal.
-- Run `npm run deploy` on a clean branch and verify the `gh-pages` branch receives the new `build.json` (e.g., `https://nina-nekketsu.github.io/reptrack/build.json`).
+## Manual verification
+- Run `npm run build` (or `npm run deploy`) and confirm `build-info.json` contains the new fields.
+- Visit the built app, open the Profile page, and check that the footer lists the current build stamp and that the Exercise Log modal shows the same marker.
+- Open the deploy preview (or `npm start`), fetch `build-info.json`, and ensure the banner appears when the backend says the version is newer.
+- With DevTools open, perform a hard refresh (Cmd/Ctrl+Shift+R or Clear Site Data) and report the exact steps in the README for future reference.

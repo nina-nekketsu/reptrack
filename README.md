@@ -85,7 +85,14 @@ This runs `gh-pages -d build` and pushes the `build/` folder to the `gh-pages` b
 
 ### Cache busting & update prompt
 
-`npm run deploy` now runs `deploy:check-clean`, `deploy:buildid`, and the build (so a dirty tree stops the deploy) before pushing to `gh-pages`. Each build writes `public/build.json` with `{ buildId, version, commit }`, the bundle reads the injected `REACT_APP_BUILD_ID`, and the UI shows a small “New version available” banner when the fetched `build.json` differs from the current bundle. You can inspect the published metadata at `https://nina-nekketsu.github.io/reptrack/build.json`, and the Profile footer plus Exercise Log modal header always show the current build ID.
+`npm run build` now runs `node scripts/write-build-info.js` via the `prebuild` hook. That script writes the same metadata object to `public/build-info.json` and to `.env.production.local`, so `react-scripts build` injects `REACT_APP_BUILD_ID`, `REACT_APP_BUILD_COMMIT`, `REACT_APP_BUILD_VERSION`, and `REACT_APP_BUILD_TIME` into the bundle. The UI surfaces the current `Build: <shortsha> · <date>` stamp in the Profile footer and inside the Exercise Log modal, and `UpdateBanner` fetches `${PUBLIC_URL}/build-info.json?ts=<timestamp>` to show a reload button whenever the remote build ID is newer than the running build. `npm run deploy` enforces `deploy:check-clean`, runs `npm run build` through `predeploy`, and finally pushes `gh-pages -d build`. The published build info is available at `https://nina-nekketsu.github.io/reptrack/build-info.json`, which the app uses to detect stale caches.
+
+### Hard refresh when caches block updates
+
+If the banner never shows up and the app seems stuck on an old version:
+1. On desktop, open DevTools (F12) and use the refresh menu (Cmd/Ctrl+Shift+R or **Empty Cache and Hard Reload**) while the tab is active.
+2. On mobile or when the simple hard reload doesn’t help, clear the site data for `https://nina-nekketsu.github.io/reptrack` (Settings → Site Settings → Storage → Clear site data) and reload the page.
+3. As a last resort you can open a new private/incognito window or append `?ts=<timestamp>` to the URL to bypass caches.
 
 ### GitHub Actions (recommended)
 

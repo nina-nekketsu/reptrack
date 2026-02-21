@@ -10,7 +10,7 @@
 
 # production
 /build
-public/build.json
+public/build-info.json
 
 # misc
 .DS_Store

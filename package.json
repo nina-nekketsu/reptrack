@@ -17,12 +17,13 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "node scripts/build.js",
+    "prebuild": "node scripts/write-build-info.js",
+    "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "deploy:check-clean": "node scripts/check-clean.js",
-    "deploy:buildid": "node scripts/build-metadata.js",
-    "deploy": "npm run deploy:check-clean && npm run deploy:buildid && npm run build && gh-pages -d build"
+    "predeploy": "npm run build",
+    "deploy": "npm run deploy:check-clean && npm run predeploy && gh-pages -d build"
   },
   "eslintConfig": {
     "extends": [

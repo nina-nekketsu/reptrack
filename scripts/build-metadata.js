@@ -1,13 +1,15 @@
-const fs = require('fs');
-const path = require('path');
 const { execSync } = require('child_process');
+const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
-const BUILD_JSON_PATH = path.join(ROOT, 'public', 'build.json');
 
 function runGit(...args) {
   try {
-    return execSync(['git', ...args].join(' '), { cwd: ROOT, encoding: 'utf8' }).trim();
+    return execSync(['git', ...args].join(' '), {
+      cwd: ROOT,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
   } catch (err) {
     return null;
   }
@@ -26,31 +28,15 @@ function generateBuildMetadata(options = {}) {
   const commit = options.commit || runGit('rev-parse HEAD') || 'unknown';
   const shortCommit = commit === 'unknown' ? 'unknown' : commit.slice(0, 8);
   const version = options.version || readPackageVersion();
-  const buildId =
-    options.buildId ||
-    process.env.REACT_APP_BUILD_ID ||
-    shortCommit ||
-    `${Date.now()}`;
+  const buildId = options.buildId || process.env.REACT_APP_BUILD_ID || shortCommit || `${Date.now()}`;
+  const builtAt = options.builtAt || new Date().toISOString();
 
-  const metadata = {
+  return {
     buildId,
     version,
     commit,
+    builtAt,
   };
-
-  try {
-    fs.writeFileSync(BUILD_JSON_PATH, JSON.stringify(metadata, null, 2) + '\n');
-  } catch (err) {
-    console.error('Failed to write build metadata:', err);
-    throw err;
-  }
-
-  return metadata;
 }
 
-module.exports = { generateBuildMetadata, BUILD_JSON_PATH };
-
-if (require.main === module) {
-  const metadata = generateBuildMetadata();
-  console.log(`Generated build.json → buildId=${metadata.buildId} commit=${metadata.commit}`);
-}
+module.exports = { generateBuildMetadata };

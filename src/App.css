@@ -71,6 +71,26 @@ body {
   letter-spacing: 0.05em;
 }
 
+.build-id-tag--modal {
+  font-size: 0.62rem;
+  padding: 0.15rem 0.5rem;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  color: #dbeafe;
+}
+
+.log-header-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.profile-build-footer {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+}
+
 /* ── Auth / Setup screens ───────────────────────────────── */
 .auth-screen {
   min-height: 100vh;
