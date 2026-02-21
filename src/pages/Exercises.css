@@ -1,0 +1,985 @@
+/* ── Filter chips ── */
+.filter-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.filter-chip {
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid #d0d0e8;
+  background: #f8f8fd;
+  color: #666;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.filter-chip.active {
+  background: #4c4cff;
+  border-color: #4c4cff;
+  color: #fff;
+}
+
+/* ── Exercise card row ── */
+.ex-card-row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  gap: 8px;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+
+.ex-card-row:hover {
+  background: #f0f0ff;
+  box-shadow: 0 2px 10px rgba(76, 76, 255, 0.08);
+}
+
+.ex-info {
+  flex: 1;
+  cursor: pointer;
+}
+
+.ex-last {
+  font-size: 11px;
+  color: #9999b3;
+  margin-top: 3px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.ex-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1.5px solid #d0d0e8;
+  background: #f0f0ff;
+  color: #4c4cff;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+  padding: 0;
+  line-height: 1;
+}
+
+.icon-btn:hover {
+  background: #e0e0ff;
+}
+
+/* ── Overload badge ── */
+.overload-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+
+.overload-badge.up {
+  background: #e6faf0;
+  color: #1a9e5c;
+}
+
+.overload-badge.down {
+  background: #fff0f0;
+  color: #cc3333;
+}
+
+/* ── Add exercise form ── */
+.add-exercise-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #f8f8fd;
+  border: 1px solid #e8e8ef;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.ex-input,
+.ex-select {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1.5px solid #d0d0e8;
+  font-size: 15px;
+  color: #1a1a2e;
+  background: #fff;
+  outline: none;
+}
+
+.ex-input:focus,
+.ex-select:focus {
+  border-color: #4c4cff;
+}
+
+.add-form-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ── Modal ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 10, 30, 0.55);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 20px 20px 0 0;
+  padding: 24px 20px 32px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 85vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: slideUp 0.22s ease;
+}
+
+.modal--tall {
+  max-height: 92vh;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(40px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0;
+}
+
+.modal-sub {
+  font-size: 13px;
+  color: #7777a0;
+  margin: -6px 0 4px;
+}
+
+/* ── Detail header ── */
+.detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.btn--sm {
+  padding: 8px 14px !important;
+  font-size: 13px !important;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Section labels ── */
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #9999b3;
+  margin-top: 4px;
+}
+
+/* ── Personal record badges ── */
+.record-badges {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.record-chip {
+  background: linear-gradient(135deg, #f0f0ff 0%, #e8e8ff 100%);
+  border: 1px solid #d8d8f0;
+  border-radius: 12px;
+  padding: 10px 10px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+}
+
+.record-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.record-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #9999b3;
+  margin-top: 2px;
+}
+
+.record-value {
+  font-size: 15px;
+  font-weight: 800;
+  color: #4c4cff;
+}
+
+/* ── Volume graph ── */
+.graph-wrap {
+  background: #f8f8fd;
+  border: 1px solid #e8e8ef;
+  border-radius: 12px;
+  padding: 10px 6px 4px;
+  overflow: hidden;
+}
+
+.volume-graph {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.graph-placeholder {
+  text-align: center;
+  color: #9999b3;
+  font-size: 12px;
+  padding: 16px;
+  background: #f8f8fd;
+  border: 1px solid #e8e8ef;
+  border-radius: 12px;
+}
+
+/* ── Set table ── */
+.sets-header {
+  display: grid;
+  grid-template-columns: 28px 1fr 1fr 28px;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #9999b3;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 0 2px;
+}
+
+.set-row {
+  display: grid;
+  grid-template-columns: 28px 1fr 1fr 28px;
+  gap: 6px;
+  align-items: center;
+  border-radius: 8px;
+  transition: background 0.15s;
+  padding: 2px 0;
+}
+
+.set-row--record {
+  background: #fffbe6;
+}
+
+.set-num {
+  font-size: 13px;
+  font-weight: 700;
+  color: #9999b3;
+  text-align: center;
+}
+
+.set-input {
+  padding: 10px 10px;
+  border-radius: 10px;
+  border: 1.5px solid #d0d0e8;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a2e;
+  text-align: center;
+  background: #f8f8fd;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.set-input:focus {
+  border-color: #4c4cff;
+  background: #f0f0ff;
+}
+
+.remove-set-btn {
+  background: none;
+  border: none;
+  color: #cc3333;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px;
+  opacity: 0.6;
+}
+
+.remove-set-btn:disabled {
+  opacity: 0.2;
+  cursor: default;
+}
+
+.add-set-btn {
+  background: #f0f0ff;
+  border: 1.5px dashed #b0b0ff;
+  border-radius: 10px;
+  color: #4c4cff;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.add-set-btn:hover {
+  background: #e4e4ff;
+}
+
+/* ── Previous best hint (kept for safety) ── */
+.prev-best-hint {
+  background: #f0f0ff;
+  border: 1px solid #d8d8f0;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 12px;
+  color: #7777a0;
+}
+
+.prev-best-hint strong {
+  color: #4c4cff;
+}
+
+/* ── PR Block ── */
+.pr-block {
+  background: linear-gradient(135deg, #f0f0ff 0%, #e8e8ff 100%);
+  border: 1px solid #d8d8f0;
+  border-radius: 14px;
+  padding: 12px 14px 10px;
+}
+
+.pr-block__title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #9999b3;
+  margin-bottom: 8px;
+}
+
+.pr-block__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.pr-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.55);
+  border-radius: 10px;
+  padding: 8px 6px 7px;
+}
+
+.pr-item__icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.pr-item__label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #9999b3;
+  margin-top: 2px;
+}
+
+.pr-item__value {
+  font-size: 13px;
+  font-weight: 800;
+  color: #4c4cff;
+  line-height: 1.2;
+}
+
+.pr-diff {
+  font-size: 10px;
+  font-weight: 700;
+  margin-left: 2px;
+}
+
+.pr-diff--up {
+  color: #1a9e5c;
+}
+
+.pr-diff--down {
+  color: #cc3333;
+}
+
+/* ── Progress Graph Block (collapsible) ── */
+.progress-graph-block {
+  border: 1px solid #e8e8ef;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f8f8fd;
+}
+
+.progress-graph-toggle {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4c4cff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: background 0.15s;
+}
+
+.progress-graph-toggle:hover {
+  background: #ececff;
+}
+
+.progress-graph-content {
+  padding: 0 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid #e8e8ef;
+}
+
+/* ── Last 5 sessions mini-list ── */
+.last5-sessions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.last5-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #9999b3;
+  margin-bottom: 2px;
+}
+
+.last5-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e8e8ef;
+  flex-wrap: wrap;
+}
+
+.last5-date {
+  font-size: 11px;
+  font-weight: 700;
+  color: #9999b3;
+  min-width: 52px;
+}
+
+.last5-vol {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a1a2e;
+  flex: 1;
+}
+
+.last5-best {
+  font-size: 11px;
+  color: #7777a0;
+  background: #ececff;
+  border-radius: 6px;
+  padding: 1px 7px;
+}
+
+/* ── Live totals ── */
+.live-totals {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.total-pill {
+  background: #f0f0ff;
+  border: 1px solid #d8d8f0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.total-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #9999b3;
+}
+
+.total-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: #4c4cff;
+}
+
+/* ── Overload hint ── */
+.overload-hint {
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.overload-hint.positive {
+  background: #e6faf0;
+  color: #1a9e5c;
+}
+
+.overload-hint.negative {
+  background: #fff0f0;
+  color: #cc3333;
+}
+
+.modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* ── History sessions ── */
+.history-sessions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.session-card {
+  background: #f8f8fd;
+  border: 1px solid #e8e8ef;
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.session-date {
+  font-size: 12px;
+  font-weight: 700;
+  color: #9999b3;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.session-stats {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.session-best {
+  font-size: 12px;
+  color: #7777a0;
+}
+
+.session-best strong {
+  color: #4c4cff;
+}
+
+.session-sets-detail {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.set-pill {
+  background: #ececff;
+  color: #4c4cff;
+  border-radius: 8px;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ── Empty state ── */
+.empty-state {
+  text-align: center;
+  color: #9999b3;
+  font-size: 14px;
+  padding: 24px 0;
+}
+
+/* ── Log modal: full-height, timer sticky at top ── */
+.modal--log {
+  max-height: 90vh;
+  padding: 0;           /* padding moved to inner zones */
+  overflow: hidden;     /* outer shell never scrolls */
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Sticky timer zone — always visible, never clipped */
+.modal--log .log-timer-zone {
+  flex-shrink: 0;
+  padding: 20px 16px 12px;
+  background: #fff;
+  /* subtle separator between timer and scrollable body */
+  border-bottom: 1px solid #e8e8ef;
+}
+
+/* Scrollable body below the timer
+   min-height: 0 is critical: without it, a flex child can refuse to shrink
+   below its content height, preventing overflow-y from ever activating on iOS/Safari. */
+.modal--log .log-scroll-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 12px 16px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Back to top button ── */
+.back-to-top-btn {
+  align-self: center;
+  margin-top: 4px;
+  padding: 7px 18px;
+  border-radius: 20px;
+  border: 1.5px solid #d0d0e8;
+  background: #f0f0ff;
+  color: #4c4cff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.back-to-top-btn:hover {
+  background: #e4e4ff;
+  box-shadow: 0 2px 8px rgba(76, 76, 255, 0.12);
+}
+
+/* ── Section divider ── */
+.modal-divider {
+  height: 1px;
+  background: #e8e8ef;
+  margin: 4px 0;
+}
+
+/* ════════════════════════════════════════════
+   SET TIMER
+════════════════════════════════════════════ */
+.set-timer {
+  position: relative;
+  background: #0f0f1e;
+  border-radius: 16px;
+  padding: 16px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden; /* clip flash overlay */
+  transition: background 0.2s;
+}
+
+/* Alert state: red background */
+.set-timer--alert {
+  background: #cc0000;
+}
+
+/* Flash overlay — absolute, covers the whole timer block */
+.timer-flash-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.55;
+  transition: background-color 0.12s;
+  border-radius: 16px;
+}
+
+/* ── Timer blocks ── */
+.timer-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 12px 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  transition: background 0.2s;
+  position: relative;
+  z-index: 2;
+}
+
+.timer-block--active {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.timer-block--alert {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.timer-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ── Timer display ── */
+.timer-display {
+  font-family: 'SF Mono', 'Fira Code', 'Menlo', monospace;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-align: center;
+  line-height: 1;
+}
+
+.timer-display--exercise {
+  font-size: 38px;
+  color: #7cfc7c; /* green: exercising */
+}
+
+.timer-block--active .timer-display--exercise {
+  color: #00ff88;
+  text-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+}
+
+.timer-display--rest {
+  font-size: 44px;
+  color: rgba(255, 255, 255, 0.35);
+  transition: color 0.2s;
+}
+
+.timer-block--active .timer-display--rest {
+  color: #ff9966;
+  text-shadow: 0 0 20px rgba(255, 153, 102, 0.35);
+}
+
+.timer-block--alert .timer-display--rest {
+  font-size: 52px;
+  font-weight: 900;
+}
+
+.timer-alert-label {
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-top: 4px;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+  animation: alertPulse 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes alertPulse {
+  from { opacity: 0.7; transform: scale(0.97); }
+  to   { opacity: 1;   transform: scale(1.03); }
+}
+
+/* ── Timer control buttons ── */
+.timer-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  position: relative;
+  z-index: 2;
+}
+
+/* When reset button is present, it spans full width */
+.timer-controls .timer-btn--stop {
+  grid-column: 1 / -1;
+}
+
+.timer-btn {
+  padding: 0 8px;
+  min-height: 52px;     /* tall enough for easy tapping on small screens */
+  border-radius: 10px;
+  border: none;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s, transform 0.1s;
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.timer-btn:active {
+  transform: scale(0.96);
+}
+
+.timer-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.timer-btn--start {
+  background: #00cc55;
+  color: #fff;
+}
+
+.timer-btn--start:hover:not(:disabled) {
+  background: #00aa44;
+}
+
+.timer-btn--start.timer-btn--active {
+  background: #009944;
+}
+
+.timer-btn--rest {
+  background: #ff6633;
+  color: #fff;
+}
+
+.timer-btn--rest:hover:not(:disabled) {
+  background: #ee4422;
+}
+
+.timer-btn--rest.timer-btn--active {
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.7);
+  cursor: default;
+}
+
+.timer-btn--stop {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+}
+
+.timer-btn--stop:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* ── Timer settings row ── */
+.timer-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 10px 12px;
+  position: relative;
+  z-index: 2;
+}
+
+.timer-setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.timer-setting-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+  flex: 1;
+  cursor: default;
+}
+
+.timer-setting-input {
+  width: 64px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+}
+
+.timer-setting-input:focus {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.timer-setting-input:disabled {
+  opacity: 0.4;
+}
+
+/* ── Auto-start toggle ── */
+.timer-toggle {
+  position: relative;
+  width: 44px;
+  height: 26px;
+  border-radius: 13px;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  transition: background 0.2s;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.timer-toggle--on {
+  background: #00cc55;
+}
+
+.timer-toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s;
+  display: block;
+}
+
+.timer-toggle--on .timer-toggle-knob {
+  transform: translateX(18px);
+}
+

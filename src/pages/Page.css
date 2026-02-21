@@ -1,0 +1,199 @@
+/* ── Page base ── */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.page-heading {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.page-sub {
+  font-size: 14px;
+  color: #7777a0;
+  margin-top: -6px;
+  margin-bottom: 4px;
+}
+
+/* ── Generic card ── */
+.card {
+  background: #f8f8fd;
+  border: 1px solid #e8e8ef;
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #9999b3;
+}
+
+.card-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+/* ── Exercise list ── */
+.exercise-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.exercise-card {
+  background: #f8f8fd;
+  border: 1px solid #e8e8ef;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.exercise-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.exercise-meta {
+  font-size: 13px;
+  color: #7777a0;
+}
+
+/* ── Stats grid ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.stat-card {
+  background: #f0f0ff;
+  border: 1px solid #d8d8f0;
+  border-radius: 12px;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: #4c4cff;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: #7777a0;
+  font-weight: 500;
+}
+
+/* ── History list ── */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.history-card {
+  background: #f8f8fd;
+  border: 1px solid #e8e8ef;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.history-left {}
+
+.history-date {
+  font-size: 12px;
+  color: #9999b3;
+  font-weight: 600;
+}
+
+.history-type {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.history-right {
+  text-align: right;
+}
+
+.history-duration {
+  font-size: 14px;
+  font-weight: 600;
+  color: #4c4cff;
+}
+
+.history-sets {
+  font-size: 12px;
+  color: #9999b3;
+}
+
+/* ── Profile avatar ── */
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #4c4cff;
+  color: #fff;
+  font-size: 26px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 8px;
+}
+
+/* ── Buttons ── */
+.btn-primary {
+  margin-top: 8px;
+  background: #4c4cff;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 700;
+  width: 100%;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-primary:hover {
+  background: #3333dd;
+}
+
+.btn-secondary {
+  margin-top: 8px;
+  background: transparent;
+  color: #4c4cff;
+  border: 2px solid #4c4cff;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  width: 100%;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #f0f0ff;
+}
