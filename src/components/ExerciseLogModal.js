@@ -1,11 +1,11 @@
 import React, { useState, useRef } from 'react';
 import SetTimer from './SetTimer';
-import PRBlock from './PRBlock';
-import ProgressGraphBlock from './ProgressGraphBlock';
+import VolumeGraph from './VolumeGraph';
 import {
   calcTotals,
   bestSet,
   getSessionsDesc,
+  getSessionsAsc,
   loadLogs,
   saveLogs,
 } from '../utils/exerciseHelpers';
@@ -21,6 +21,7 @@ import {
  */
 export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
   const [sets, setSets] = useState([{ reps: '', weight: '' }]);
+  const [graphOpen, setGraphOpen] = useState(false);
   const logScrollRef = useRef(null);
 
   function updateSet(index, field, value) {
@@ -58,7 +59,6 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
     };
     saveLogs(updated);
 
-    // Fire custom event so BottomNav badge updates
     window.dispatchEvent(new Event('exerciseLogged'));
 
     if (onSaved) {
@@ -78,7 +78,56 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
     return sessions[0] || null;
   }
 
+  // ── Compute all-time record set (by volume = reps × weight) ──
+  function getAllTimeRecord() {
+    const sessions = getSessionsDesc(logs, exercise.id);
+    if (sessions.length === 0) return null;
+    let best = null;
+    let bestVol = 0;
+    let bestSetIndex = 0;
+    sessions.forEach((session) => {
+      session.sets.forEach((s, idx) => {
+        const vol = (Number(s.reps) || 0) * (Number(s.weight) || 0);
+        if (vol > bestVol) {
+          bestVol = vol;
+          best = s;
+          bestSetIndex = idx + 1; // 1-based set number
+        }
+      });
+    });
+    if (!best || bestVol === 0) return null;
+    return { set: best, setIndex: bestSetIndex, volume: bestVol };
+  }
+
+  // ── Compute previous session's best set (by volume) ──
+  function getPrevSessionBest() {
+    const sessions = getSessionsDesc(logs, exercise.id);
+    if (sessions.length === 0) return null;
+    const prev = sessions[0]; // most recent session
+    if (!prev.sets || prev.sets.length === 0) return null;
+    let best = null;
+    let bestVol = 0;
+    let bestSetIndex = 0;
+    prev.sets.forEach((s, idx) => {
+      const vol = (Number(s.reps) || 0) * (Number(s.weight) || 0);
+      if (vol > bestVol) {
+        bestVol = vol;
+        best = s;
+        bestSetIndex = idx + 1;
+      }
+    });
+    if (!best || bestVol === 0) return null;
+    return { set: best, setIndex: bestSetIndex, date: prev.date };
+  }
+
   const liveTotals = calcTotals(sets);
+  const allTimeRecord = getAllTimeRecord();
+  const prevSessionBest = getPrevSessionBest();
+  const sessionsAsc = getSessionsAsc(logs, exercise.id);
+  const hasHistory = sessionsAsc.length > 0;
+
+  const prev = lastSession(exercise.id);
+  const overloadDiff = prev ? liveTotals.totalVolume - prev.totalVolume : null;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -94,11 +143,6 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
         {/* Scrollable body */}
         <div className="log-scroll-body" ref={logScrollRef}>
           <div className="modal-divider" />
-
-          <PRBlock logs={logs} exerciseId={exercise.id} />
-          <ProgressGraphBlock logs={logs} exerciseId={exercise.id} />
-
-          {logs[exercise.id]?.length > 0 && <div className="modal-divider" />}
 
           <div className="sets-header">
             <span>Set</span>
@@ -153,6 +197,69 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
             + Add Set
           </button>
 
+          {/* ── Insights panel: record + prev session + graph ── */}
+          {hasHistory && (
+            <div className="insights-panel">
+              <div className="insights-panel__rows">
+                {/* All-time record set */}
+                {allTimeRecord && (
+                  <div className="insights-row">
+                    <span className="insights-icon">🏆</span>
+                    <div className="insights-content">
+                      <span className="insights-label">All-time record</span>
+                      <span className="insights-value">
+                        {allTimeRecord.set.reps} reps @ {allTimeRecord.set.weight} kg
+                        <span className="insights-set-num"> (Set {allTimeRecord.setIndex})</span>
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Previous session best set */}
+                {prevSessionBest && (
+                  <div className="insights-row">
+                    <span className="insights-icon">📅</span>
+                    <div className="insights-content">
+                      <span className="insights-label">
+                        Last session ·{' '}
+                        {new Date(prevSessionBest.date).toLocaleDateString('nl-NL', {
+                          day: 'numeric',
+                          month: 'short',
+                        })}
+                      </span>
+                      <span className="insights-value">
+                        {prevSessionBest.set.reps} reps @ {prevSessionBest.set.weight} kg
+                        <span className="insights-set-num"> (Set {prevSessionBest.setIndex})</span>
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Graph toggle */}
+              <button
+                className="insights-graph-toggle"
+                onClick={() => setGraphOpen((v) => !v)}
+                aria-expanded={graphOpen}
+              >
+                <span>{graphOpen ? '▾' : '▸'}</span>
+                <span>{graphOpen ? 'Hide graph' : 'Show progress graph'}</span>
+              </button>
+
+              {graphOpen && (
+                <div className="insights-graph-body">
+                  {sessionsAsc.length >= 2 ? (
+                    <VolumeGraph sessions={sessionsAsc} />
+                  ) : (
+                    <p className="insights-graph-hint">
+                      Log at least 2 sessions to see your graph.
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Live totals */}
           <div className="live-totals">
             <div className="total-pill">
@@ -166,18 +273,13 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
           </div>
 
           {/* Progressive overload hint */}
-          {(() => {
-            const prev = lastSession(exercise.id);
-            if (!prev) return null;
-            const diff = liveTotals.totalVolume - prev.totalVolume;
-            return (
-              <div className={`overload-hint ${diff >= 0 ? 'positive' : 'negative'}`}>
-                {diff >= 0
-                  ? `▲ +${diff.toLocaleString()} kg vs last session — progressive overload!`
-                  : `▼ ${Math.abs(diff).toLocaleString()} kg vs last session`}
-              </div>
-            );
-          })()}
+          {overloadDiff !== null && (
+            <div className={`overload-hint ${overloadDiff >= 0 ? 'positive' : 'negative'}`}>
+              {overloadDiff >= 0
+                ? `▲ +${overloadDiff.toLocaleString()} kg vs last session — progressive overload!`
+                : `▼ ${Math.abs(overloadDiff).toLocaleString()} kg vs last session`}
+            </div>
+          )}
 
           <div className="modal-actions">
             <button
