@@ -83,6 +83,10 @@ npm run deploy
 
 This runs `gh-pages -d build` and pushes the `build/` folder to the `gh-pages` branch.
 
+### Cache busting & update prompt
+
+`npm run deploy` now runs `deploy:check-clean`, `deploy:buildid`, and the build (so a dirty tree stops the deploy) before pushing to `gh-pages`. Each build writes `public/build.json` with `{ buildId, version, commit }`, the bundle reads the injected `REACT_APP_BUILD_ID`, and the UI shows a small “New version available” banner when the fetched `build.json` differs from the current bundle. You can inspect the published metadata at `https://nina-nekketsu.github.io/reptrack/build.json`, and the Profile footer plus Exercise Log modal header always show the current build ID.
+
 ### GitHub Actions (recommended)
 
 Create `.github/workflows/deploy.yml`:

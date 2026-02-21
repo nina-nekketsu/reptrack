@@ -1,6 +1,7 @@
 import './Page.css'
 import { useAuth } from '../context/AuthContext'
 import { useEffect, useState, useCallback } from 'react'
+import { formatBuildId } from '../utils/buildInfo'
 import {
   getCoachShare,
   enableCoachShare,
@@ -205,6 +206,9 @@ export default function Profile() {
           </p>
         </div>
       )}
+      <div className="profile-build-footer">
+        <span className="build-id-tag">{formatBuildId()}</span>
+      </div>
     </div>
   )
 }

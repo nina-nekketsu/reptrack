@@ -26,6 +26,51 @@ body {
   width: 100%;
 }
 
+.update-banner {
+  margin: 0.85rem 1rem 0;
+  background: #eff2ff;
+  border: 1px solid #dbeafe;
+  border-radius: 14px;
+  padding: 0.55rem 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  color: #312e81;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.update-banner__text {
+  flex: 1;
+}
+
+.update-banner__reload {
+  background: #4338ca;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.update-banner__reload:hover {
+  background: #312e81;
+}
+
+.build-id-tag {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #4c4cff;
+  background: rgba(124, 106, 247, 0.15);
+  border-radius: 999px;
+  padding: 0.18rem 0.75rem;
+  letter-spacing: 0.05em;
+}
+
 /* ── Auth / Setup screens ───────────────────────────────── */
 .auth-screen {
   min-height: 100vh;
@@ -455,4 +500,48 @@ body {
 .coach-rotate-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+/* === Warm palette overrides === */
+:root {
+  /* fallback if index.css not loaded for some reason */
+  --c-bg: #225D65;
+  --c-surface: #E3D8C6;
+  --c-surface-2: rgba(227, 216, 198, 0.72);
+  --c-text: #123033;
+  --c-muted: rgba(18, 48, 51, 0.62);
+  --c-border: rgba(18, 48, 51, 0.18);
+  --c-primary: #225D65;
+  --c-secondary: #5C633E;
+  --c-accent: #D39932;
+  --c-danger: #AE5238;
+}
+
+.app {
+  background: var(--c-bg);
+  color: var(--c-text);
+}
+
+.app-header {
+  background: rgba(34, 93, 101, 0.92);
+  border-bottom: 2px solid var(--c-accent);
+}
+
+.app-header h1 {
+  color: var(--c-surface);
+}
+
+.btn-primary {
+  background: var(--c-primary) !important;
+  color: var(--c-surface) !important;
+}
+
+.btn-primary:hover {
+  filter: brightness(0.92);
+}
+
+.btn-secondary {
+  background: rgba(227, 216, 198, 0.14);
+  border: 1px solid rgba(227, 216, 198, 0.24);
+  color: var(--c-surface);
 }

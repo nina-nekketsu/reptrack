@@ -14,6 +14,7 @@ import Profile from './pages/Profile'
 import ActiveWorkout from './pages/ActiveWorkout'
 import CoachView from './pages/CoachView'
 import SyncIndicator from './components/SyncIndicator'
+import UpdatePrompt from './components/UpdatePrompt'
 import { useState } from 'react'
 import './App.css'
 
@@ -52,6 +53,7 @@ function AppContent() {
   // Authenticated (or running locally without config)
   return (
     <div className="app">
+      <UpdatePrompt />
       <SyncBar />
       <SyncIndicator />
       <main className="app-main">

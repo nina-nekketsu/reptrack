@@ -82,6 +82,125 @@
   background: #e0e0ff;
 }
 
+/* ── Danger icon button variant ── */
+.icon-btn--danger {
+  color: #cc3333;
+  border-color: #f0d0d0;
+  background: #fff5f5;
+}
+
+.icon-btn--danger:hover {
+  background: #ffe0e0;
+}
+
+/* ── Session card header (date + delete btn row) ── */
+.session-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* ── Session delete button ── */
+.session-delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  opacity: 0.4;
+  padding: 2px 4px;
+  border-radius: 6px;
+  transition: opacity 0.15s, background 0.15s;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.session-delete-btn:hover {
+  opacity: 1;
+  background: #ffe0e0;
+}
+
+/* ── Confirm overlay ── */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 10, 30, 0.65);
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.confirm-modal {
+  background: #fff;
+  border-radius: 18px;
+  padding: 28px 24px 24px;
+  max-width: 340px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.22);
+  animation: confirmPop 0.18s ease;
+}
+
+@keyframes confirmPop {
+  from { transform: scale(0.92); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+.confirm-icon {
+  font-size: 36px;
+  line-height: 1;
+}
+
+.confirm-message {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a2e;
+  text-align: center;
+  margin: 0;
+}
+
+.confirm-sub {
+  font-size: 13px;
+  color: #7777a0;
+  text-align: center;
+  margin: -4px 0 0;
+  line-height: 1.5;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.confirm-actions .btn-danger,
+.confirm-actions .btn-secondary {
+  flex: 1;
+}
+
+/* ── Danger button ── */
+.btn-danger {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+}
+
 /* ── Overload badge ── */
 .overload-badge {
   display: inline-block;
@@ -884,6 +1003,122 @@
   margin: 0;
 }
 
+/* ── Alpha-style modal tabs ── */
+.log-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.log-tab {
+  min-height: 42px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.log-tab.active {
+  background: #4c4cff;
+  border-color: rgba(76, 76, 255, 0.65);
+  box-shadow: 0 10px 18px rgba(76, 76, 255, 0.25);
+}
+
+@media (max-width: 360px) {
+  .log-tab { font-size: 0.9rem; }
+}
+
+/* ── Log modal discoverability ── */
+.log-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.log-header-text {
+  min-width: 0;
+}
+
+.log-header-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.build-id-tag--modal {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #4c4cff;
+  background: rgba(124, 106, 247, 0.12);
+  border-radius: 999px;
+  padding: 0.1rem 0.7rem;
+  letter-spacing: 0.04em;
+}
+
+.overview-btn {
+  flex: 0 0 auto;
+  align-self: center;
+  background: #4c4cff;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  box-shadow: 0 8px 18px rgba(76, 76, 255, 0.25);
+}
+
+.overview-btn:active {
+  transform: translateY(1px);
+}
+
+.overview-cta {
+  width: 100%;
+  margin: 0.5rem 0 0.25rem;
+  background: rgba(76, 76, 255, 0.12);
+  color: #4c4cff;
+  border: 1px solid rgba(76, 76, 255, 0.3);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-weight: 700;
+}
+
+@media (max-width: 420px) {
+  .overview-btn {
+    display: none; /* we show actions under the timer instead */
+  }
+}
+
+.timer-actions-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.timer-action-btn {
+  min-height: 44px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.timer-action-btn--primary {
+  background: #4c4cff;
+  border-color: rgba(76, 76, 255, 0.6);
+  box-shadow: 0 10px 18px rgba(76, 76, 255, 0.25);
+}
+
+@media (max-width: 360px) {
+  .timer-actions-row { grid-template-columns: 1fr; }
+}
+
 /* ── Back to top button ── */
 .back-to-top-btn {
   align-self: center;
@@ -1361,3 +1596,41 @@
   }
 }
 
+
+/* === Warm palette overrides (keep existing layout, recolor) === */
+.modal--log,
+.modal,
+.exercise-card,
+.session-card,
+.rt-card,
+.placeholder-card {
+  background: var(--c-surface);
+  color: var(--c-text);
+  border-color: var(--c-border);
+}
+
+.filter-chip.active,
+.log-tab.active,
+.insights-graph-toggle-btn,
+.timer-action-btn--primary {
+  background: var(--c-accent) !important;
+  color: #123033 !important;
+  border-color: rgba(211, 153, 50, 0.6) !important;
+}
+
+.btn-danger,
+.icon-btn--danger {
+  background: var(--c-danger) !important;
+  color: var(--c-surface) !important;
+  border-color: rgba(174, 82, 56, 0.55) !important;
+}
+
+.overload-badge.up,
+.overload-hint.positive {
+  color: var(--c-secondary);
+}
+
+.overload-badge.down,
+.overload-hint.negative {
+  color: var(--c-danger);
+}

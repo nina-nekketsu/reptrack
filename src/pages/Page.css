@@ -197,3 +197,9 @@
 .btn-secondary:hover {
   background: #f0f0ff;
 }
+
+.profile-build-footer {
+  margin-top: 0.75rem;
+  text-align: center;
+  color: #a2a2c8;
+}
