@@ -13,6 +13,7 @@ import {
   saveLogs,
   upsertSession,
 } from '../utils/exerciseHelpers';
+import { updateRemoteSession } from '../lib/sync';
 import { useAuth } from '../context/AuthContext';
 
 /**
@@ -29,6 +30,7 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
 
   const [activeTab, setActiveTab] = useState('log'); // 'log' | 'overview'
   const [sets, setSets] = useState([{ reps: '', weight: '' }]);
+  const [editingSession, setEditingSession] = useState(null);
   const logScrollRef = useRef(null);
 
   // Always start at the top when opening a new exercise
@@ -36,7 +38,17 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
     logScrollRef.current?.scrollTo({ top: 0 });
     setActiveTab('log');
     setSets([{ reps: '', weight: '' }]);
+    setEditingSession(null);
   }, [exercise?.id]);
+
+  const editingDateLabel = editingSession
+    ? new Date(editingSession.date).toLocaleDateString('nl-NL', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      })
+    : null;
 
   function updateSet(index, field, value) {
     setSets((prev) => {
@@ -58,37 +70,91 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
     logScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  function closeModal() {
+    setEditingSession(null);
+    setSets([{ reps: '', weight: '' }]);
+    setActiveTab('log');
+    onClose();
+  }
+
+  function handleBackToLog() {
+    setActiveTab('log');
+    scrollToTop();
+  }
+
+  function handleEditSession(session) {
+    const normalizedSets = session.sets.map((s) => ({
+      reps: s.reps?.toString() ?? '',
+      weight: s.weight?.toString() ?? '',
+    }));
+    const lastRow = normalizedSets[normalizedSets.length - 1];
+    const needsBlankRow = !lastRow || lastRow.reps !== '' || lastRow.weight !== '';
+    if (needsBlankRow) {
+      normalizedSets.push({ reps: '', weight: '' });
+    }
+    setSets(normalizedSets);
+    setEditingSession({ ...session });
+    setActiveTab('log');
+    scrollToTop();
+  }
+
   function saveSession() {
     const validSets = sets.filter((s) => s.reps !== '' || s.weight !== '');
     if (validSets.length === 0) return;
 
     const best = bestSet(validSets);
-    const session = {
-      date: new Date().toISOString(),
+    const baseSession = {
       sets: validSets,
       bestSet: best,
       ...calcTotals(validSets),
     };
 
     const currentLogs = loadLogs();
-    const updated = {
-      ...currentLogs,
-      [exercise.id]: [...(currentLogs[exercise.id] || []), session],
-    };
+    const existingSessions = currentLogs[exercise.id] || [];
+    let updatedLogs;
 
-    saveLogs(updated);
-
-    // Sync to Supabase (fire-and-forget)
-    if (user) {
-      upsertSession(exercise.id, session, user.id).catch((err) =>
-        console.warn('[Supabase] session sync failed:', err)
+    if (editingSession) {
+      const updatedEntry = {
+        ...editingSession,
+        ...baseSession,
+        date: editingSession.date,
+      };
+      const merged = existingSessions.map((s) =>
+        s.date === editingSession.date ? updatedEntry : s
       );
+      updatedLogs = {
+        ...currentLogs,
+        [exercise.id]: merged,
+      };
+
+      if (user) {
+        const syncPromise = editingSession.remoteId
+          ? updateRemoteSession(editingSession.remoteId, exercise.id, updatedEntry, user.id)
+          : upsertSession(exercise.id, updatedEntry, user.id);
+        syncPromise.catch((err) =>
+          console.warn('[Supabase] session sync failed:', err)
+        );
+      }
+    } else {
+      const newSession = {
+        date: new Date().toISOString(),
+        ...baseSession,
+      };
+      updatedLogs = {
+        ...currentLogs,
+        [exercise.id]: [...existingSessions, newSession],
+      };
+      if (user) {
+        upsertSession(exercise.id, newSession, user.id).catch((err) =>
+          console.warn('[Supabase] session sync failed:', err)
+        );
+      }
     }
 
+    saveLogs(updatedLogs);
     window.dispatchEvent(new Event('exerciseLogged'));
-
-    if (onSaved) onSaved(updated);
-    onClose();
+    if (onSaved) onSaved(updatedLogs);
+    closeModal();
   }
 
   // ── Derived data for Overview tab ──
@@ -102,48 +168,54 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
   const last5 = sessionsDesc.slice(0, 5);
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={closeModal}>
       <div className="modal modal--log" onClick={(e) => e.stopPropagation()}>
-        {/* Sticky timer zone */}
-        <div id="log-timer-top" className="log-timer-zone">
-          <div className="log-header-text">
-            <div className="log-header-title-row">
-              <h3 className="modal-title">{exercise.name}</h3>
-              <span className="build-id-tag build-id-tag--modal">{formatBuildId()}</span>
+        <div className="log-sticky-top">
+          <div id="log-timer-top" className="log-timer-zone">
+            <div className="log-header-text">
+              <div className="log-header-title-row">
+                <h3 className="modal-title">{exercise.name}</h3>
+                <span className="build-id-tag build-id-tag--modal">{formatBuildId()}</span>
+              </div>
+              <p className="modal-sub">{exercise.muscleGroup} · Log your sets</p>
             </div>
-            <p className="modal-sub">{exercise.muscleGroup} · Log your sets</p>
+
+            <SetTimer exerciseId={exercise.id} onClose={closeModal} />
           </div>
-
-          <SetTimer exerciseId={exercise.id} onClose={onClose} />
-
-          {/* Alpha-style tabs (always visible) */}
-          <div className="log-tabs" role="tablist" aria-label="Exercise tabs">
-            <button
-              type="button"
-              className={`log-tab ${activeTab === 'log' ? 'active' : ''}`}
-              onClick={() => setActiveTab('log')}
-              role="tab"
-              aria-selected={activeTab === 'log'}
-            >
-              Log
-            </button>
-            <button
-              type="button"
-              className={`log-tab ${activeTab === 'overview' ? 'active' : ''}`}
-              onClick={() => setActiveTab('overview')}
-              role="tab"
-              aria-selected={activeTab === 'overview'}
-            >
-              Overview
-            </button>
+          <div className="log-tabs-wrapper">
+            <div className="log-tabs" role="tablist" aria-label="Exercise tabs">
+              <button
+                type="button"
+                className={`log-tab ${activeTab === 'log' ? 'active' : ''}`}
+                onClick={() => setActiveTab('log')}
+                role="tab"
+                aria-selected={activeTab === 'log'}
+              >
+                Log
+              </button>
+              <button
+                type="button"
+                className={`log-tab ${activeTab === 'overview' ? 'active' : ''}`}
+                onClick={() => setActiveTab('overview')}
+                role="tab"
+                aria-selected={activeTab === 'overview'}
+              >
+                Overview
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Scrollable body (content under tabs) */}
         <div className="log-scroll-body" ref={logScrollRef}>
           {activeTab === 'log' ? (
             <>
               <div className="modal-divider" />
+
+              {editingSession && (
+                <div className="editing-banner">
+                  Editing session: {editingDateLabel}
+                </div>
+              )}
 
               <div className="sets-header">
                 <span>Set</span>
@@ -186,7 +258,6 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
                 + Add Set
               </button>
 
-              {/* Live totals */}
               <div className="live-totals">
                 <div className="total-pill">
                   <span className="total-label">Total Reps</span>
@@ -198,19 +269,6 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
                 </div>
               </div>
 
-              <div className="modal-actions">
-                <button
-                  className="btn-primary"
-                  onClick={saveSession}
-                  disabled={liveTotals.totalReps === 0 && liveTotals.totalVolume === 0}
-                >
-                  Save Session
-                </button>
-                <button className="btn-secondary" onClick={onClose}>
-                  Cancel
-                </button>
-              </div>
-
               <button className="back-to-top-btn" onClick={scrollToTop} type="button">
                 ↑ Back to timer
               </button>
@@ -219,69 +277,80 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
             <>
               <div className="modal-divider" />
 
-              {!hasHistory ? (
+              {!hasHistory && (
                 <p className="insights-no-history">
                   📭 No history yet on this device/site — log a session to see your records and graph.
                 </p>
-              ) : (
+              )}
+
+              {hasHistory && (
                 <>
                   <div className="section-label">Personal Records</div>
                   <RecordBadges records={records} />
+                </>
+              )}
 
-                  <div className="section-label">Volume Over Time</div>
-                  {sessionsAsc.length >= 2 ? (
-                    <VolumeGraph sessions={sessionsAsc} />
-                  ) : (
-                    <p className="insights-graph-hint">Log at least 2 sessions to see your graph.</p>
-                  )}
+              <div className="section-label">Volume Over Time</div>
+              <VolumeGraph sessions={sessionsAsc} />
 
-                  {lastSession && (
-                    <>
-                      <div className="section-label">Last Session Sets</div>
-                      <div className="last-session-sets">
-                        <div className="last-session-sets__header">
-                          <span className="last-session-sets__title">📋 Last session</span>
-                          <span className="last-session-sets__date">
-                            {new Date(lastSession.date).toLocaleDateString('nl-NL', {
-                              weekday: 'short',
-                              day: 'numeric',
-                              month: 'short',
-                            })}
-                          </span>
-                        </div>
-                        <table className="last-session-sets__table">
-                          <thead>
-                            <tr>
-                              <th>Set</th>
-                              <th>kg</th>
-                              <th>Reps</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {lastSession.sets.map((s, idx) => (
-                              <tr key={idx}>
-                                <td>{idx + 1}</td>
-                                <td>{s.weight || '—'}</td>
-                                <td>{s.reps || '—'}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </>
-                  )}
+              {hasHistory && lastSession && (
+                <>
+                  <div className="section-label">Last Session Sets</div>
+                  <div className="last-session-sets">
+                    <div className="last-session-sets__header">
+                      <span className="last-session-sets__title">📋 Last session</span>
+                      <span className="last-session-sets__date">
+                        {new Date(lastSession.date).toLocaleDateString('nl-NL', {
+                          weekday: 'short',
+                          day: 'numeric',
+                          month: 'short',
+                        })}
+                      </span>
+                    </div>
+                    <table className="last-session-sets__table">
+                      <thead>
+                        <tr>
+                          <th>Set</th>
+                          <th>kg</th>
+                          <th>Reps</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {lastSession.sets.map((s, idx) => (
+                          <tr key={idx}>
+                            <td>{idx + 1}</td>
+                            <td>{s.weight || '—'}</td>
+                            <td>{s.reps || '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
 
+              {hasHistory && (
+                <>
                   <div className="section-label">Recent Sessions</div>
                   <div className="history-sessions">
                     {last5.map((session) => (
                       <div className="session-card" key={session.date}>
-                        <div className="session-date">
-                          {new Date(session.date).toLocaleDateString('nl-NL', {
-                            weekday: 'short',
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric',
-                          })}
+                        <div className="session-card-header">
+                          <div className="session-date">
+                            {new Date(session.date).toLocaleDateString('nl-NL', {
+                              weekday: 'short',
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
+                            })}
+                          </div>
+                          <button
+                            type="button"
+                            className="session-edit-btn"
+                            onClick={() => handleEditSession(session)}
+                          >
+                            Edit
+                          </button>
                         </div>
                         <div className="session-stats">
                           <span>{session.sets.length} sets</span>
@@ -303,6 +372,33 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
 
               <button className="btn-secondary" onClick={scrollToTop} type="button">
                 Back to top
+              </button>
+            </>
+          )}
+        </div>
+
+        <div className="log-actions">
+          {activeTab === 'log' ? (
+            <>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={saveSession}
+                disabled={liveTotals.totalReps === 0 && liveTotals.totalVolume === 0}
+              >
+                Save Session
+              </button>
+              <button type="button" className="btn-secondary" onClick={closeModal}>
+                Cancel
+              </button>
+            </>
+          ) : (
+            <>
+              <button type="button" className="btn-secondary" onClick={handleBackToLog}>
+                Back to Log
+              </button>
+              <button type="button" className="btn-secondary" onClick={closeModal}>
+                Close
               </button>
             </>
           )}

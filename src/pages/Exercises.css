@@ -759,6 +759,34 @@
   font-weight: 600;
 }
 
+.editing-banner {
+  font-size: 12px;
+  letter-spacing: 0.3px;
+  color: #4c4cff;
+  text-transform: uppercase;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid #d0d0ef;
+  background: #f0f0ff;
+}
+
+.session-edit-btn {
+  background: none;
+  border: 1px solid transparent;
+  color: #4c4cff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s, border 0.15s;
+}
+
+.session-edit-btn:hover {
+  background: rgba(76, 76, 255, 0.12);
+  border-color: rgba(76, 76, 255, 0.25);
+}
+
 /* ── Empty state ── */
 .empty-state {
   text-align: center;
@@ -788,13 +816,26 @@
   align-items: center;
 }
 
+.log-sticky-top {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+}
+
 /* Sticky timer zone — always visible, never clipped */
 .modal--log .log-timer-zone {
   flex-shrink: 0;
   padding: 16px 16px 12px;
   background: #fff;
-  /* subtle separator between timer and scrollable body */
+}
+
+.log-tabs-wrapper {
+  padding: 0 16px 12px;
   border-bottom: 1px solid #e8e8ef;
+  background: #fff;
 }
 
 /* Scrollable body below the timer
@@ -807,7 +848,8 @@
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   /* Bottom padding ensures Save/Cancel are reachable past safe-area */
-  padding: 12px 16px max(28px, env(safe-area-inset-bottom, 16px));
+  padding: 12px 16px 0;
+  padding-bottom: max(120px, env(safe-area-inset-bottom, 16px) + 70px);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -1028,6 +1070,22 @@
 
 @media (max-width: 360px) {
   .log-tab { font-size: 0.9rem; }
+}
+
+.log-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  background: #fff;
+  border-top: 1px solid #e8e8ef;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 16px));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.log-actions button {
+  width: 100%;
 }
 
 /* ── Log modal discoverability ── */

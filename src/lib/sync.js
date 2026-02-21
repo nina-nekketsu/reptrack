@@ -261,6 +261,43 @@ export async function pushAll(userId) {
   }
 }
 
+// ─── Delete helpers ────────────────────────────────────────────────────
+
+/**
+ * Delete a session from Supabase by its remote id.
+ * The exercise_logs table is flat (one row = one session).
+ */
+export async function deleteRemoteSession(remoteId) {
+  if (!supabase || !remoteId) return;
+  const { error } = await supabase
+    .from('exercise_logs')
+    .delete()
+    .eq('id', remoteId);
+  if (error) console.error('[sync] deleteRemoteSession:', error);
+}
+
+/**
+ * Delete an exercise and all its sessions from Supabase.
+ */
+export async function deleteRemoteExercise(exerciseId, userId) {
+  if (!supabase || !userId) return;
+  // Delete all sessions for this exercise first
+  const { error: logsErr } = await supabase
+    .from('exercise_logs')
+    .delete()
+    .eq('exercise_id', String(exerciseId))
+    .eq('user_id', userId);
+  if (logsErr) console.error('[sync] deleteRemoteExercise logs:', logsErr);
+
+  // Delete the exercise itself
+  const { error: exErr } = await supabase
+    .from('exercises')
+    .delete()
+    .eq('id', String(exerciseId))
+    .eq('user_id', userId);
+  if (exErr) console.error('[sync] deleteRemoteExercise:', exErr);
+}
+
 // ─── Single-entity push helpers (fire-and-forget after local write) ────
 
 export async function pushExercise(exercise, userId) {
@@ -303,6 +340,22 @@ export async function pushSession(exerciseId, session, userId) {
     return null;
   }
   return data?.id || null;
+}
+
+export async function updateRemoteSession(remoteId, exerciseId, session, userId) {
+  if (!supabase || !userId || !remoteId) return null;
+  const { error } = await supabase.from('exercise_logs').update({
+    sets: session.sets,
+    best_set: session.bestSet || null,
+    total_reps: session.totalReps || 0,
+    total_volume: session.totalVolume || 0,
+  }).eq('id', remoteId).eq('user_id', userId).eq('exercise_id', String(exerciseId));
+
+  if (error) {
+    console.error('[sync] updateRemoteSession:', error);
+    return null;
+  }
+  return true;
 }
 
 // ─── Utilities ──────────────────────────────────────────────────────────
