@@ -1,12 +1,92 @@
 import './Page.css'
 import { useAuth } from '../context/AuthContext'
+import { useEffect, useState, useCallback } from 'react'
+import {
+  getCoachShare,
+  enableCoachShare,
+  disableCoachShare,
+  rotateCoachToken,
+} from '../lib/coachShare'
+import { isConfigured } from '../lib/supabase'
+
+const BASE_URL = 'https://nina-nekketsu.github.io/reptrack/#/coach/';
+
+function buildCoachLink(token) {
+  return `${BASE_URL}${token}`;
+}
 
 export default function Profile() {
-  const { user, signOut, syncing, syncError, isConfigured, syncData } = useAuth();
+  const { user, signOut, syncing, syncError, syncData } = useAuth();
+
+  // ── Coach share state ──────────────────────────────────────────────────
+  const [shareRecord, setShareRecord]   = useState(null); // coach_shares row
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareError, setShareError]     = useState(null);
+  const [copied, setCopied]             = useState(false);
+
+  const loadShare = useCallback(async () => {
+    if (!user || !isConfigured) return;
+    try {
+      const rec = await getCoachShare(user.id);
+      setShareRecord(rec);
+    } catch (err) {
+      console.error('[Profile] loadShare error:', err);
+    }
+  }, [user]);
+
+  useEffect(() => { loadShare(); }, [loadShare]);
 
   async function handleSyncNow() {
     if (user) await syncData(user.id);
   }
+
+  async function handleToggleShare(enabled) {
+    if (!user) return;
+    setShareLoading(true);
+    setShareError(null);
+    try {
+      let rec;
+      if (enabled) {
+        rec = await enableCoachShare(user.id);
+      } else {
+        rec = await disableCoachShare(user.id);
+      }
+      setShareRecord(rec);
+    } catch (err) {
+      console.error('[Profile] toggle share error:', err);
+      setShareError(err.message || 'Something went wrong');
+    } finally {
+      setShareLoading(false);
+    }
+  }
+
+  async function handleRotate() {
+    if (!user) return;
+    if (!window.confirm('Rotating the token will invalidate the current link. Continue?')) return;
+    setShareLoading(true);
+    setShareError(null);
+    try {
+      const rec = await rotateCoachToken(user.id);
+      setShareRecord(rec);
+    } catch (err) {
+      console.error('[Profile] rotate error:', err);
+      setShareError(err.message || 'Something went wrong');
+    } finally {
+      setShareLoading(false);
+    }
+  }
+
+  function handleCopy() {
+    if (!shareRecord?.token) return;
+    const link = buildCoachLink(shareRecord.token);
+    navigator.clipboard.writeText(link).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  const shareEnabled = shareRecord?.enabled === true;
+  const coachLink = shareRecord?.token ? buildCoachLink(shareRecord.token) : null;
 
   return (
     <div className="page">
@@ -45,6 +125,71 @@ export default function Profile() {
               {syncing ? 'Syncing…' : '⟳ Sync now'}
             </button>
           )}
+
+          {/* ── Coach sharing ─────────────────────────────────────────── */}
+          {isConfigured && (
+            <div className="coach-share-section">
+              <h3 className="coach-share-heading">🔗 Coach sharing</h3>
+              <p className="coach-share-desc">
+                Generate a private link so your coach can view your logs — no account needed on their end.
+              </p>
+
+              {shareError && (
+                <div className="coach-share-error">⚠ {shareError}</div>
+              )}
+
+              {/* Toggle */}
+              <div className="coach-share-toggle-row">
+                <span className="coach-share-label">
+                  {shareEnabled ? 'Sharing ON' : 'Sharing OFF'}
+                </span>
+                <button
+                  className={`coach-toggle-btn ${shareEnabled ? 'active' : ''}`}
+                  onClick={() => handleToggleShare(!shareEnabled)}
+                  disabled={shareLoading}
+                  aria-pressed={shareEnabled}
+                >
+                  {shareLoading ? '…' : shareEnabled ? 'ON' : 'OFF'}
+                </button>
+              </div>
+
+              {/* Link block — only when enabled and token exists */}
+              {shareEnabled && coachLink && (
+                <div className="coach-link-block">
+                  {/* Warning */}
+                  <div className="coach-share-warning">
+                    ⚠ Anyone with this link can view your training logs.
+                  </div>
+
+                  <label className="coach-link-label">Coach link</label>
+                  <div className="coach-link-row">
+                    <input
+                      className="coach-link-input"
+                      readOnly
+                      value={coachLink}
+                      onFocus={(e) => e.target.select()}
+                    />
+                    <button
+                      className="coach-copy-btn"
+                      onClick={handleCopy}
+                      disabled={shareLoading}
+                    >
+                      {copied ? '✓ Copied' : 'Copy'}
+                    </button>
+                  </div>
+
+                  <button
+                    className="coach-rotate-btn"
+                    onClick={handleRotate}
+                    disabled={shareLoading}
+                  >
+                    🔄 Rotate link (revokes old link)
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+          {/* ── /Coach sharing ──────────────────────────────────────────── */}
 
           <button className="profile-signout-btn" onClick={signOut}>
             Sign Out

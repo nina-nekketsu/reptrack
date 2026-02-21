@@ -12,6 +12,7 @@ import History from './pages/History'
 import Progress from './pages/Progress'
 import Profile from './pages/Profile'
 import ActiveWorkout from './pages/ActiveWorkout'
+import CoachView from './pages/CoachView'
 import SyncIndicator from './components/SyncIndicator'
 import { useState } from 'react'
 import './App.css'
@@ -75,7 +76,11 @@ function App() {
   return (
     <HashRouter>
       <AuthProvider>
-        <AppContent />
+        {/* Coach view is outside AuthProvider's guard — no login needed */}
+        <Routes>
+          <Route path="/coach/:token" element={<CoachView />} />
+          <Route path="*" element={<AppContent />} />
+        </Routes>
       </AuthProvider>
     </HashRouter>
   );

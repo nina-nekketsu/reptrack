@@ -298,3 +298,161 @@ body {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+/* ── Coach sharing section (Profile page) ──────────────────────── */
+.coach-share-section {
+  margin-top: 1rem;
+  border: 1.5px solid rgba(124,106,247,0.25);
+  border-radius: 14px;
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: rgba(124,106,247,0.04);
+}
+
+.coach-share-heading {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0;
+}
+
+.coach-share-desc {
+  font-size: 0.78rem;
+  color: #9999b3;
+  line-height: 1.5;
+}
+
+.coach-share-error {
+  background: rgba(239,68,68,0.10);
+  border: 1px solid rgba(239,68,68,0.3);
+  color: #ef4444;
+  font-size: 0.8rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+}
+
+.coach-share-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.coach-share-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.coach-toggle-btn {
+  background: #e2e2f0;
+  border: none;
+  border-radius: 100px;
+  padding: 0.4rem 1rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: #7777a0;
+  transition: background 0.15s, color 0.15s;
+  min-width: 52px;
+}
+
+.coach-toggle-btn.active {
+  background: #7c6af7;
+  color: #fff;
+}
+
+.coach-toggle-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.coach-link-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.coach-share-warning {
+  background: rgba(251,191,36,0.1);
+  border: 1px solid rgba(251,191,36,0.35);
+  color: #d97706;
+  font-size: 0.76rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.coach-link-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #9999b3;
+}
+
+.coach-link-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.coach-link-input {
+  flex: 1;
+  min-width: 0;
+  background: #f0f0fa;
+  border: 1.5px solid #d8d8f0;
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.72rem;
+  color: #4c4c80;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  outline: none;
+}
+
+.coach-copy-btn {
+  background: #7c6af7;
+  border: none;
+  border-radius: 10px;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.coach-copy-btn:hover:not(:disabled) {
+  background: #6b58e8;
+}
+
+.coach-copy-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.coach-rotate-btn {
+  background: transparent;
+  border: 1.5px solid rgba(239,68,68,0.35);
+  border-radius: 10px;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #ef4444;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.coach-rotate-btn:hover:not(:disabled) {
+  background: rgba(239,68,68,0.07);
+}
+
+.coach-rotate-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

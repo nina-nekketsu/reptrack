@@ -9,6 +9,7 @@ A mobile-first workout tracking app built with React. Runs as a static site on G
 - Session timer, progressive overload hints, personal records
 - Works fully offline — data is stored in localStorage
 - Optional Supabase sync: sign in once and your data is wherever you are
+- **Coach View**: share a private read-only link with your coach (no login required on their end)
 
 ---
 
@@ -150,8 +151,48 @@ jobs:
 | `exercise_sets` | Individual sets within a session |
 | `workout_plans` | Named workout plans |
 | `plan_exercises` | Exercises within a plan (with prescribed sets/reps) |
+| `coach_shares` | One share record per user (token, enabled flag) |
 
 All tables have RLS policies: `auth.uid() = user_id`.
+
+---
+
+## Coach View (share link feature)
+
+Lets a logged-in user generate a private link so a coach can view their training logs without creating an account.
+
+### How it works
+
+1. User opens **Profile → Coach sharing** and toggles it ON.
+2. A UUID v4 token is created in `coach_shares`. The UI shows a link like:
+   ```
+   https://nina-nekketsu.github.io/reptrack/#/coach/<token>
+   ```
+3. The coach opens the link — no login needed. They see exercises, last session sets, PRs, and a volume graph.
+4. The user can rotate the token at any time, instantly revoking the old link.
+
+### Security model
+
+- The `coach_shares` table has strict RLS: only the authenticated owner can read/write it.
+- The anon key **cannot** enumerate users or read their training data directly.
+- Coach data is served via a `SECURITY DEFINER` Supabase RPC (`get_coach_data`). This function runs as the database owner and bypasses RLS only for the specific token lookup. It returns `null` for invalid or disabled tokens.
+- Tokens are raw UUID v4 (128-bit random) — practically unguessable.
+
+### Setup
+
+After running `supabase/schema.sql`, also run `supabase/coach_share.sql` in the Supabase SQL editor:
+
+```sql
+-- In Supabase dashboard → SQL editor
+-- Paste and run the contents of supabase/coach_share.sql
+```
+
+That creates:
+- `coach_shares` table with RLS
+- `get_coach_data(uuid)` RPC function (SECURITY DEFINER)
+- Indexes for fast token lookups
+
+No frontend env changes needed — it uses the same `REACT_APP_SUPABASE_URL` and `REACT_APP_SUPABASE_ANON_KEY`.
 
 ---
 
