@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Page.css';
 import './Workouts.css';
 
@@ -369,6 +370,7 @@ function NewPlanModal({ onSave, onClose }) {
 //  Main Workouts page
 // ═══════════════════════════════════════════
 export default function Workouts() {
+  const navigate = useNavigate();
   const [plans, setPlans] = useState(loadPlans);
   const [allExercises, setAllExercises] = useState(loadAndMergeExercises);
   const [currentPlanId, setCurrentPlanId] = useState(loadCurrentPlanId);
@@ -396,7 +398,11 @@ export default function Workouts() {
 
   // ── Start session ──
   function handleStart() {
-    if (activeSession) return; // already active
+    if (activeSession && activeSession.planId === currentPlan.id) {
+      // Already active for this plan — navigate to active workout
+      navigate(`/workout/${currentPlan.id}`);
+      return;
+    }
     const session = {
       planId: currentPlan.id,
       planName: currentPlan.name,
@@ -404,6 +410,7 @@ export default function Workouts() {
     };
     setActiveSession(session);
     saveActiveSession(session);
+    navigate(`/workout/${currentPlan.id}`);
   }
 
   // ── End session ──
@@ -509,15 +516,19 @@ export default function Workouts() {
 
       {/* ── Active session banner ── */}
       {activeSession && (
-        <div className="active-session-banner">
+        <div
+          className="active-session-banner"
+          onClick={() => navigate(`/workout/${activeSession.planId}`)}
+          style={{ cursor: 'pointer' }}
+        >
           <div className="active-dot" />
           <div>
             <div style={{ fontWeight: 800 }}>{activeSession.planName}</div>
             <div style={{ fontSize: 12, fontWeight: 500, opacity: 0.85 }}>
-              Session active · {elapsed}
+              Session active · {elapsed} · Tap to resume
             </div>
           </div>
-          <button className="end-session-btn" onClick={handleEndSession}>
+          <button className="end-session-btn" onClick={(e) => { e.stopPropagation(); handleEndSession(); }}>
             End
           </button>
         </div>
@@ -554,7 +565,6 @@ export default function Workouts() {
             <button
               className={`plan-start-btn${isActive ? ' active' : ''}`}
               onClick={handleStart}
-              disabled={!!activeSession}
             >
               {isActive ? '🟢 In Progress' : '▶ Start'}
             </button>

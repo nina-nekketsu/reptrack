@@ -8,6 +8,7 @@ import Exercises from './pages/Exercises'
 import History from './pages/History'
 import Progress from './pages/Progress'
 import Profile from './pages/Profile'
+import ActiveWorkout from './pages/ActiveWorkout'
 import './App.css'
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/home" element={<Home />} />
             <Route path="/workout" element={<Workout />} />
+            <Route path="/workout/:planId" element={<ActiveWorkout />} />
             <Route path="/workouts" element={<Workouts />} />
             <Route path="/exercises" element={<Exercises />} />
             <Route path="/history" element={<History />} />
