@@ -5,8 +5,8 @@ import './BottomNav.css'
 const tabs = [
   { to: '/', label: 'Dashboard', icon: '🏠', end: true },
   { to: '/workouts', label: 'Workouts', icon: '🏋️', end: false },
+  { to: '/coach', label: 'Coach', icon: '🧠', end: false },
   { to: '/exercises', label: 'Exercises', icon: '📋', end: false },
-  { to: '/progress', label: 'Progress', icon: '📈', end: false },
   { to: '/profile', label: 'Profile', icon: '👤', end: false },
 ]
 

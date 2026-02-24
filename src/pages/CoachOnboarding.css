@@ -1,0 +1,235 @@
+/* ── Coach Onboarding ── */
+.coach-onboarding {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--c-bg);
+  padding: 0;
+}
+
+/* Progress bar */
+.co-progress {
+  height: 4px;
+  background: rgba(227, 216, 198, 0.2);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.co-progress-fill {
+  height: 100%;
+  background: var(--c-accent);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+/* Content area */
+.co-content {
+  flex: 1;
+  padding: 2rem 1.25rem;
+  max-width: 500px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.co-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--c-surface);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.co-sub {
+  font-size: 0.85rem;
+  color: rgba(227, 216, 198, 0.65);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Options list */
+.co-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.co-options--grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+}
+
+.co-option {
+  background: rgba(227, 216, 198, 0.08);
+  border: 1.5px solid rgba(227, 216, 198, 0.18);
+  border-radius: 14px;
+  padding: 1rem 1.1rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.co-option:hover {
+  background: rgba(227, 216, 198, 0.14);
+}
+
+.co-option--active {
+  background: rgba(211, 153, 50, 0.18) !important;
+  border-color: var(--c-accent) !important;
+}
+
+.co-option--compact {
+  align-items: center;
+  text-align: center;
+  padding: 0.85rem 0.5rem;
+}
+
+.co-option-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--c-surface);
+}
+
+.co-option-desc {
+  font-size: 0.78rem;
+  color: rgba(227, 216, 198, 0.55);
+  line-height: 1.4;
+}
+
+/* Textarea */
+.co-textarea {
+  width: 100%;
+  background: rgba(227, 216, 198, 0.08);
+  border: 1.5px solid rgba(227, 216, 198, 0.18);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  font-size: 0.95rem;
+  color: var(--c-surface);
+  resize: vertical;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.co-textarea:focus {
+  border-color: var(--c-accent);
+}
+
+.co-textarea::placeholder {
+  color: rgba(227, 216, 198, 0.35);
+}
+
+.co-hint {
+  font-size: 0.75rem;
+  color: rgba(227, 216, 198, 0.4);
+  margin: 0;
+}
+
+/* Plan card */
+.co-plan-card {
+  background: rgba(227, 216, 198, 0.1);
+  border: 1.5px solid rgba(211, 153, 50, 0.35);
+  border-radius: 16px;
+  padding: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.co-plan-name {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--c-accent);
+}
+
+.co-plan-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.co-plan-details span {
+  background: rgba(227, 216, 198, 0.12);
+  padding: 0.25rem 0.65rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(227, 216, 198, 0.7);
+  text-transform: capitalize;
+}
+
+.co-plan-days {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.co-plan-day {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background: rgba(227, 216, 198, 0.06);
+  border-radius: 10px;
+}
+
+.co-plan-day-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--c-surface);
+}
+
+.co-plan-day-count {
+  font-size: 0.75rem;
+  color: rgba(227, 216, 198, 0.5);
+}
+
+/* Navigation */
+.co-nav {
+  position: sticky;
+  bottom: 0;
+  padding: 1rem 1.25rem calc(1rem + env(safe-area-inset-bottom, 0));
+  background: rgba(34, 93, 101, 0.96);
+  border-top: 1px solid rgba(227, 216, 198, 0.12);
+  display: flex;
+  gap: 0.75rem;
+}
+
+.co-nav-btn {
+  flex: 1;
+  padding: 1rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+}
+
+.co-nav-btn--back {
+  background: rgba(227, 216, 198, 0.12);
+  color: var(--c-surface);
+  flex: 0 0 auto;
+  padding: 1rem 1.5rem;
+}
+
+.co-nav-btn--next {
+  background: var(--c-accent);
+  color: #123033;
+}
+
+.co-nav-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.co-nav-btn--next:hover:not(:disabled) {
+  filter: brightness(1.1);
+}

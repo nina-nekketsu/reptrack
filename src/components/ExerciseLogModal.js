@@ -1,7 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import SetTimer from './SetTimer';
 import RecordBadges from './RecordBadges';
 import VolumeGraph from './VolumeGraph';
+import CoachFeedback from './CoachFeedback';
+import RestAdvisor from './RestAdvisor';
 import { formatBuildId } from '../utils/buildInfo';
 import {
   calcTotals,
@@ -16,6 +18,9 @@ import {
 } from '../utils/exerciseHelpers';
 import { updateRemoteSession } from '../lib/sync';
 import { useAuth } from '../context/AuthContext';
+import { useCoach } from '../context/CoachContext';
+import { getPreviousSets, isIntensityAllowed } from '../lib/coachEngine';
+import './CoachComponents.css';
 
 /**
  * Full exercise logging modal — used by both Exercises page and ActiveWorkout page.
@@ -28,12 +33,23 @@ import { useAuth } from '../context/AuthContext';
  */
 export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
   const { user } = useAuth();
+  const coach = useCoach();
 
   const [activeTab, setActiveTab] = useState('log'); // 'log' | 'overview'
   const [sets, setSets] = useState([{ reps: '', weight: '' }]);
   const [editingSession, setEditingSession] = useState(null);
   const [confirmDeleteDate, setConfirmDeleteDate] = useState(null);
+  const [intensity, setIntensity] = useState('moderate');
+  const [rir, setRir] = useState('');
+  const [lastSavedSet, setLastSavedSet] = useState(null);
   const logScrollRef = useRef(null);
+
+  // Coach-related derived data
+  const isCoachActive = coach.isOnboarded && coach.coachActive;
+  const previousSets = useMemo(
+    () => exercise?.id ? getPreviousSets(exercise.id) : [],
+    [exercise?.id]
+  );
 
   // When opening an exercise, pre-populate sets if already logged in the current active workout session
   useEffect(() => {
@@ -156,12 +172,22 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
     const validSets = sets.filter((s) => s.reps !== '' || s.weight !== '');
     if (validSets.length === 0) return;
 
-    const best = bestSet(validSets);
+    // Enrich sets with intensity/RIR if coach is active
+    const enrichedSets = isCoachActive
+      ? validSets.map(s => ({ ...s, intensity, rir: rir !== '' ? Number(rir) : undefined }))
+      : validSets;
+
+    const best = bestSet(enrichedSets);
     const baseSession = {
-      sets: validSets,
+      sets: enrichedSets,
       bestSet: best,
-      ...calcTotals(validSets),
+      ...calcTotals(enrichedSets),
     };
+
+    // Track last saved set for coach feedback
+    if (isCoachActive && enrichedSets.length > 0) {
+      setLastSavedSet(enrichedSets[enrichedSets.length - 1]);
+    }
 
     const currentLogs = loadLogs();
     const existingSessions = currentLogs[exercise.id] || [];
@@ -322,6 +348,53 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
                   <span className="total-value">{liveTotals.totalVolume.toLocaleString()} kg</span>
                 </div>
               </div>
+
+              {/* ── Coach: Intensity & RIR ── */}
+              {isCoachActive && (
+                <>
+                  <div className="section-label">Intensity</div>
+                  <div className="intensity-row">
+                    {['light', 'moderate', 'hard', 'all-out'].map(level => (
+                      <button
+                        key={level}
+                        className={`intensity-chip ${intensity === level ? 'active' : ''}`}
+                        onClick={() => setIntensity(level)}
+                        disabled={!isIntensityAllowed(level, coach.weeksActive, coach.canUseAllOut)}
+                      >
+                        {level}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="rir-input-row">
+                    <span className="rir-label">RIR (reps in reserve):</span>
+                    <input
+                      className="rir-input"
+                      type="number"
+                      min="0"
+                      max="10"
+                      placeholder={coach.targetRIR}
+                      value={rir}
+                      onChange={e => setRir(e.target.value)}
+                    />
+                  </div>
+
+                  <RestAdvisor goal={coach.profile.goal} intensity={intensity} />
+                </>
+              )}
+
+              {/* ── Coach Feedback (after logging) ── */}
+              {isCoachActive && lastSavedSet && (
+                <CoachFeedback
+                  exerciseId={exercise.id}
+                  currentSet={lastSavedSet}
+                  previousSets={previousSets}
+                  goal={coach.profile.goal}
+                  targetReps={null}
+                  encouragementStyle={coach.profile.encouragementStyle}
+                  feedbackFrequency={coach.profile.feedbackFrequency}
+                  metadata={coach.metadata}
+                />
+              )}
 
               <button className="back-to-top-btn" onClick={scrollToTop} type="button">
                 ↑ Back to timer

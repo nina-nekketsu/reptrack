@@ -1,0 +1,102 @@
+/* ── Coach Dashboard ── */
+.coach-page {
+  gap: 12px;
+}
+
+.coach-heading {
+  color: var(--c-surface);
+}
+
+.coach-sub {
+  color: rgba(227, 216, 198, 0.55) !important;
+  font-style: italic;
+}
+
+.coach-card {
+  background: var(--c-surface) !important;
+  border-color: var(--c-border) !important;
+}
+
+.coach-meta {
+  font-size: 0.78rem;
+  color: var(--c-muted);
+  margin-top: 2px;
+}
+
+/* Stats grid */
+.coach-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.coach-stat-card {
+  text-align: center;
+  padding: 12px 8px !important;
+  background: var(--c-surface) !important;
+  border-color: var(--c-border) !important;
+}
+
+.coach-stat-value {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--c-primary);
+}
+
+.coach-stat-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--c-muted);
+  margin-top: 2px;
+}
+
+/* Nudge */
+.coach-nudge {
+  font-size: 0.78rem;
+  color: var(--c-accent);
+  font-weight: 600;
+  padding: 6px 0 0;
+}
+
+/* Philosophy */
+.coach-philosophy {
+  font-size: 0.85rem;
+  color: var(--c-muted);
+  line-height: 1.6;
+  font-style: italic;
+}
+
+/* Training days */
+.coach-days-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.coach-day-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  background: rgba(34, 93, 101, 0.05);
+  border-radius: 10px;
+}
+
+.coach-day-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.coach-day-count {
+  font-size: 0.75rem;
+  color: var(--c-muted);
+}
+
+/* Settings button */
+.coach-settings-btn {
+  margin-top: 4px;
+}

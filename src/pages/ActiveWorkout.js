@@ -1,12 +1,21 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ExerciseLogModal from '../components/ExerciseLogModal';
+import WorkoutSummary from '../components/WorkoutSummary';
 import { useTimer } from '../context/TimerContext';
+import { useCoach } from '../context/CoachContext';
 import { loadLogs } from '../utils/exerciseHelpers';
+import {
+  detectOverload,
+  getPreviousSets,
+  calculateFatigueAdjustment,
+  generateSessionSummary,
+} from '../lib/coachEngine';
 import './Page.css';
 import './Exercises.css';
 import './Workouts.css';
 import './ActiveWorkout.css';
+import '../components/CoachComponents.css';
 
 // Muscle-group emoji map (same as Workouts.js)
 const GROUP_EMOJI = {
@@ -72,6 +81,7 @@ export default function ActiveWorkout() {
   const { planId } = useParams();
   const navigate = useNavigate();
   const timer = useTimer();
+  const coach = useCoach();
 
   const [plans] = useState(loadPlans);
   const [allExercises] = useState(loadExercises);
@@ -79,8 +89,21 @@ export default function ActiveWorkout() {
   const [activeSession, setActiveSession] = useState(loadActiveSession);
   const [elapsed, setElapsed] = useState('0:00');
   const [selectedExercise, setSelectedExercise] = useState(null);
+  const [showSummary, setShowSummary] = useState(false);
+  const [summaryData, setSummaryData] = useState(null);
 
   const plan = plans.find((p) => p.id === planId);
+
+  // Activate coach when workout starts
+  useEffect(() => {
+    if (coach.isOnboarded && activeSession) {
+      coach.activateCoach();
+    }
+    return () => {
+      // Don't deactivate here — let handleEndWorkout do it
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSession, coach.isOnboarded]);
 
   // If no plan found or no active session for this plan, start one or redirect
   useEffect(() => {
@@ -132,9 +155,64 @@ export default function ActiveWorkout() {
   const totalExercises = plan ? plan.exercises.length : 0;
 
   function handleEndWorkout() {
-    timer.stopAll(); // Stop all timers when workout ends
+    timer.stopAll();
+
+    // Generate workout summary if coach is active
+    if (coach.isOnboarded && plan && activeSession) {
+      const currentLogs = loadLogs();
+      const sessionStart = new Date(activeSession.startedAt);
+      const exerciseResults = [];
+
+      for (const planEx of plan.exercises) {
+        const exSessions = currentLogs[planEx.exerciseId] || [];
+        const sessionsDuringWorkout = exSessions.filter(
+          s => new Date(s.date) >= sessionStart
+        );
+        if (sessionsDuringWorkout.length > 0) {
+          const latestSession = sessionsDuringWorkout[sessionsDuringWorkout.length - 1];
+          const prevSets = getPreviousSets(planEx.exerciseId, activeSession.startedAt);
+          const lastSet = latestSession.sets[latestSession.sets.length - 1] || {};
+          const overload = detectOverload(planEx.exerciseId, lastSet, prevSets);
+          const ex = allExercises.find(e => e.id === planEx.exerciseId);
+          exerciseResults.push({
+            exerciseName: ex?.name || planEx.exerciseId,
+            overload,
+            setsLogged: latestSession.sets.length,
+            volume: latestSession.totalVolume || 0,
+          });
+        }
+      }
+
+      if (exerciseResults.length > 0) {
+        const duration = Date.now() - sessionStart.getTime();
+        const summary = generateSessionSummary(exerciseResults, duration, coach.profile.goal);
+        setSummaryData(summary);
+        setShowSummary(true);
+
+        // Update coaching metadata
+        const fatigueAdj = calculateFatigueAdjustment(exerciseResults.map(r => r.overload));
+        coach.updateMetadata({
+          fatigueScore: Math.max(0, Math.min(100, coach.metadata.fatigueScore + fatigueAdj)),
+          totalSessions: coach.metadata.totalSessions + 1,
+          lastSessionDate: new Date().toISOString(),
+        });
+
+        coach.deactivateCoach();
+        setActiveSession(null);
+        saveActiveSession(null);
+        return; // Don't navigate yet — show summary first
+      }
+    }
+
+    coach.deactivateCoach();
     setActiveSession(null);
     saveActiveSession(null);
+    navigate('/workouts', { replace: true });
+  }
+
+  function handleCloseSummary() {
+    setShowSummary(false);
+    setSummaryData(null);
     navigate('/workouts', { replace: true });
   }
 
@@ -252,6 +330,15 @@ export default function ActiveWorkout() {
           logs={logs}
           onClose={closeExerciseLog}
           onSaved={handleLogSaved}
+        />
+      )}
+
+      {/* Post-workout summary */}
+      {showSummary && summaryData && (
+        <WorkoutSummary
+          summary={summaryData}
+          planId={coach.profile.planId}
+          onClose={handleCloseSummary}
         />
       )}
     </div>

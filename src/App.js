@@ -1,6 +1,7 @@
 import { HashRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { TimerProvider } from './context/TimerContext'
+import { CoachProvider } from './context/CoachContext'
 import BottomNav from './components/BottomNav'
 import AuthScreen from './components/AuthScreen'
 import SetupScreen from './components/SetupScreen'
@@ -14,6 +15,8 @@ import Progress from './pages/Progress'
 import Profile from './pages/Profile'
 import ActiveWorkout from './pages/ActiveWorkout'
 import CoachView from './pages/CoachView'
+import Coach from './pages/Coach'
+import CoachSettings from './pages/CoachSettings'
 import SyncIndicator from './components/SyncIndicator'
 import UpdateBanner from './components/UpdateBanner'
 import { useState } from 'react'
@@ -54,25 +57,29 @@ function AppContent() {
   // Authenticated (or running locally without config)
   return (
     <TimerProvider>
-      <div className="app">
-        <UpdateBanner />
-        <SyncBar />
-        <SyncIndicator />
-        <main className="app-main">
-          <Routes>
-            <Route path="/"              element={<Dashboard />} />
-            <Route path="/home"          element={<Home />} />
-            <Route path="/workout"       element={<Workout />} />
-            <Route path="/workout/:planId" element={<ActiveWorkout />} />
-            <Route path="/workouts"      element={<Workouts />} />
-            <Route path="/exercises"     element={<Exercises />} />
-            <Route path="/history"       element={<History />} />
-            <Route path="/progress"      element={<Progress />} />
-            <Route path="/profile"       element={<Profile />} />
-          </Routes>
-        </main>
-        <BottomNav />
-      </div>
+      <CoachProvider>
+        <div className="app">
+          <UpdateBanner />
+          <SyncBar />
+          <SyncIndicator />
+          <main className="app-main">
+            <Routes>
+              <Route path="/"              element={<Dashboard />} />
+              <Route path="/home"          element={<Home />} />
+              <Route path="/workout"       element={<Workout />} />
+              <Route path="/workout/:planId" element={<ActiveWorkout />} />
+              <Route path="/workouts"      element={<Workouts />} />
+              <Route path="/exercises"     element={<Exercises />} />
+              <Route path="/history"       element={<History />} />
+              <Route path="/progress"      element={<Progress />} />
+              <Route path="/profile"       element={<Profile />} />
+              <Route path="/coach"         element={<Coach />} />
+              <Route path="/coach/settings" element={<CoachSettings />} />
+            </Routes>
+          </main>
+          <BottomNav />
+        </div>
+      </CoachProvider>
     </TimerProvider>
   );
 }
