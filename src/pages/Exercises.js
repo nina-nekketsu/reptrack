@@ -8,11 +8,14 @@ import {
   loadLogs,
   saveExercises,
   getSessionsDesc,
+  deleteExerciseWithSessions,
 } from '../utils/exerciseHelpers';
+import { useAuth } from '../context/AuthContext';
 
 const MUSCLE_GROUPS = ['All', 'Chest', 'Back', 'Legs', 'Shoulders', 'Arms', 'Core'];
 
 export default function Exercises() {
+  const { user } = useAuth();
   const [exercises, setExercises] = useState(loadExercises);
   const [logs, setLogs] = useState(loadLogs);
   const [filter, setFilter] = useState('All');
@@ -21,6 +24,7 @@ export default function Exercises() {
   const [newName, setNewName] = useState('');
   const [newGroup, setNewGroup] = useState('Chest');
   const [historyFor, setHistoryFor] = useState(null);
+  const [deleteExId, setDeleteExId] = useState(null); // exercise pending deletion
 
   const filtered =
     filter === 'All' ? exercises : exercises.filter((e) => e.muscleGroup === filter);
@@ -34,6 +38,10 @@ export default function Exercises() {
   }
 
   function handleLogSaved(updatedLogs) {
+    setLogs(updatedLogs);
+  }
+
+  function handleLogsChanged(updatedLogs) {
     setLogs(updatedLogs);
   }
 
@@ -62,7 +70,32 @@ export default function Exercises() {
     return { diff, up: diff > 0 };
   }
 
+  function sessionCount(exerciseId) {
+    return (logs[exerciseId] || []).length;
+  }
+
+  function handleDeleteExerciseClick(e, exerciseId) {
+    e.stopPropagation();
+    setDeleteExId(exerciseId);
+  }
+
+  function handleConfirmDeleteExercise() {
+    if (!deleteExId) return;
+    const { updatedExercises, updatedLogs } = deleteExerciseWithSessions(deleteExId, user?.id);
+    setExercises(updatedExercises);
+    setLogs(updatedLogs);
+    setDeleteExId(null);
+    // Close history modal if it was open for the deleted exercise
+    if (historyFor === deleteExId) setHistoryFor(null);
+  }
+
+  function handleCancelDeleteExercise() {
+    setDeleteExId(null);
+  }
+
   const historyExercise = exercises.find((e) => e.id === historyFor);
+  const deleteExercise  = exercises.find((e) => e.id === deleteExId);
+  const deleteExSessions = deleteExId ? sessionCount(deleteExId) : 0;
 
   return (
     <div className="page">
@@ -110,6 +143,14 @@ export default function Exercises() {
               <div className="ex-actions" onClick={(e) => e.stopPropagation()}>
                 <button className="icon-btn" onClick={() => openLog(ex)} title="Log session">
                   ＋
+                </button>
+                <button
+                  className="icon-btn icon-btn--danger"
+                  onClick={(e) => handleDeleteExerciseClick(e, ex.id)}
+                  title="Delete exercise"
+                  aria-label="Delete exercise"
+                >
+                  🗑
                 </button>
               </div>
             </div>
@@ -169,7 +210,35 @@ export default function Exercises() {
           logs={logs}
           onClose={() => setHistoryFor(null)}
           onOpenLog={openLog}
+          onLogsChanged={handleLogsChanged}
         />
+      )}
+
+      {/* ── Delete exercise confirm modal ── */}
+      {deleteExId && deleteExercise && (
+        <div className="confirm-overlay" onClick={handleCancelDeleteExercise}>
+          <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="confirm-icon">⚠️</div>
+            <p className="confirm-message">
+              Delete <strong>{deleteExercise.name}</strong>?
+            </p>
+            {deleteExSessions > 0 ? (
+              <p className="confirm-sub">
+                This will also delete {deleteExSessions} logged session{deleteExSessions !== 1 ? 's' : ''}. This cannot be undone.
+              </p>
+            ) : (
+              <p className="confirm-sub">This cannot be undone.</p>
+            )}
+            <div className="confirm-actions">
+              <button className="btn-danger" onClick={handleConfirmDeleteExercise}>
+                Delete
+              </button>
+              <button className="btn-secondary" onClick={handleCancelDeleteExercise}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -61,3 +61,22 @@
 .nav-tab {
   position: relative;
 }
+
+/* === Warm palette overrides === */
+.bottom-nav {
+  background: rgba(34, 93, 101, 0.96);
+  border-top: 1px solid rgba(227, 216, 198, 0.18);
+}
+
+.nav-tab {
+  color: rgba(227, 216, 198, 0.65);
+}
+
+.nav-tab.active {
+  color: var(--c-accent);
+}
+
+.nav-badge {
+  background: var(--c-accent);
+  color: #123033;
+}

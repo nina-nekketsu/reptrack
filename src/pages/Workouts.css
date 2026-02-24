@@ -520,3 +520,32 @@
 .workout-modal__actions .btn-secondary {
   flex: 1;
 }
+
+/* === Warm palette overrides === */
+.workouts-page,
+.page {
+  color: var(--c-text);
+}
+
+.plan-card {
+  background: var(--c-surface) !important;
+  border: 1px solid var(--c-border) !important;
+}
+
+.plan-card .plan-name {
+  color: var(--c-text);
+}
+
+.plan-card .plan-meta {
+  color: var(--c-muted);
+}
+
+.start-btn {
+  background: var(--c-primary) !important;
+  color: var(--c-surface) !important;
+}
+
+.edit-btn {
+  background: var(--c-secondary) !important;
+  color: var(--c-surface) !important;
+}

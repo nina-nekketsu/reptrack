@@ -258,3 +258,18 @@
   text-align: center;
   padding-top: 0.5rem;
 }
+
+/* === Warm palette overrides === */
+.coach-view {
+  background: var(--c-bg);
+  color: var(--c-surface);
+}
+
+.coach-card {
+  background: rgba(227, 216, 198, 0.12);
+  border: 1px solid rgba(227, 216, 198, 0.18);
+}
+
+.coach-title {
+  color: var(--c-accent);
+}
