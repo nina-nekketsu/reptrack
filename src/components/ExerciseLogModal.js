@@ -35,12 +35,44 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
   const [confirmDeleteDate, setConfirmDeleteDate] = useState(null);
   const logScrollRef = useRef(null);
 
-  // Always start at the top when opening a new exercise
+  // When opening an exercise, pre-populate sets if already logged in the current active workout session
   useEffect(() => {
     logScrollRef.current?.scrollTo({ top: 0 });
     setActiveTab('log');
-    setSets([{ reps: '', weight: '' }]);
     setEditingSession(null);
+
+    // Check if this exercise was already logged during the current active workout session
+    let initialSets = [{ reps: '', weight: '' }];
+    try {
+      const activeSessionRaw = localStorage.getItem('activeWorkoutSession');
+      if (activeSessionRaw && exercise?.id) {
+        const activeWorkoutSession = JSON.parse(activeSessionRaw);
+        const sessionStart = activeWorkoutSession?.startedAt
+          ? new Date(activeWorkoutSession.startedAt)
+          : null;
+        if (sessionStart) {
+          const currentLogs = loadLogs();
+          const exerciseSessions = currentLogs[exercise.id] || [];
+          // Find sessions logged after the workout started (most recent first)
+          const sessionsDuringWorkout = exerciseSessions
+            .filter((s) => new Date(s.date) >= sessionStart)
+            .sort((a, b) => new Date(b.date) - new Date(a.date));
+          if (sessionsDuringWorkout.length > 0) {
+            // Pre-populate with the most recently logged sets + one empty row
+            const prevSets = sessionsDuringWorkout[0].sets.map((s) => ({
+              reps: s.reps?.toString() ?? '',
+              weight: s.weight?.toString() ?? '',
+            }));
+            // Add empty row at the bottom for adding more sets
+            initialSets = [...prevSets, { reps: '', weight: '' }];
+          }
+        }
+      }
+    } catch (e) {
+      // Fall back to empty row if anything goes wrong
+    }
+
+    setSets(initialSets);
   }, [exercise?.id]);
 
   const editingDateLabel = editingSession
@@ -420,7 +452,7 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
                 onClick={saveSession}
                 disabled={liveTotals.totalReps === 0 && liveTotals.totalVolume === 0}
               >
-                Save Session
+                Done
               </button>
               <button type="button" className="btn-secondary" onClick={closeModal}>
                 Cancel
