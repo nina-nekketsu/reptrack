@@ -31,17 +31,20 @@ export async function pullAll(userId) {
   setStatus('syncing');
 
   try {
-    const [exRes, plansRes, logsRes, settingsRes] = await Promise.all([
+    const [exRes, plansRes, logsRes, settingsRes, timerRes] = await Promise.all([
       supabase.from('exercises').select('*').eq('user_id', userId),
       supabase.from('workout_plans').select('*').eq('user_id', userId),
       supabase.from('exercise_logs').select('*').eq('user_id', userId),
       supabase.from('user_settings').select('*').eq('user_id', userId).maybeSingle(),
+      supabase.from('workout_timer_state').select('*').eq('user_id', userId).maybeSingle(),
     ]);
 
     if (exRes.error) throw exRes.error;
     if (plansRes.error) throw plansRes.error;
     if (logsRes.error) throw logsRes.error;
     if (settingsRes.error) throw settingsRes.error;
+    // Timer state pull is best-effort — don't throw on error
+    if (timerRes.error) console.warn('[sync] timer state pull failed:', timerRes.error);
 
     // ── Merge exercises ──
     if (exRes.data && exRes.data.length > 0) {
@@ -112,14 +115,23 @@ export async function pullAll(userId) {
       if (settings.currentPlanId) {
         localStorage.setItem('currentPlanId', settings.currentPlanId);
       }
-      if (settings.autoStartTimer !== undefined) {
-        localStorage.setItem('autoStartTimer', JSON.stringify(settings.autoStartTimer));
+      if (settings.timerAutoStart !== undefined) {
+        localStorage.setItem('timerAutoStart', settings.timerAutoStart ? 'true' : 'false');
       }
-      // Restore restDefaults_* keys
-      if (settings.restDefaults) {
-        for (const [key, val] of Object.entries(settings.restDefaults)) {
-          localStorage.setItem(key, JSON.stringify(val));
-        }
+      // Restore timerRestDefaults (single JSON map)
+      if (settings.timerRestDefaults) {
+        localStorage.setItem('timerRestDefaults', JSON.stringify(settings.timerRestDefaults));
+      }
+    }
+
+    // ── Merge timer state (cross-device) ──
+    // Remote timer state takes precedence if it's newer than local
+    if (timerRes.data && timerRes.data.state) {
+      const localTimer = safeParseJSON(localStorage.getItem('workoutTimerState'), null);
+      const remoteTimer = timerRes.data.state;
+      // Use remote if no local state, or if remote is a running timer and local is idle
+      if (!localTimer || localTimer.phase === 'idle') {
+        localStorage.setItem('workoutTimerState', JSON.stringify(remoteTimer));
       }
     }
 
@@ -218,22 +230,16 @@ export async function pushSettings(userId) {
   const currentPlanId = localStorage.getItem('currentPlanId');
   if (currentPlanId) settings.currentPlanId = currentPlanId;
 
-  // autoStartTimer
-  const autoStart = localStorage.getItem('autoStartTimer');
+  // timerAutoStart (boolean stored as 'true'/'false' string)
+  const autoStart = localStorage.getItem('timerAutoStart');
   if (autoStart !== null) {
-    settings.autoStartTimer = safeParseJSON(autoStart, false);
+    settings.timerAutoStart = autoStart === 'true';
   }
 
-  // restDefaults_* keys
-  const restDefaults = {};
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key && key.startsWith('restDefaults_')) {
-      restDefaults[key] = safeParseJSON(localStorage.getItem(key), null);
-    }
-  }
-  if (Object.keys(restDefaults).length > 0) {
-    settings.restDefaults = restDefaults;
+  // timerRestDefaults (single JSON map: { exerciseId: seconds, ... })
+  const restDefaults = safeParseJSON(localStorage.getItem('timerRestDefaults'), null);
+  if (restDefaults && Object.keys(restDefaults).length > 0) {
+    settings.timerRestDefaults = restDefaults;
   }
 
   const { error } = await supabase.from('user_settings').upsert({

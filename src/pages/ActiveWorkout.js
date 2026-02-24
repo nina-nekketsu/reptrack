@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ExerciseLogModal from '../components/ExerciseLogModal';
+import { useTimer } from '../context/TimerContext';
 import { loadLogs } from '../utils/exerciseHelpers';
 import './Page.css';
 import './Exercises.css';
@@ -70,6 +71,7 @@ function loadExercises() {
 export default function ActiveWorkout() {
   const { planId } = useParams();
   const navigate = useNavigate();
+  const timer = useTimer();
 
   const [plans] = useState(loadPlans);
   const [allExercises] = useState(loadExercises);
@@ -130,6 +132,7 @@ export default function ActiveWorkout() {
   const totalExercises = plan ? plan.exercises.length : 0;
 
   function handleEndWorkout() {
+    timer.stopAll(); // Stop all timers when workout ends
     setActiveSession(null);
     saveActiveSession(null);
     navigate('/workouts', { replace: true });

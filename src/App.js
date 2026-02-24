@@ -1,5 +1,6 @@
 import { HashRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { TimerProvider } from './context/TimerContext'
 import BottomNav from './components/BottomNav'
 import AuthScreen from './components/AuthScreen'
 import SetupScreen from './components/SetupScreen'
@@ -52,25 +53,27 @@ function AppContent() {
 
   // Authenticated (or running locally without config)
   return (
-    <div className="app">
-      <UpdateBanner />
-      <SyncBar />
-      <SyncIndicator />
-      <main className="app-main">
-        <Routes>
-          <Route path="/"              element={<Dashboard />} />
-          <Route path="/home"          element={<Home />} />
-          <Route path="/workout"       element={<Workout />} />
-          <Route path="/workout/:planId" element={<ActiveWorkout />} />
-          <Route path="/workouts"      element={<Workouts />} />
-          <Route path="/exercises"     element={<Exercises />} />
-          <Route path="/history"       element={<History />} />
-          <Route path="/progress"      element={<Progress />} />
-          <Route path="/profile"       element={<Profile />} />
-        </Routes>
-      </main>
-      <BottomNav />
-    </div>
+    <TimerProvider>
+      <div className="app">
+        <UpdateBanner />
+        <SyncBar />
+        <SyncIndicator />
+        <main className="app-main">
+          <Routes>
+            <Route path="/"              element={<Dashboard />} />
+            <Route path="/home"          element={<Home />} />
+            <Route path="/workout"       element={<Workout />} />
+            <Route path="/workout/:planId" element={<ActiveWorkout />} />
+            <Route path="/workouts"      element={<Workouts />} />
+            <Route path="/exercises"     element={<Exercises />} />
+            <Route path="/history"       element={<History />} />
+            <Route path="/progress"      element={<Progress />} />
+            <Route path="/profile"       element={<Profile />} />
+          </Routes>
+        </main>
+        <BottomNav />
+      </div>
+    </TimerProvider>
   );
 }
 

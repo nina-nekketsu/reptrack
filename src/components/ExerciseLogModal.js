@@ -202,7 +202,7 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
               <p className="modal-sub">{exercise.muscleGroup} · Log your sets</p>
             </div>
 
-            <SetTimer exerciseId={exercise.id} onClose={closeModal} />
+            <SetTimer exerciseId={exercise.id} />
           </div>
           <div className="log-tabs-wrapper">
             <div className="log-tabs" role="tablist" aria-label="Exercise tabs">

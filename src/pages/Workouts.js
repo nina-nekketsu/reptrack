@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTimer } from '../context/TimerContext';
 import { pushPlan, pushExercise, pushSettings } from '../lib/sync';
 import './Page.css';
 import './Workouts.css';
@@ -374,6 +375,7 @@ function NewPlanModal({ onSave, onClose }) {
 export default function Workouts() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const timer = useTimer();
   const [plans, setPlans] = useState(loadPlans);
   const [allExercises, setAllExercises] = useState(loadAndMergeExercises);
   const [currentPlanId, setCurrentPlanId] = useState(loadCurrentPlanId);
@@ -418,6 +420,7 @@ export default function Workouts() {
 
   // ── End session ──
   function handleEndSession() {
+    timer.stopAll(); // Stop all timers when workout ends
     setActiveSession(null);
     saveActiveSession(null);
     setElapsed('');
