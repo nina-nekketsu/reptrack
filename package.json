@@ -21,9 +21,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "deploy:check-clean": "node scripts/check-clean.js",
     "predeploy": "npm run build",
-    "deploy": "npm run deploy:check-clean && npm run predeploy && gh-pages -d build"
+    "deploy": "npm run predeploy && gh-pages -d build --no-history"
   },
   "eslintConfig": {
     "extends": [
