@@ -52,6 +52,18 @@
   margin-top: 2px;
 }
 
+/* Deload */
+.coach-deload-card {
+  background: rgba(174, 82, 56, 0.08) !important;
+  border-color: rgba(174, 82, 56, 0.2) !important;
+}
+
+.coach-deload-text {
+  font-size: 0.82rem;
+  color: var(--c-muted);
+  line-height: 1.5;
+}
+
 /* Nudge */
 .coach-nudge {
   font-size: 0.78rem;
@@ -94,6 +106,57 @@
 .coach-day-count {
   font-size: 0.75rem;
   color: var(--c-muted);
+}
+
+/* FAQ */
+.coach-faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+}
+
+.coach-faq-item {
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.coach-faq-q {
+  width: 100%;
+  background: rgba(34, 93, 101, 0.05);
+  border: none;
+  padding: 10px 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--c-text);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.coach-faq-q:hover {
+  background: rgba(34, 93, 101, 0.1);
+}
+
+.coach-faq-arrow {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--c-muted);
+  flex-shrink: 0;
+  width: 20px;
+  text-align: center;
+}
+
+.coach-faq-a {
+  padding: 8px 12px 12px;
+  font-size: 0.78rem;
+  color: var(--c-muted);
+  line-height: 1.5;
+  background: rgba(34, 93, 101, 0.03);
 }
 
 /* Settings button */

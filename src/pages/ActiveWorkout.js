@@ -91,6 +91,7 @@ export default function ActiveWorkout() {
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [showSummary, setShowSummary] = useState(false);
   const [summaryData, setSummaryData] = useState(null);
+  const [warmupDismissed, setWarmupDismissed] = useState(false);
 
   const plan = plans.find((p) => p.id === planId);
 
@@ -266,6 +267,33 @@ export default function ActiveWorkout() {
         </div>
       </div>
 
+      {/* Warm-up prompt — PRD Section 5.4.3 */}
+      {coach.isOnboarded && !warmupDismissed && completedCount === 0 && (
+        <div className="aw-warmup-banner">
+          <div className="aw-warmup-text">
+            <strong>10-min warm-up?</strong>
+            <span>Start with moderate steady-state cardio. It prevents injury and counts toward your 150-min weekly target.</span>
+          </div>
+          <div className="aw-warmup-actions">
+            <button
+              className="aw-warmup-btn aw-warmup-btn--yes"
+              onClick={() => {
+                coach.addCardioLog({ type: 'other', minutes: 10 });
+                setWarmupDismissed(true);
+              }}
+            >
+              Done it
+            </button>
+            <button
+              className="aw-warmup-btn aw-warmup-btn--skip"
+              onClick={() => setWarmupDismissed(true)}
+            >
+              Skip
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Exercise list */}
       <div className="aw-exercise-list">
         {plan.exercises.map((planEx, i) => {
@@ -338,6 +366,7 @@ export default function ActiveWorkout() {
         <WorkoutSummary
           summary={summaryData}
           planId={coach.profile.planId}
+          cardioMinutes={coach.isOnboarded ? coach.weeklyCardioMinutes : null}
           onClose={handleCloseSummary}
         />
       )}

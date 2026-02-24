@@ -99,6 +99,21 @@ const exerciseLibrary = [
   { id: 'lib-russian-twist', name: 'Russian Twist',             muscleGroup: 'Core',      type: 'Strength', category: 'isolation', equipment: ['bodyweight'],             alternatives: ['lib-woodchop'] },
   { id: 'lib-woodchop',      name: 'Cable Woodchop',            muscleGroup: 'Core',      type: 'Strength', category: 'isolation', equipment: ['cable'],                  alternatives: ['lib-russian-twist'] },
   { id: 'lib-pallof-press',  name: 'Pallof Press',              muscleGroup: 'Core',      type: 'Strength', category: 'isolation', equipment: ['cable', 'band'],          alternatives: ['lib-plank'] },
+
+  // ── TRAPS ─────────────────────────────────────────────────────────────
+  { id: 'lib-bb-shrug',       name: 'Barbell Shrug',             muscleGroup: 'Traps',     type: 'Strength', category: 'isolation', equipment: ['barbell'],                alternatives: ['lib-db-shrug', 'lib-trap-bar-shrug'] },
+  { id: 'lib-db-shrug',       name: 'Dumbbell Shrug',            muscleGroup: 'Traps',     type: 'Strength', category: 'isolation', equipment: ['dumbbell'],               alternatives: ['lib-bb-shrug'] },
+  { id: 'lib-trap-bar-shrug', name: 'Trap Bar Shrug',            muscleGroup: 'Traps',     type: 'Strength', category: 'isolation', equipment: ['barbell'],                alternatives: ['lib-bb-shrug', 'lib-db-shrug'] },
+  { id: 'lib-upright-row',    name: 'Upright Row',               muscleGroup: 'Traps',     type: 'Strength', category: 'compound',  equipment: ['barbell'],                alternatives: ['lib-db-shrug', 'lib-cable-upright-row'] },
+  { id: 'lib-cable-upright-row', name: 'Cable Upright Row',      muscleGroup: 'Traps',     type: 'Strength', category: 'compound',  equipment: ['cable'],                  alternatives: ['lib-upright-row'] },
+  { id: 'lib-smith-shrug',    name: 'Smith Machine Shrug',       muscleGroup: 'Traps',     type: 'Strength', category: 'isolation', equipment: ['smith'],                  alternatives: ['lib-bb-shrug'] },
+
+  // ── FOREARMS ──────────────────────────────────────────────────────────
+  { id: 'lib-wrist-curl',     name: 'Wrist Curl',                muscleGroup: 'Forearms',  type: 'Strength', category: 'isolation', equipment: ['barbell'],                alternatives: ['lib-db-wrist-curl'] },
+  { id: 'lib-db-wrist-curl',  name: 'Dumbbell Wrist Curl',       muscleGroup: 'Forearms',  type: 'Strength', category: 'isolation', equipment: ['dumbbell'],               alternatives: ['lib-wrist-curl'] },
+  { id: 'lib-reverse-curl',   name: 'Reverse Curl',              muscleGroup: 'Forearms',  type: 'Strength', category: 'isolation', equipment: ['barbell'],                alternatives: ['lib-hammer-curl'] },
+  { id: 'lib-farmer-walk',    name: 'Farmer\'s Walk',            muscleGroup: 'Forearms',  type: 'Strength', category: 'compound',  equipment: ['dumbbell'],               alternatives: ['lib-bb-shrug'] },
+  { id: 'lib-plate-pinch',    name: 'Plate Pinch Hold',          muscleGroup: 'Forearms',  type: 'Strength', category: 'isolation', equipment: ['other'],                  alternatives: ['lib-wrist-curl'] },
 ];
 
 // ── Lookup helpers ──────────────────────────────────────────────────────

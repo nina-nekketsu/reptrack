@@ -4,13 +4,25 @@
 
 import { loadLogs } from '../utils/exerciseHelpers';
 
-// ── Rest time recommendations (seconds) ─────────────────────────────────
+// ── Rest time recommendations (seconds) — ranges from PRD Section 5.4.8 ──
 const REST_TABLE = {
-  hypertrophy: { light: 60, moderate: 120, hard: 180, 'all-out': 240 },
-  strength:    { light: 120, moderate: 150, hard: 240, 'all-out': 300 },
+  hypertrophy: {
+    light:     { min: 30,  max: 60 },
+    moderate:  { min: 60,  max: 120 },
+    hard:      { min: 120, max: 240 },
+    'all-out': { min: 120, max: 240 },
+  },
+  strength: {
+    light:     { min: 60,  max: 120 },
+    moderate:  { min: 120, max: 180 },
+    hard:      { min: 180, max: 300 },
+    'all-out': { min: 180, max: 300 },
+  },
+  superset: { min: 15, max: 90 },
 };
 
-export function getRecommendedRest(goal, intensity) {
+export function getRecommendedRest(goal, intensity, isSuperset = false) {
+  if (isSuperset) return REST_TABLE.superset;
   const table = REST_TABLE[goal] || REST_TABLE.hypertrophy;
   return table[intensity] || table.moderate;
 }
@@ -105,78 +117,82 @@ export function getPreviousSets(exerciseId, beforeDate) {
 }
 
 // ── Coaching message generation ─────────────────────────────────────────
+// Key phrases from PRD Section 6.2 woven in contextually:
+//   "Harder than last time", "This is a marathon, not a sprint",
+//   "Just show up", "There are no rules", "Effort overrides variety",
+//   "Train smarter, not just harder", "Zoom out"
 const MESSAGES = {
   improved: {
     soft: [
-      'Nice work! You improved.',
-      'Great effort, keep it up!',
-      'You\'re making progress!',
+      'Nice work! You improved — that\'s what matters.',
+      'Great effort, keep it up! Consistency is paying off.',
+      'You\'re making progress! This is why showing up matters.',
     ],
     balanced: [
-      'Solid improvement. Keep pushing.',
-      'Better than last time. That\'s the goal.',
-      'Progress detected. Stay consistent.',
+      'Harder than last time. That\'s the goal, every session.',
+      'Better than last time. Effort overrides everything else.',
+      'Progress detected. Stay consistent — this is a marathon, not a sprint.',
     ],
     tough: [
-      'Good. Now do it again next time.',
-      'Improvement noted. Don\'t get complacent.',
-      'That\'s progress. Maintain this standard.',
+      'Good. Harder than last time. Now do it again.',
+      'Improvement noted. This is the standard. Maintain it.',
+      'That\'s progress. You showed up and delivered.',
     ],
     aggressive: [
-      'THAT\'S what I\'m talking about!',
-      'Harder than last time. EXACTLY right.',
-      'You showed up and delivered. Respect.',
+      'HARDER THAN LAST TIME. That\'s EXACTLY right!',
+      'You showed up and delivered. THAT is how you build a physique.',
+      'Progress. Real progress. Effort overrides variety — keep pushing.',
     ],
   },
   maintained: {
     soft: [
-      'Consistent performance — that\'s valuable.',
-      'Same as before, and that\'s okay.',
-      'Staying steady is still showing up.',
+      'Consistent performance — that\'s valuable. You showed up.',
+      'Same as before, and that\'s okay. This is a marathon, not a sprint.',
+      'Staying steady is still showing up. Progress comes in waves.',
     ],
     balanced: [
-      'Maintained. Try to push one lever next set.',
-      'Holding steady. Look for a small improvement.',
-      'Same performance. Can you add a rep?',
+      'Maintained. Try to push one lever next set — add a rep, slow the tempo.',
+      'Holding steady. Zoom out — monthly progress matters more than daily.',
+      'Same performance. Can you add a rep or slow the eccentric?',
     ],
     tough: [
-      'Same as last time. Time to push harder.',
-      'No improvement. Find a way to progress.',
-      'Maintenance is temporary. Push forward.',
+      'Same as last time. Harder than last time is the rule. Find a lever.',
+      'No improvement. Find a way to progress — reps, tempo, anything.',
+      'Maintenance is temporary. You didn\'t show up to stay the same.',
     ],
     aggressive: [
-      'Same numbers. Not good enough. Push.',
-      'Where\'s the progress? Step it up.',
-      'HARDER than last time. That\'s the rule.',
+      'Same numbers. HARDER than last time. That\'s the rule. Push.',
+      'Where\'s the progress? Add a rep, slow the negative, cut rest. Move.',
+      'Not good enough. Effort overrides variety — find a way to improve.',
     ],
   },
   regressed: {
     soft: [
-      'A bit below last time. No worries — bad days happen.',
-      'Slight dip. Focus on form and try again.',
-      'Not every session is a PR. Rest and recover.',
+      'A bit below last time. No worries — bad days happen. Just show up.',
+      'Slight dip. Focus on form and try again. This is a marathon, not a sprint.',
+      'Not every session is a PR. Rest, recover, come back stronger.',
     ],
     balanced: [
       'Below last session. Could be fatigue. Keep the weight, aim for reps.',
-      'Regression — it happens. Hold weight steady, rebuild reps.',
-      'Off day. Don\'t drop weight yet, try again next session.',
+      'Regression — it happens. Hold weight steady, rebuild. Zoom out.',
+      'Off day. Don\'t drop weight yet. Train smarter, not just harder.',
     ],
     tough: [
-      'Down from last time. Check your recovery.',
-      'Regression. Are you sleeping and eating enough?',
-      'Weaker today. Fix what\'s outside the gym.',
+      'Down from last time. Check sleep, food, stress. Fix what\'s outside the gym.',
+      'Regression. Are you sleeping and eating enough? Be honest with yourself.',
+      'Weaker today. It happens. But figure out why — train smarter.',
     ],
     aggressive: [
-      'Weaker than last time. Figure out why.',
-      'Down numbers. Sleep, food, stress — fix it.',
-      'Not acceptable long term. Address recovery NOW.',
+      'Weaker than last time. Figure out why. Sleep, food, stress — fix it.',
+      'Down numbers. This is not acceptable long term. Address recovery NOW.',
+      'Not the direction we want. Train smarter, not just harder. Fix the basics.',
     ],
   },
   first: {
-    soft: ['First time logging this exercise! Great start.'],
-    balanced: ['First set logged. This is your baseline.'],
-    tough: ['Baseline set. Now beat it every time.'],
-    aggressive: ['Starting point locked in. Only up from here.'],
+    soft: ['First time logging this exercise! Great start. Just showing up is the hardest part.'],
+    balanced: ['First set logged. This is your baseline. Now beat it — harder than last time.'],
+    tough: ['Baseline set. The only direction from here is up. Beat this next time.'],
+    aggressive: ['Starting point locked in. Only up from here. HARDER THAN LAST TIME.'],
   },
 };
 
@@ -211,14 +227,18 @@ export function getNextSetGuidance(overloadResult, goal, targetReps) {
   }
 }
 
-// ── Overload lever suggestion ───────────────────────────────────────────
+// ── Overload lever suggestion — all 10 forms from PRD Section 5.4.7 ─────
 const OVERLOAD_LEVERS = [
-  { lever: 'reps',   label: 'Add 1-2 reps per set' },
-  { lever: 'weight', label: 'Increase weight by 2.5kg' },
-  { lever: 'tempo',  label: 'Slow the eccentric (3s down)' },
-  { lever: 'rest',   label: 'Reduce rest time by 15-30s' },
-  { lever: 'rir',    label: 'Push closer to failure (lower RIR)' },
-  { lever: 'rom',    label: 'Increase range of motion' },
+  { lever: 'reps',      label: 'Add 1-2 reps per set' },
+  { lever: 'technique', label: 'Improve technique — control every rep' },
+  { lever: 'weight',    label: 'Increase weight by 2.5kg' },
+  { lever: 'volume',    label: 'Add one more working set' },
+  { lever: 'rest',      label: 'Reduce rest time by 15-30s' },
+  { lever: 'rir',       label: 'Push closer to failure (lower RIR)' },
+  { lever: 'rom',       label: 'Increase range of motion' },
+  { lever: 'tempo',     label: 'Slow the eccentric (3s down)' },
+  { lever: 'pause',     label: 'Add a pause at peak contraction' },
+  { lever: 'partials',  label: 'Add partial reps after failure (advanced)' },
 ];
 
 export function suggestOverloadLever(exerciseId, metadata) {
@@ -324,9 +344,18 @@ export function isIntensityAllowed(intensity, weeksActive, canUseAllOut) {
 }
 
 // ── Format rest time ────────────────────────────────────────────────────
-export function formatRestTime(seconds) {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  if (s === 0) return `${m} min`;
-  return `${m}:${String(s).padStart(2, '0')}`;
+export function formatRestTime(restRange) {
+  if (typeof restRange === 'number') {
+    const m = Math.floor(restRange / 60);
+    const s = restRange % 60;
+    return s === 0 ? `${m} min` : `${m}:${String(s).padStart(2, '0')}`;
+  }
+  // Range object { min, max }
+  const fmtSingle = (secs) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return s === 0 ? `${m}` : `${m}:${String(s).padStart(2, '0')}`;
+  };
+  if (restRange.min === restRange.max) return `${fmtSingle(restRange.min)} min`;
+  return `${fmtSingle(restRange.min)}-${fmtSingle(restRange.max)} min`;
 }

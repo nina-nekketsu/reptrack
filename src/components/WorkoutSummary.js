@@ -2,7 +2,16 @@
 import React from 'react';
 import { getPlanById } from '../data/trainingPlans';
 
-export default function WorkoutSummary({ summary, planId, onClose }) {
+// Motivational closing messages — PRD Section 6.2 key phrases
+const CLOSING_MESSAGES = [
+  'You showed up. That\'s the hardest part. Everything else follows.',
+  'Harder than last time — that\'s all that matters.',
+  'This is a marathon, not a sprint. Another session in the bank.',
+  'Consistency beats intensity. You\'re building something.',
+  'Effort overrides variety. You did the work today.',
+];
+
+export default function WorkoutSummary({ summary, planId, cardioMinutes, onClose }) {
   if (!summary) return null;
 
   const plan = planId ? getPlanById(planId) : null;
@@ -10,13 +19,14 @@ export default function WorkoutSummary({ summary, planId, onClose }) {
   // Determine next day in the plan rotation
   let nextDayPreview = null;
   if (plan && plan.days.length > 1) {
-    // Simple rotation — we don't track which day was done, just show the plan days
     nextDayPreview = plan.days.map(d => d.dayName).join(' / ');
   }
 
   const durationMin = summary.duration
     ? Math.floor(summary.duration / 60000)
     : null;
+
+  const closingMsg = CLOSING_MESSAGES[Math.floor(Math.random() * CLOSING_MESSAGES.length)];
 
   return (
     <div className="workout-summary-overlay" onClick={onClose}>
@@ -75,6 +85,11 @@ export default function WorkoutSummary({ summary, planId, onClose }) {
                 </div>
               ))}
             </div>
+            {summary.regressions.length > 0 && summary.improvements.length === 0 && (
+              <p className="ws-regression-note">
+                Off days happen. Zoom out — monthly progress matters more than one session.
+              </p>
+            )}
           </>
         )}
 
@@ -87,6 +102,14 @@ export default function WorkoutSummary({ summary, planId, onClose }) {
           </p>
         )}
 
+        {/* Cardio progress */}
+        {cardioMinutes != null && (
+          <div className="ws-cardio-row">
+            <span className="ws-cardio-label">Weekly Cardio</span>
+            <span className="ws-cardio-value">{Math.round(cardioMinutes)} / 150 min</span>
+          </div>
+        )}
+
         {/* Next session preview */}
         {nextDayPreview && (
           <div className="ws-next-session">
@@ -94,6 +117,9 @@ export default function WorkoutSummary({ summary, planId, onClose }) {
             <div>{nextDayPreview}</div>
           </div>
         )}
+
+        {/* Motivational closing */}
+        <p className="ws-closing">{closingMsg}</p>
 
         <button className="ws-close-btn" onClick={onClose}>Done</button>
       </div>
