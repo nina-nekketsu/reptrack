@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/reptrack/static/css/main.dc0f3d18.css",
+    "main.js": "/reptrack/static/js/main.1be9dd91.js",
+    "static/js/453.54dc34d7.chunk.js": "/reptrack/static/js/453.54dc34d7.chunk.js",
+    "index.html": "/reptrack/index.html",
+    "main.dc0f3d18.css.map": "/reptrack/static/css/main.dc0f3d18.css.map",
+    "main.1be9dd91.js.map": "/reptrack/static/js/main.1be9dd91.js.map",
+    "453.54dc34d7.chunk.js.map": "/reptrack/static/js/453.54dc34d7.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.dc0f3d18.css",
+    "static/js/main.1be9dd91.js"
+  ]
+}
