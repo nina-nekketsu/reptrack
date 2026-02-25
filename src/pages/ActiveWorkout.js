@@ -92,6 +92,7 @@ export default function ActiveWorkout() {
   const [showSummary, setShowSummary] = useState(false);
   const [summaryData, setSummaryData] = useState(null);
   const [warmupDismissed, setWarmupDismissed] = useState(false);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
 
   const plan = plans.find((p) => p.id === planId);
 
@@ -240,7 +241,7 @@ export default function ActiveWorkout() {
             <div className="aw-header__label">Active Workout</div>
             <div className="aw-header__name">{plan.name}</div>
           </div>
-          <button className="aw-end-btn" onClick={handleEndWorkout}>
+          <button className="aw-end-btn" onClick={() => setShowEndConfirm(true)}>
             End Workout
           </button>
         </div>
@@ -308,11 +309,7 @@ export default function ActiveWorkout() {
               onClick={() => openExerciseLog(ex)}
             >
               <div className="aw-exercise-status">
-                {done ? (
-                  <span className="aw-check">✓</span>
-                ) : (
-                  <span className="aw-number">{i + 1}</span>
-                )}
+                <span className="aw-number">{i + 1}</span>
               </div>
 
               <div className="aw-exercise-thumb">
@@ -369,6 +366,36 @@ export default function ActiveWorkout() {
           cardioMinutes={coach.isOnboarded ? coach.weeklyCardioMinutes : null}
           onClose={handleCloseSummary}
         />
+      )}
+
+      {/* End workout confirmation overlay */}
+      {showEndConfirm && (
+        <div className="aw-end-overlay" onClick={() => setShowEndConfirm(false)}>
+          <div className="aw-end-confirm" onClick={(e) => e.stopPropagation()}>
+            <div className="aw-end-confirm__check">✓</div>
+            <h3 className="aw-end-confirm__title">End Workout?</h3>
+            <p className="aw-end-confirm__subtitle">
+              {completedCount}/{totalExercises} exercises logged · {elapsed}
+            </p>
+            <div className="aw-end-confirm__actions">
+              <button
+                className="aw-end-confirm__btn aw-end-confirm__btn--cancel"
+                onClick={() => setShowEndConfirm(false)}
+              >
+                Keep Going
+              </button>
+              <button
+                className="aw-end-confirm__btn aw-end-confirm__btn--confirm"
+                onClick={() => {
+                  setShowEndConfirm(false);
+                  handleEndWorkout();
+                }}
+              >
+                End & Save
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
