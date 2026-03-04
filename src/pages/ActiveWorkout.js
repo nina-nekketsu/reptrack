@@ -141,18 +141,29 @@ export default function ActiveWorkout() {
     [allExercises]
   );
 
-  // Check if an exercise has been logged during this session
-  function isLoggedThisSession(exerciseId) {
-    if (!activeSession) return false;
+  // Count sets logged during this active session for a given exercise
+  function getSetsLoggedThisSession(exerciseId) {
+    if (!activeSession) return 0;
     const sessions = logs[exerciseId];
-    if (!sessions || sessions.length === 0) return false;
+    if (!sessions || sessions.length === 0) return 0;
     const sessionStart = new Date(activeSession.startedAt).getTime();
-    return sessions.some((s) => new Date(s.date).getTime() >= sessionStart);
+    let total = 0;
+    for (const s of sessions) {
+      if (new Date(s.date).getTime() >= sessionStart) {
+        total += (s.sets ? s.sets.length : 0);
+      }
+    }
+    return total;
   }
 
-  // Count how many exercises are completed
+  // Check if ALL prescribed sets are logged
+  function isFullyLogged(exerciseId, prescribedSets) {
+    return getSetsLoggedThisSession(exerciseId) >= (prescribedSets || 1);
+  }
+
+  // Count how many exercises are fully completed
   const completedCount = plan
-    ? plan.exercises.filter((pe) => isLoggedThisSession(pe.exerciseId)).length
+    ? plan.exercises.filter((pe) => isFullyLogged(pe.exerciseId, pe.prescribedSets)).length
     : 0;
   const totalExercises = plan ? plan.exercises.length : 0;
 
@@ -300,12 +311,15 @@ export default function ActiveWorkout() {
         {plan.exercises.map((planEx, i) => {
           const ex = getExercise(planEx.exerciseId);
           if (!ex) return null;
-          const done = isLoggedThisSession(planEx.exerciseId);
+          const setsLogged = getSetsLoggedThisSession(planEx.exerciseId);
+          const targetSets = planEx.prescribedSets || 1;
+          const done = setsLogged >= targetSets;
+          const partial = setsLogged > 0 && !done;
 
           return (
             <div
               key={`${planEx.exerciseId}-${i}`}
-              className={`aw-exercise-row ${done ? 'aw-exercise-row--done' : ''}`}
+              className={`aw-exercise-row ${done ? 'aw-exercise-row--done' : partial ? 'aw-exercise-row--partial' : ''}`}
               onClick={() => openExerciseLog(ex)}
             >
               <div className="aw-exercise-status">
@@ -328,6 +342,8 @@ export default function ActiveWorkout() {
               <div className="aw-exercise-action">
                 {done ? (
                   <span className="aw-logged-badge">Logged</span>
+                ) : partial ? (
+                  <span className="aw-partial-badge">{setsLogged}/{targetSets}</span>
                 ) : (
                   <span className="aw-log-btn">Log</span>
                 )}
