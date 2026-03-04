@@ -106,6 +106,40 @@ export default function Profile() {
         <div className="profile-avatar">💪</div>
       </div>
 
+      {/* Timer Defaults */}
+      <div className="profile-auth-section">
+        <h3>⏱ Timer Defaults</h3>
+        <div className="profile-rest-setting">
+          <label className="profile-rest-label" htmlFor="global-rest">
+            Default rest duration (seconds)
+          </label>
+          <div className="profile-rest-controls">
+            {[30, 60, 90, 120].map((sec) => (
+              <button
+                key={sec}
+                className={`profile-rest-btn ${globalRest === sec ? 'profile-rest-btn--active' : ''}`}
+                onClick={() => handleGlobalRestChange(sec)}
+              >
+                {sec}s
+              </button>
+            ))}
+            <input
+              id="global-rest"
+              className="profile-rest-input"
+              type="number"
+              min="5"
+              max="600"
+              step="5"
+              value={globalRest}
+              onChange={(e) => handleGlobalRestChange(e.target.value)}
+            />
+          </div>
+          <p className="profile-rest-hint">
+            Used for all exercises unless you set a custom rest time per exercise.
+          </p>
+        </div>
+      </div>
+
       {user && (
         <div className="profile-auth-section">
           <p className="profile-user-email">Signed in as <strong>{user.email}</strong></p>
