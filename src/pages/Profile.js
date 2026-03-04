@@ -9,6 +9,7 @@ import {
   rotateCoachToken,
 } from '../lib/coachShare'
 import { isConfigured } from '../lib/supabase'
+import { loadGlobalRestDefault, saveGlobalRestDefault } from '../utils/timer'
 
 const BASE_URL = 'https://nina-nekketsu.github.io/reptrack/#/coach/';
 
@@ -24,6 +25,7 @@ export default function Profile() {
   const [shareLoading, setShareLoading] = useState(false);
   const [shareError, setShareError]     = useState(null);
   const [copied, setCopied]             = useState(false);
+  const [globalRest, setGlobalRest]     = useState(() => loadGlobalRestDefault());
 
   const loadShare = useCallback(async () => {
     if (!user || !isConfigured) return;
@@ -39,6 +41,12 @@ export default function Profile() {
 
   async function handleSyncNow() {
     if (user) await syncData(user.id);
+  }
+
+  function handleGlobalRestChange(val) {
+    const n = Math.max(5, Math.min(600, Number(val) || 90));
+    setGlobalRest(n);
+    saveGlobalRestDefault(n);
   }
 
   async function handleToggleShare(enabled) {

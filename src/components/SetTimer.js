@@ -90,6 +90,20 @@ export default function SetTimer({ exerciseId }) {
         )}
       </div>
 
+      {/* Quick-select rest duration buttons */}
+      <div className="timer-quick-rest">
+        {[30, 60, 90].map((sec) => (
+          <button
+            key={sec}
+            className={`timer-quick-btn ${restSeconds === sec ? 'timer-quick-btn--active' : ''}`}
+            onClick={() => handleRestSecondsChange(sec)}
+            disabled={timer.isResting}
+          >
+            {sec}s
+          </button>
+        ))}
+      </div>
+
       <div className="timer-controls">
         <button
           className={`timer-btn timer-btn--start ${timer.isExercising ? 'timer-btn--active' : ''}`}

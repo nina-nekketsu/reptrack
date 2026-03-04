@@ -158,9 +158,9 @@ const LS_AUTOSTART_KEY = 'timerAutoStart';
 export function loadRestDefault(exerciseId) {
   try {
     const map = JSON.parse(localStorage.getItem(LS_REST_KEY) || '{}');
-    return typeof map[exerciseId] === 'number' ? map[exerciseId] : 90; // default 90s
+    return typeof map[exerciseId] === 'number' ? map[exerciseId] : loadGlobalRestDefault();
   } catch {
-    return 90;
+    return loadGlobalRestDefault();
   }
 }
 
@@ -178,6 +178,25 @@ export function loadAutoStart() {
   } catch {
     return false;
   }
+}
+
+
+/** Global default rest time (used when no per-exercise override exists) */
+const LS_GLOBAL_REST_KEY = 'timerGlobalRestDefault';
+
+export function loadGlobalRestDefault() {
+  try {
+    const val = localStorage.getItem(LS_GLOBAL_REST_KEY);
+    return val !== null ? Number(val) : 90;
+  } catch {
+    return 90;
+  }
+}
+
+export function saveGlobalRestDefault(seconds) {
+  try {
+    localStorage.setItem(LS_GLOBAL_REST_KEY, String(seconds));
+  } catch {}
 }
 
 export function saveAutoStart(value) {

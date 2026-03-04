@@ -565,3 +565,67 @@ body {
   border: 1px solid rgba(227, 216, 198, 0.24);
   color: var(--c-surface);
 }
+
+/* Profile: Default Rest Time Setting */
+.profile-rest-setting {
+  margin-top: 12px;
+}
+
+.profile-rest-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.profile-rest-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.profile-rest-btn {
+  background: #f0f0f5;
+  color: #555;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.profile-rest-btn:hover {
+  background: #e8e8f0;
+}
+
+.profile-rest-btn--active {
+  background: #4c4cff;
+  color: #fff;
+  border-color: #4c4cff;
+}
+
+.profile-rest-input {
+  width: 70px;
+  padding: 8px 10px;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.profile-rest-input:focus {
+  border-color: #4c4cff;
+  outline: none;
+}
+
+.profile-rest-hint {
+  font-size: 12px;
+  color: #999;
+  margin-top: 8px;
+  margin-bottom: 0;
+}
