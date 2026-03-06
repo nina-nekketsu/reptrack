@@ -68,40 +68,28 @@ export default function SetTimer({ exerciseId }) {
         />
       )}
 
-      <div className={`timer-block timer-block--exercise ${timer.isExercising ? 'timer-block--active' : ''}`}>
-        <div className="timer-label">Exercise Timer</div>
-        <div className="timer-display timer-display--exercise">
-          {timer.isExercising ? timer.exerciseDisplay : formatMs(timer.exerciseElapsedMs)}
-        </div>
-      </div>
-
-      <div className={`timer-block timer-block--rest ${timer.isResting ? 'timer-block--active' : ''} ${timer.isAlert ? 'timer-block--alert' : ''}`}>
-        <div className="timer-label">Rest Timer</div>
-        <div
-          className="timer-display timer-display--rest"
-          style={timer.isAlert ? { color: restTextColor, position: 'relative', zIndex: 2 } : {}}
-        >
-          {timer.isResting ? timer.restDisplay : formatMs(restSeconds * 1000)}
-        </div>
-        {timer.isAlert && (
-          <div className="timer-alert-label" style={{ color: restTextColor, position: 'relative', zIndex: 2 }}>
-            GET READY!
+      <div className="timer-row">
+        <div className={`timer-block timer-block--exercise ${timer.isExercising ? 'timer-block--active' : ''}`}>
+          <div className="timer-label">Exercise</div>
+          <div className="timer-display timer-display--exercise">
+            {timer.isExercising ? timer.exerciseDisplay : formatMs(timer.exerciseElapsedMs)}
           </div>
-        )}
-      </div>
+        </div>
 
-      {/* Quick-select rest duration buttons */}
-      <div className="timer-quick-rest">
-        {[30, 60, 90].map((sec) => (
-          <button
-            key={sec}
-            className={`timer-quick-btn ${restSeconds === sec ? 'timer-quick-btn--active' : ''}`}
-            onClick={() => handleRestSecondsChange(sec)}
-            disabled={timer.isResting}
+        <div className={`timer-block timer-block--rest ${timer.isResting ? 'timer-block--active' : ''} ${timer.isAlert ? 'timer-block--alert' : ''}`}>
+          <div className="timer-label">Rest</div>
+          <div
+            className="timer-display timer-display--rest"
+            style={timer.isAlert ? { color: restTextColor, position: 'relative', zIndex: 2 } : {}}
           >
-            {sec}s
-          </button>
-        ))}
+            {timer.isResting ? timer.restDisplay : formatMs(restSeconds * 1000)}
+          </div>
+          {timer.isAlert && (
+            <div className="timer-alert-label" style={{ color: restTextColor, position: 'relative', zIndex: 2 }}>
+              GET READY!
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="timer-controls">
@@ -132,8 +120,20 @@ export default function SetTimer({ exerciseId }) {
       <div className="timer-settings">
         <div className="timer-setting-row">
           <label className="timer-setting-label" htmlFor="rest-seconds">
-            Rest duration (s)
+            Rest (s)
           </label>
+          <div className="timer-quick-rest">
+            {[30, 60, 90].map((sec) => (
+              <button
+                key={sec}
+                className={`timer-quick-btn ${restSeconds === sec ? 'timer-quick-btn--active' : ''}`}
+                onClick={() => handleRestSecondsChange(sec)}
+                disabled={timer.isResting}
+              >
+                {sec}s
+              </button>
+            ))}
+          </div>
           <input
             id="rest-seconds"
             className="timer-setting-input"

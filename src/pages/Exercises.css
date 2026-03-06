@@ -1214,10 +1214,10 @@
   position: relative;
   background: #0f0f1e;
   border-radius: 16px;
-  padding: 16px 14px 14px;
+  padding: 10px 14px 10px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px;
   overflow: hidden; /* clip flash overlay */
   transition: background 0.2s;
 }
@@ -1244,7 +1244,7 @@
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  padding: 10px 12px 8px;
+  padding: 6px 10px 4px;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.06);
   transition: background 0.2s;
@@ -1258,6 +1258,49 @@
 
 .timer-block--alert {
   background: rgba(0, 0, 0, 0.25);
+}
+
+/* Side-by-side timer row */
+.timer-row {
+  display: flex;
+  gap: 6px;
+  position: relative;
+  z-index: 2;
+}
+
+.timer-row .timer-block {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Quick-select rest buttons inline with rest duration */
+.timer-quick-rest {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+}
+
+.timer-quick-btn {
+  padding: 4px 12px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.timer-quick-btn--active {
+  background: rgba(255, 153, 102, 0.25);
+  border-color: #ff9966;
+  color: #ff9966;
+}
+
+.timer-quick-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .timer-label {
@@ -1278,7 +1321,7 @@
 }
 
 .timer-display--exercise {
-  font-size: 38px;
+  font-size: 28px;
   color: #7cfc7c; /* green: exercising */
 }
 
@@ -1288,7 +1331,7 @@
 }
 
 .timer-display--rest {
-  font-size: 44px;
+  font-size: 32px;
   color: rgba(255, 255, 255, 0.35);
   transition: color 0.2s;
 }
@@ -1299,7 +1342,7 @@
 }
 
 .timer-block--alert .timer-display--rest {
-  font-size: 52px;
+  font-size: 38px;
   font-weight: 900;
 }
 
@@ -1334,7 +1377,7 @@
 
 .timer-btn {
   padding: 0 8px;
-  min-height: 52px;     /* tall enough for easy tapping on small screens */
+  min-height: 42px;
   border-radius: 10px;
   border: none;
   font-size: 15px;
@@ -1401,10 +1444,10 @@
 .timer-settings {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 10px;
-  padding: 10px 12px;
+  padding: 6px 10px;
   position: relative;
   z-index: 2;
 }
@@ -1529,28 +1572,28 @@
 
   /* Timer container: tighter padding */
   .set-timer {
-    padding: 12px 10px 10px;
-    gap: 8px;
+    padding: 8px 8px 8px;
+    gap: 4px;
   }
 
   /* Timer blocks: less internal padding */
   .timer-block {
-    padding: 7px 8px 6px;
+    padding: 4px 6px 3px;
   }
 
   /* Shrink the big clock digits */
   .timer-display--exercise {
-    font-size: 28px;
+    font-size: 24px;
     letter-spacing: 1px;
   }
 
   .timer-display--rest {
-    font-size: 32px;
+    font-size: 26px;
     letter-spacing: 1px;
   }
 
   .timer-block--alert .timer-display--rest {
-    font-size: 38px;
+    font-size: 32px;
   }
 
   /* Alert label */
@@ -1561,14 +1604,14 @@
 
   /* Timer buttons: slightly shorter */
   .timer-btn {
-    min-height: 44px;
+    min-height: 38px;
     font-size: 13px;
   }
 
   /* Timer settings: tighter */
   .timer-settings {
-    padding: 8px 10px;
-    gap: 6px;
+    padding: 4px 8px;
+    gap: 3px;
   }
 
   .timer-setting-label {
