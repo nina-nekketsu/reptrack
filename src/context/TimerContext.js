@@ -13,6 +13,7 @@
 import React, { createContext, useContext, useReducer, useEffect, useRef, useCallback } from 'react';
 import { formatMs, playBeep, vibrate, loadAutoStart } from '../utils/timer';
 import { supabase } from '../lib/supabase';
+import { STORAGE_AVAILABLE } from '../utils/storageCheck';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 const LS_KEY = 'workoutTimerState';
@@ -27,6 +28,7 @@ const PHASE_ALERT      = 'alert';
 
 // ─── localStorage helpers ───────────────────────────────────────────────────
 function loadState() {
+  if (!STORAGE_AVAILABLE) return null;
   try {
     const raw = localStorage.getItem(LS_KEY);
     return raw ? JSON.parse(raw) : null;
@@ -36,12 +38,14 @@ function loadState() {
 }
 
 function persistState(state) {
+  if (!STORAGE_AVAILABLE) return;
   try {
     localStorage.setItem(LS_KEY, JSON.stringify(state));
   } catch { /* quota exceeded — silent */ }
 }
 
 function clearPersistedState() {
+  if (!STORAGE_AVAILABLE) return;
   try {
     localStorage.removeItem(LS_KEY);
   } catch { /* silent */ }

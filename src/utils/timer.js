@@ -5,6 +5,8 @@
  * tab switches, and throttled rAF. Interval tick is just for display refresh.
  */
 
+import { STORAGE_AVAILABLE } from './storageCheck';
+
 /**
  * Create a count-up stopwatch.
  * Returns { start, stop, reset, getElapsed }
@@ -156,6 +158,7 @@ const LS_REST_KEY = 'timerRestDefaults';
 const LS_AUTOSTART_KEY = 'timerAutoStart';
 
 export function loadRestDefault(exerciseId) {
+  if (!STORAGE_AVAILABLE) return loadGlobalRestDefault();
   try {
     const map = JSON.parse(localStorage.getItem(LS_REST_KEY) || '{}');
     return typeof map[exerciseId] === 'number' ? map[exerciseId] : loadGlobalRestDefault();
@@ -165,6 +168,7 @@ export function loadRestDefault(exerciseId) {
 }
 
 export function saveRestDefault(exerciseId, seconds) {
+  if (!STORAGE_AVAILABLE) return;
   try {
     const map = JSON.parse(localStorage.getItem(LS_REST_KEY) || '{}');
     map[exerciseId] = seconds;
@@ -173,6 +177,7 @@ export function saveRestDefault(exerciseId, seconds) {
 }
 
 export function loadAutoStart() {
+  if (!STORAGE_AVAILABLE) return false;
   try {
     return localStorage.getItem(LS_AUTOSTART_KEY) === 'true';
   } catch {
@@ -185,6 +190,7 @@ export function loadAutoStart() {
 const LS_GLOBAL_REST_KEY = 'timerGlobalRestDefault';
 
 export function loadGlobalRestDefault() {
+  if (!STORAGE_AVAILABLE) return 90;
   try {
     const val = localStorage.getItem(LS_GLOBAL_REST_KEY);
     return val !== null ? Number(val) : 90;
@@ -194,12 +200,14 @@ export function loadGlobalRestDefault() {
 }
 
 export function saveGlobalRestDefault(seconds) {
+  if (!STORAGE_AVAILABLE) return;
   try {
     localStorage.setItem(LS_GLOBAL_REST_KEY, String(seconds));
   } catch {}
 }
 
 export function saveAutoStart(value) {
+  if (!STORAGE_AVAILABLE) return;
   try {
     localStorage.setItem(LS_AUTOSTART_KEY, value ? 'true' : 'false');
   } catch {}

@@ -1,6 +1,7 @@
 // src/utils/exerciseHelpers.js — localStorage helpers + Supabase sync via src/lib/sync.js
 
 import { pushExercise, pushSession, deleteRemoteSession, deleteRemoteExercise } from '../lib/sync';
+import { STORAGE_AVAILABLE } from './storageCheck';
 
 const defaultExercises = [
   { id: 1, name: 'Bench Press',    muscleGroup: 'Chest',     type: 'Strength' },
@@ -18,6 +19,7 @@ export { defaultExercises };
 // ── LocalStorage ─────────────────────────────────────────────────────────
 
 export function loadExercises() {
+  if (!STORAGE_AVAILABLE) return defaultExercises;
   try {
     const saved = localStorage.getItem('exercises');
     return saved ? JSON.parse(saved) : defaultExercises;
@@ -27,6 +29,7 @@ export function loadExercises() {
 }
 
 export function loadLogs() {
+  if (!STORAGE_AVAILABLE) return {};
   try {
     const saved = localStorage.getItem('exerciseLogs');
     return saved ? JSON.parse(saved) : {};
@@ -37,21 +40,25 @@ export function loadLogs() {
 
 /** Write logs directly (used by sync pull) */
 export function saveLogs(logs) {
+  if (!STORAGE_AVAILABLE) return;
   localStorage.setItem('exerciseLogs', JSON.stringify(logs));
 }
 
 /** Write exercises directly (used by sync pull and Exercises page) */
 export function saveExercisesRaw(exercises) {
+  if (!STORAGE_AVAILABLE) return;
   localStorage.setItem('exercises', JSON.stringify(exercises));
 }
 
 /** Alias for backward-compat with Exercises.js */
 export function saveExercises(exercises) {
+  if (!STORAGE_AVAILABLE) return;
   localStorage.setItem('exercises', JSON.stringify(exercises));
 }
 
 /** Write plans directly (used by sync pull) */
 export function savePlansRaw(plans) {
+  if (!STORAGE_AVAILABLE) return;
   localStorage.setItem('workoutPlans', JSON.stringify(plans));
 }
 

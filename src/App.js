@@ -38,7 +38,10 @@ function AppContent() {
       <div className="auth-screen">
         <div className="auth-card" style={{ textAlign: 'center' }}>
           <div className="auth-logo">💪</div>
-          <p style={{ color: '#9999b3', fontSize: '0.9rem' }}>Loading…</p>
+          <p style={{ color: '#9999b3', fontSize: '0.9rem' }}>Loading RepTrack…</p>
+          <p style={{ color: '#666', fontSize: '0.75rem', marginTop: '1rem' }}>
+            Stuck here? Try: Hold reload button → Reload Without Content Blockers
+          </p>
         </div>
       </div>
     );

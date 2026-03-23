@@ -35,6 +35,28 @@ export default function AuthScreen() {
     }
   }
 
+  async function handleForgotPassword() {
+    setError(null);
+    setInfo(null);
+
+    if (!email || !email.includes('@')) {
+      setError('Enter your email first, then tap Forgot password.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const redirectTo = `${window.location.origin}${window.location.pathname}`;
+      const { error: err } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+      if (err) throw err;
+      setInfo('Password reset email sent. Check your inbox and spam folder.');
+    } catch (err) {
+      setError(err.message || 'Could not send reset email.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="auth-screen">
       <div className="auth-card">
@@ -82,6 +104,17 @@ export default function AuthScreen() {
               ? 'Please wait…'
               : mode === 'signin' ? 'Sign In' : 'Create Account'}
           </button>
+
+          {mode === 'signin' && (
+            <button
+              type="button"
+              className="auth-toggle"
+              onClick={handleForgotPassword}
+              disabled={loading}
+            >
+              Forgot password?
+            </button>
+          )}
         </form>
 
         <button
