@@ -11,6 +11,10 @@ import {
   calculateFatigueAdjustment,
   generateSessionSummary,
 } from '../lib/coachEngine';
+import {
+  getStoredVisibleActiveWorkoutSession,
+  saveActiveWorkoutSession,
+} from '../lib/activeWorkoutSession';
 import './Page.css';
 import './Exercises.css';
 import './Workouts.css';
@@ -34,29 +38,12 @@ function thumbEmoji(muscleGroup) {
 
 function formatElapsed(startIso) {
   if (!startIso) return '0:00';
-  const secs = Math.floor((Date.now() - new Date(startIso).getTime()) / 1000);
+  const secs = Math.max(0, Math.floor((Date.now() - new Date(startIso).getTime()) / 1000));
   const h = Math.floor(secs / 3600);
   const m = Math.floor((secs % 3600) / 60);
   const s = secs % 60;
   if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   return `${m}:${String(s).padStart(2, '0')}`;
-}
-
-function loadActiveSession() {
-  try {
-    const raw = localStorage.getItem('activeWorkoutSession');
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
-function saveActiveSession(session) {
-  if (session) {
-    localStorage.setItem('activeWorkoutSession', JSON.stringify(session));
-  } else {
-    localStorage.removeItem('activeWorkoutSession');
-  }
 }
 
 function loadPlans() {
@@ -86,7 +73,7 @@ export default function ActiveWorkout() {
   const [plans] = useState(loadPlans);
   const [allExercises] = useState(loadExercises);
   const [logs, setLogs] = useState(loadLogs);
-  const [activeSession, setActiveSession] = useState(loadActiveSession);
+  const [activeSession, setActiveSession] = useState(getStoredVisibleActiveWorkoutSession);
   const [elapsed, setElapsed] = useState('0:00');
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [showSummary, setShowSummary] = useState(false);
@@ -116,13 +103,14 @@ export default function ActiveWorkout() {
 
     // If there's no active session or it's for a different plan, create one
     if (!activeSession || activeSession.planId !== planId) {
-      const session = {
+      const now = new Date().toISOString();
+      const session = saveActiveWorkoutSession({
+        action: 'start',
         planId: plan.id,
         planName: plan.name,
-        startedAt: new Date().toISOString(),
-      };
+        now,
+      });
       setActiveSession(session);
-      saveActiveSession(session);
     }
   }, [plan, planId, activeSession, navigate]);
 
@@ -211,15 +199,15 @@ export default function ActiveWorkout() {
         });
 
         coach.deactivateCoach();
+        saveActiveWorkoutSession({ action: 'end', now: new Date().toISOString() });
         setActiveSession(null);
-        saveActiveSession(null);
         return; // Don't navigate yet — show summary first
       }
     }
 
     coach.deactivateCoach();
+    saveActiveWorkoutSession({ action: 'end', now: new Date().toISOString() });
     setActiveSession(null);
-    saveActiveSession(null);
     navigate('/workouts', { replace: true });
   }
 

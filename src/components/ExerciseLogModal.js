@@ -17,6 +17,7 @@ import {
   upsertSession,
 } from '../utils/exerciseHelpers';
 import { updateRemoteSession } from '../lib/sync';
+import { getStoredVisibleActiveWorkoutSession } from '../lib/activeWorkoutSession';
 import { useAuth } from '../context/AuthContext';
 import { useCoach } from '../context/CoachContext';
 import { getPreviousSets, isIntensityAllowed } from '../lib/coachEngine';
@@ -60,10 +61,9 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
     // Check if this exercise was already logged during the current active workout session
     let initialSets = [{ reps: '', weight: '' }];
     try {
-      const activeSessionRaw = localStorage.getItem('activeWorkoutSession');
-      if (activeSessionRaw && exercise?.id) {
-        const activeWorkoutSession = JSON.parse(activeSessionRaw);
-        const sessionStart = activeWorkoutSession?.startedAt
+      const activeWorkoutSession = getStoredVisibleActiveWorkoutSession();
+      if (activeWorkoutSession && exercise?.id) {
+        const sessionStart = activeWorkoutSession.startedAt
           ? new Date(activeWorkoutSession.startedAt)
           : null;
         if (sessionStart) {

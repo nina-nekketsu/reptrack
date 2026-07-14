@@ -3,6 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTimer } from '../context/TimerContext';
 import { pushPlan, pushExercise, pushSettings } from '../lib/sync';
+import {
+  getStoredVisibleActiveWorkoutSession,
+  saveActiveWorkoutSession,
+} from '../lib/activeWorkoutSession';
 import './Page.css';
 import './Workouts.css';
 
@@ -133,23 +137,6 @@ function saveCurrentPlanId(id) {
   localStorage.setItem('currentPlanId', id);
 }
 
-function loadActiveSession() {
-  try {
-    const raw = localStorage.getItem('activeWorkoutSession');
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
-function saveActiveSession(session) {
-  if (session) {
-    localStorage.setItem('activeWorkoutSession', JSON.stringify(session));
-  } else {
-    localStorage.removeItem('activeWorkoutSession');
-  }
-}
-
 // Merge seed exercises into existing exercises list without overwriting custom ones
 function loadAndMergeExercises() {
   try {
@@ -179,7 +166,7 @@ function saveExercises(exercises) {
 // ── Format elapsed time ──
 function formatElapsed(startIso) {
   if (!startIso) return '';
-  const secs = Math.floor((Date.now() - new Date(startIso).getTime()) / 1000);
+  const secs = Math.max(0, Math.floor((Date.now() - new Date(startIso).getTime()) / 1000));
   const m = Math.floor(secs / 60);
   const s = secs % 60;
   return `${m}:${String(s).padStart(2, '0')}`;
@@ -379,7 +366,7 @@ export default function Workouts() {
   const [plans, setPlans] = useState(loadPlans);
   const [allExercises, setAllExercises] = useState(loadAndMergeExercises);
   const [currentPlanId, setCurrentPlanId] = useState(loadCurrentPlanId);
-  const [activeSession, setActiveSession] = useState(loadActiveSession);
+  const [activeSession, setActiveSession] = useState(getStoredVisibleActiveWorkoutSession);
   const [elapsed, setElapsed] = useState('');
 
   // Modals
@@ -408,21 +395,22 @@ export default function Workouts() {
       navigate(`/workout/${currentPlan.id}`);
       return;
     }
-    const session = {
+    const now = new Date().toISOString();
+    const session = saveActiveWorkoutSession({
+      action: 'start',
       planId: currentPlan.id,
       planName: currentPlan.name,
-      startedAt: new Date().toISOString(),
-    };
+      now,
+    });
     setActiveSession(session);
-    saveActiveSession(session);
     navigate(`/workout/${currentPlan.id}`);
   }
 
   // ── End session ──
   function handleEndSession() {
     timer.stopAll(); // Stop all timers when workout ends
+    saveActiveWorkoutSession({ action: 'end', now: new Date().toISOString() });
     setActiveSession(null);
-    saveActiveSession(null);
     setElapsed('');
   }
 
