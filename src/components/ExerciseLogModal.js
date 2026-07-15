@@ -512,12 +512,12 @@ export default function ExerciseLogModal({
 
   return (
     <div className="modal-overlay" onClick={closeModal}>
-      <div className="modal modal--log" onClick={(e) => e.stopPropagation()}>
+      <div className="modal modal--log" role="dialog" aria-modal="true" aria-labelledby="exercise-log-title" onClick={(e) => e.stopPropagation()}>
         <div className="log-sticky-top">
           <div id="log-timer-top" className="log-timer-zone">
             <div className="log-header-text">
               <div className="log-header-title-row">
-                <h3 className="modal-title">{exercise.name}</h3>
+                <h3 className="modal-title" id="exercise-log-title">{exercise.name}</h3>
                 <span className="build-id-tag build-id-tag--modal">{formatBuildId()}</span>
               </div>
               <p className="modal-sub">{exercise.muscleGroup} · Log your sets</p>
@@ -581,8 +581,8 @@ export default function ExerciseLogModal({
                   <React.Fragment key={s.clientSetId || i}>
                     <div className={`set-row ${feedback ? `set-row--${feedback.state}` : ''} ${isParentDropset(s) ? 'set-row--dropset' : ''} ${childRow ? 'set-row--dropset-child' : ''}`}>
                       <span className={`set-num ${childRow ? 'set-num--dropset-child' : ''}`}>{getSetLabel(sets, i)}</span>
-                      <input className={`set-input ${feedback ? `set-input--${feedback.state}` : ''}`} type="number" min="0" placeholder="0" value={s.reps} onChange={(e) => updateSet(i, 'reps', e.target.value)} aria-describedby={feedbackId} />
-                      <input className={`set-input ${feedback ? `set-input--${feedback.state}` : ''}`} type="number" min="0" step="0.5" placeholder="0" value={s.weight} onChange={(e) => updateSet(i, 'weight', e.target.value)} aria-describedby={feedbackId} />
+                      <input className={`set-input ${feedback ? `set-input--${feedback.state}` : ''}`} type="number" inputMode="numeric" min="0" placeholder="0" value={s.reps} onChange={(e) => updateSet(i, 'reps', e.target.value)} aria-label={`Set ${i + 1} reps`} aria-describedby={feedbackId} />
+                      <input className={`set-input ${feedback ? `set-input--${feedback.state}` : ''}`} type="number" inputMode="decimal" min="0" step="0.5" placeholder="0" value={s.weight} onChange={(e) => updateSet(i, 'weight', e.target.value)} aria-label={`Set ${i + 1} weight`} aria-describedby={feedbackId} />
                       {childRow ? (
                         <span className="set-input set-type-child" title="Dropset child">↳</span>
                       ) : (
@@ -606,7 +606,7 @@ export default function ExerciseLogModal({
                       >
                         {s.done ? '✓' : '○'}
                       </button>
-                      <button className="remove-set-btn" onClick={() => removeSet(i)} disabled={sets.length === 1}>✕</button>
+                      <button className="remove-set-btn" aria-label={`Remove set ${i + 1}`} onClick={() => removeSet(i)} disabled={sets.length === 1}>✕</button>
                     </div>
                     {feedback && (
                       <div id={feedbackId} className={`set-feedback set-feedback--${feedback.state}`} role="status">

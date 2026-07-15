@@ -5,6 +5,34 @@
   gap: 12px;
 }
 
+/* Gym Floor shell and Today */
+.page { display:flex; flex-direction:column; gap:20px; color:var(--ink-hi); }
+.page-header { display:flex; flex-direction:column; gap:2px; }
+.page-overline { color:var(--ink-low); font-size:11px; line-height:16px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
+.page-heading { margin:0; color:var(--ink-hi); font-size:24px; line-height:30px; font-weight:800; letter-spacing:-.02em; }
+.page-sub { margin:0; color:var(--ink-mid); font-size:15px; line-height:22px; }
+.section-heading { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:8px; }
+.section-heading h2 { margin:0; color:var(--ink-hi); font-size:17px; line-height:24px; font-weight:700; }
+.section-heading span { color:var(--ink-low); font-size:13px; font-weight:600; }
+.stats-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.stat-card { min-height:120px; padding:16px; display:flex; flex-direction:column-reverse; justify-content:space-between; background:var(--bg-1); border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:none; }
+.stat-card--accent { background:linear-gradient(145deg,var(--go-dim),var(--bg-1) 75%); border-color:color-mix(in srgb,var(--go) 35%,var(--line)); }
+.stat-label { color:var(--ink-mid); font-size:11px; line-height:16px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
+.stat-value { color:var(--ink-hi); font-size:32px; line-height:38px; font-weight:800; font-variant-numeric:tabular-nums; }
+.today-resume { min-height:88px; padding:14px 16px; display:grid; grid-template-columns:8px 1fr 24px; align-items:center; gap:12px; background:var(--go-dim); border:1px solid var(--go); border-radius:var(--r-lg); color:var(--ink-hi); text-decoration:none; }
+.today-resume__signal { width:8px; height:40px; border-radius:var(--r-full); background:var(--go); }
+.today-resume > span:nth-child(2) { display:flex; flex-direction:column; }
+.today-resume small { color:var(--go); font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
+.today-resume strong { font-size:17px; line-height:24px; }
+.today-resume span span { color:var(--ink-mid); font-size:13px; }
+.today-resume__arrow { color:var(--go); font-size:28px; }
+.today-session-card { padding:16px; display:grid; grid-template-columns:1fr 1fr; gap:16px; background:var(--bg-1); border:1px solid var(--line); border-radius:var(--r-lg); }
+.today-session-card div { display:flex; flex-direction:column; gap:4px; }
+.today-session-card strong { color:var(--ink-hi); font-size:20px; font-variant-numeric:tabular-nums; }
+.empty-card { padding:24px 16px; display:flex; flex-direction:column; align-items:flex-start; gap:6px; background:var(--bg-1); border:1px solid var(--line); border-radius:var(--r-lg); color:var(--ink-mid); }
+.empty-card strong { color:var(--ink-hi); font-size:17px; }.empty-card a{margin-top:8px;color:var(--go);font-weight:700;min-height:44px;display:flex;align-items:center}
+@media(max-width:359px){.stats-grid{gap:8px}.stat-card{padding:12px}.stat-value{font-size:28px}}
+
 .page-heading {
   font-size: 24px;
   font-weight: 700;
