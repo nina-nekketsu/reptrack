@@ -1,21 +1,38 @@
-// src/components/SyncIndicator.js
-// Small floating icon showing sync status: ✓ synced / ↻ syncing / ⚡ offline
-
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getSyncStatus, onSyncStatusChange } from '../lib/sync';
+import {
+  flushPendingMutations,
+  getSyncSnapshot,
+  onSyncSnapshotChange,
+  retryPendingMutation,
+} from '../lib/sync';
+import './SyncIndicator.css';
+
+function countLabel(count, singular, plural = `${singular}s`) {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
 
 export default function SyncIndicator() {
   const { user, isConfigured } = useAuth();
-  const [status, setStatus] = useState(getSyncStatus());
+  const [snapshot, setSnapshot] = useState(() => getSyncSnapshot());
   const [online, setOnline] = useState(navigator.onLine);
 
   useEffect(() => {
-    return onSyncStatusChange(setStatus);
+    const unsubscribe = onSyncSnapshotChange(setSnapshot);
+    setSnapshot(getSyncSnapshot());
+    return unsubscribe;
   }, []);
 
   useEffect(() => {
-    function handleOnline() { setOnline(true); }
+    if (!isConfigured || !user || !online) return undefined;
+    flushPendingMutations().catch(() => {});
+    return undefined;
+  }, [isConfigured, online, user]);
+
+  useEffect(() => {
+    function handleOnline() {
+      setOnline(true);
+    }
     function handleOffline() { setOnline(false); }
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
@@ -23,34 +40,71 @@ export default function SyncIndicator() {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, []);
+  }, [isConfigured, user]);
 
-  // Only show when Supabase is configured and user is logged in
   if (!isConfigured || !user) return null;
 
-  let icon, label, className;
+  const unsyncedCount = snapshot.pendingCount + snapshot.failedCount + snapshot.syncingCount;
+  let icon = '•';
+  let label = 'Not synced yet';
+  let state = 'unknown';
 
   if (!online) {
     icon = '⚡';
-    label = 'Offline';
-    className = 'sync-indicator sync-indicator--offline';
-  } else if (status === 'syncing') {
-    icon = '↻';
-    label = 'Syncing';
-    className = 'sync-indicator sync-indicator--syncing';
-  } else if (status === 'error') {
+    label = unsyncedCount > 0
+      ? `Offline — ${countLabel(unsyncedCount, 'change')} not synced`
+      : 'Offline';
+    state = 'offline';
+  } else if (snapshot.failedCount > 0 || snapshot.status === 'error') {
     icon = '⚠';
-    label = 'Sync error';
-    className = 'sync-indicator sync-indicator--error';
-  } else {
+    label = snapshot.failedCount > 0
+      ? `${countLabel(snapshot.failedCount, 'change')} failed to sync`
+      : 'Sync error';
+    state = 'error';
+  } else if (snapshot.syncingCount > 0 || snapshot.status === 'syncing') {
+    icon = '↻';
+    label = 'Syncing changes';
+    state = 'syncing';
+  } else if (snapshot.pendingCount > 0) {
+    icon = '…';
+    label = `${countLabel(snapshot.pendingCount, 'change')} pending`;
+    state = 'pending';
+  } else if (snapshot.lastSuccessfulSyncAt) {
     icon = '✓';
     label = 'Synced';
-    className = 'sync-indicator sync-indicator--synced';
+    state = 'synced';
+  }
+
+  async function retryFailed() {
+    try {
+      snapshot.operations
+        .filter((operation) => operation.status === 'failed')
+        .forEach((operation) => retryPendingMutation(operation.id));
+      await flushPendingMutations();
+    } catch {
+      // The retained failed operation keeps the UI truthful for another retry.
+    }
   }
 
   return (
-    <div className={className} title={label}>
-      <span className="sync-indicator__icon">{icon}</span>
+    <div
+      className={`sync-indicator sync-indicator--truthful sync-indicator--${state}`}
+      role="status"
+      aria-label={label}
+      title={label}
+    >
+      <span className="sync-indicator__icon" aria-hidden="true">{icon}</span>
+      <span className="sync-indicator__label">{label}</span>
+      {state === 'error' && snapshot.failedCount > 0 && (
+        <button
+          className="sync-indicator__retry"
+          type="button"
+          onClick={retryFailed}
+          aria-label="Retry failed sync"
+        >
+          Retry
+        </button>
+      )}
     </div>
   );
 }

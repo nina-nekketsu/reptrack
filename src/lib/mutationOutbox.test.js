@@ -219,4 +219,36 @@ describe('mutation outbox storage safety', () => {
     }));
     expect(outbox.pendingCount()).toBe(0);
   });
+
+  test('notifies isolated subscribers for enqueue, failure, retry, and success removal', async () => {
+    const outbox = createMutationOutbox({ storage: localStorage, now: () => 901 });
+    const snapshots = [];
+    outbox.subscribe(() => { throw new Error('observer failed'); });
+    const unsubscribe = outbox.subscribe((operations) => snapshots.push(operations));
+
+    const operation = outbox.enqueue({
+      kind: 'exercise/update',
+      entityId: 'exercise-2',
+      idempotencyKey: 'exercise-2',
+      payload: { name: 'Squat' },
+    });
+    await outbox.flush(async () => { throw new Error('offline'); });
+    outbox.retry(operation.id);
+    await outbox.flush(async () => undefined);
+
+    expect(snapshots.some((items) => items[0]?.status === 'pending')).toBe(true);
+    expect(snapshots.some((items) => items[0]?.status === 'syncing')).toBe(true);
+    expect(snapshots.some((items) => items[0]?.status === 'failed')).toBe(true);
+    expect(snapshots.at(-1)).toEqual([]);
+
+    unsubscribe();
+    const countAfterUnsubscribe = snapshots.length;
+    outbox.enqueue({
+      kind: 'exercise/update',
+      entityId: 'exercise-3',
+      idempotencyKey: 'exercise-3',
+      payload: { name: 'Row' },
+    });
+    expect(snapshots).toHaveLength(countAfterUnsubscribe);
+  });
 });

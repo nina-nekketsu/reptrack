@@ -14,12 +14,37 @@ import {
 import { createMutationOutbox } from './mutationOutbox';
 
 let _mutationOutbox = null;
+let _snapshotListeners = [];
+const LAST_SUCCESS_STORAGE_KEY = 'reptrackLastSuccessfulSyncAt';
+let _lastSuccessfulSyncAt = typeof localStorage === 'undefined'
+  ? null
+  : localStorage.getItem(LAST_SUCCESS_STORAGE_KEY);
+
+function notifySyncSnapshot() {
+  const snapshot = getSyncSnapshot();
+  _snapshotListeners.forEach((listener) => {
+    try { listener(snapshot); } catch { /* one observer must not break sync */ }
+  });
+}
+
+function markSuccessfulSync() {
+  _lastSuccessfulSyncAt = new Date().toISOString();
+  if (typeof localStorage !== 'undefined') {
+    try {
+      localStorage.setItem(LAST_SUCCESS_STORAGE_KEY, _lastSuccessfulSyncAt);
+    } catch {
+      // Keep truthful in-memory status when persistent storage is unavailable.
+    }
+  }
+  notifySyncSnapshot();
+}
 
 function getMutationOutbox() {
   if (!_mutationOutbox) {
     _mutationOutbox = createMutationOutbox({
       storage: typeof localStorage === 'undefined' ? null : localStorage,
     });
+    _mutationOutbox.subscribe(notifySyncSnapshot);
   }
   return _mutationOutbox;
 }
@@ -42,6 +67,25 @@ export function retryPendingMutation(operationId) {
   return getMutationOutbox().retry(operationId);
 }
 
+export function getSyncSnapshot() {
+  const operations = getMutationOutbox().listPending();
+  return {
+    status: _syncStatus,
+    pendingCount: operations.filter((operation) => operation.status === 'pending').length,
+    failedCount: operations.filter((operation) => operation.status === 'failed').length,
+    syncingCount: operations.filter((operation) => operation.status === 'syncing').length,
+    lastSuccessfulSyncAt: _lastSuccessfulSyncAt,
+    operations,
+  };
+}
+
+export function onSyncSnapshotChange(listener) {
+  _snapshotListeners.push(listener);
+  return () => {
+    _snapshotListeners = _snapshotListeners.filter((candidate) => candidate !== listener);
+  };
+}
+
 export async function flushPendingMutations() {
   const outbox = getMutationOutbox();
   if (!supabase) {
@@ -61,6 +105,7 @@ export async function flushPendingMutations() {
     totals.failed += result.failed;
     totals.pending = outbox.pendingCount();
   } while (outbox.listPending().some((operation) => operation.status === 'pending'));
+  if (totals.succeeded > 0 && outbox.pendingCount() === 0) markSuccessfulSync();
   return totals;
 }
 
@@ -78,6 +123,13 @@ export function onSyncStatusChange(fn) {
 function setStatus(s) {
   _syncStatus = s;
   _listeners.forEach(fn => fn(s));
+  notifySyncSnapshot();
+}
+
+function setSuccessfulStatus() {
+  _syncStatus = 'idle';
+  _listeners.forEach(fn => fn('idle'));
+  markSuccessfulSync();
 }
 
 // ─── Pull: Supabase → localStorage ─────────────────────────────────────
@@ -193,7 +245,7 @@ export async function pullAll(userId) {
 
     await pullActiveWorkoutSession(supabase, userId);
 
-    setStatus('idle');
+    setSuccessfulStatus();
   } catch (err) {
     console.error('[sync] pullAll failed:', err);
     setStatus('error');
@@ -217,7 +269,7 @@ export async function pushExercises(userId) {
   }));
 
   const { error } = await supabase.from('exercises').upsert(rows, { onConflict: 'id,user_id' });
-  if (error) console.error('[sync] pushExercises:', error);
+  if (error) throw error;
 }
 
 export async function pushPlans(userId) {
@@ -233,7 +285,7 @@ export async function pushPlans(userId) {
   }));
 
   const { error } = await supabase.from('workout_plans').upsert(rows, { onConflict: 'id,user_id' });
-  if (error) console.error('[sync] pushPlans:', error);
+  if (error) throw error;
 }
 
 export async function pushLogs(userId) {
@@ -261,8 +313,7 @@ export async function pushLogs(userId) {
 
   const { data, error } = await supabase.from('exercise_logs').insert(rows).select();
   if (error) {
-    console.error('[sync] pushLogs:', error);
-    return;
+    throw error;
   }
 
   // Mark sessions with their remoteId so we don't push them again
@@ -305,7 +356,7 @@ export async function pushSettings(userId) {
     settings,
   }, { onConflict: 'user_id' });
 
-  if (error) console.error('[sync] pushSettings:', error);
+  if (error) throw error;
 }
 
 export async function pushActiveWorkoutSession(userId) {
@@ -329,7 +380,7 @@ export async function pushAll(userId) {
       pushSettings(userId),
       pushDedicatedActiveWorkoutSession(supabase, userId),
     ]);
-    setStatus('idle');
+    setSuccessfulStatus();
   } catch (err) {
     console.error('[sync] pushAll failed:', err);
     setStatus('error');

@@ -26,6 +26,7 @@ describe('exercise mutation outbox integration', () => {
     });
     const {
       flushPendingMutations,
+      getSyncSnapshot,
       listPendingMutations,
       pushExercise,
       retryPendingMutation,
@@ -54,6 +55,12 @@ describe('exercise mutation outbox integration', () => {
     }, { onConflict: 'id,user_id' });
 
     const [failed] = listPendingMutations();
+    expect(getSyncSnapshot()).toEqual(expect.objectContaining({
+      pendingCount: 0,
+      failedCount: 1,
+      syncingCount: 0,
+      lastSuccessfulSyncAt: null,
+    }));
     expect(failed).toEqual(expect.objectContaining({
       kind: 'exercise/update',
       entityId: 'bench-1',
@@ -77,6 +84,12 @@ describe('exercise mutation outbox integration', () => {
 
     expect(secondExecutorCall).toHaveBeenCalledTimes(1);
     expect(listPendingMutations()).toEqual([]);
+    expect(getSyncSnapshot()).toEqual(expect.objectContaining({
+      pendingCount: 0,
+      failedCount: 0,
+      syncingCount: 0,
+      lastSuccessfulSyncAt: expect.any(String),
+    }));
   });
 
   test('removes a successful queued exercise mutation and does not replay it', async () => {

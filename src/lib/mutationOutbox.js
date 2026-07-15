@@ -42,14 +42,24 @@ export function createMutationOutbox({
   let sequence = 0;
   let operations = [];
   let flushPromise = null;
+  const listeners = new Set();
+
+  function notify() {
+    const snapshot = clone(operations);
+    listeners.forEach((listener) => {
+      try { listener(snapshot); } catch { /* isolate observer failures */ }
+    });
+  }
 
   function persist() {
-    if (!storage) return;
-    try {
-      storage.setItem(MUTATION_OUTBOX_STORAGE_KEY, JSON.stringify(operations));
-    } catch {
-      // The in-memory queue remains usable when browser storage is unavailable.
+    if (storage) {
+      try {
+        storage.setItem(MUTATION_OUTBOX_STORAGE_KEY, JSON.stringify(operations));
+      } catch {
+        // The in-memory queue remains usable when browser storage is unavailable.
+      }
     }
+    notify();
   }
 
   function load() {
@@ -87,6 +97,12 @@ export function createMutationOutbox({
 
   function pendingCount() {
     return operations.length;
+  }
+
+  function subscribe(listener) {
+    if (typeof listener !== 'function') throw new TypeError('Subscriber must be a function');
+    listeners.add(listener);
+    return () => listeners.delete(listener);
   }
 
   function enqueue({ kind, entityId = null, idempotencyKey, payload = null } = {}) {
@@ -212,5 +228,6 @@ export function createMutationOutbox({
     listPending,
     pendingCount,
     retry,
+    subscribe,
   };
 }
