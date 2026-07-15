@@ -28,4 +28,9 @@ describe('active workout consumers use the single lifecycle mutation API', () =>
     expect(contents).not.toContain('readStoredActiveWorkoutSession');
     expect(contents).toMatch(/from ['"]\.\.\/lib\/activeWorkoutSession['"]/);
   });
+
+  test.each(pageFiles)('%s persists lifecycle changes through the dedicated sync path', (pageFile) => {
+    const contents = source(pageFile);
+    expect(contents).toContain('pushActiveWorkoutSession');
+  });
 });

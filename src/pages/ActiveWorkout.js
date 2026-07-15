@@ -4,6 +4,7 @@ import ExerciseLogModal from '../components/ExerciseLogModal';
 import WorkoutSummary from '../components/WorkoutSummary';
 import { useTimer } from '../context/TimerContext';
 import { useCoach } from '../context/CoachContext';
+import { useAuth } from '../context/AuthContext';
 import { loadLogs } from '../utils/exerciseHelpers';
 import {
   detectOverload,
@@ -15,6 +16,7 @@ import {
   getStoredVisibleActiveWorkoutSession,
   saveActiveWorkoutSession,
 } from '../lib/activeWorkoutSession';
+import { pushActiveWorkoutSession } from '../lib/sync';
 import './Page.css';
 import './Exercises.css';
 import './Workouts.css';
@@ -69,6 +71,7 @@ export default function ActiveWorkout() {
   const navigate = useNavigate();
   const timer = useTimer();
   const coach = useCoach();
+  const { user } = useAuth();
 
   const [plans] = useState(loadPlans);
   const [allExercises] = useState(loadExercises);
@@ -110,9 +113,10 @@ export default function ActiveWorkout() {
         planName: plan.name,
         now,
       });
+      pushActiveWorkoutSession(user?.id);
       setActiveSession(session);
     }
-  }, [plan, planId, activeSession, navigate]);
+  }, [plan, planId, activeSession, navigate, user?.id]);
 
   // Tick elapsed time
   useEffect(() => {
@@ -200,6 +204,7 @@ export default function ActiveWorkout() {
 
         coach.deactivateCoach();
         saveActiveWorkoutSession({ action: 'end', now: new Date().toISOString() });
+        pushActiveWorkoutSession(user?.id);
         setActiveSession(null);
         return; // Don't navigate yet — show summary first
       }
@@ -207,6 +212,7 @@ export default function ActiveWorkout() {
 
     coach.deactivateCoach();
     saveActiveWorkoutSession({ action: 'end', now: new Date().toISOString() });
+    pushActiveWorkoutSession(user?.id);
     setActiveSession(null);
     navigate('/workouts', { replace: true });
   }

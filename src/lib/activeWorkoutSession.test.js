@@ -10,6 +10,7 @@ import {
   normalizeActiveWorkoutSession,
   readStoredActiveWorkoutSession,
   saveActiveWorkoutSession,
+  writeMergedActiveWorkoutSession,
 } from './activeWorkoutSession';
 
 const active = (overrides = {}) => ({
@@ -184,5 +185,22 @@ describe('active workout session local store', () => {
     expect(ended.deviceId).toBe('device-generated');
     expect(ended.planName).toBe('');
     expect(JSON.parse(localStorage.getItem(ACTIVE_WORKOUT_KEY))).toEqual(ended);
+  });
+
+  test('a newer ended tombstone survives an older active remote copy', () => {
+    localStorage.setItem(ACTIVE_WORKOUT_KEY, JSON.stringify(active({
+      updatedAt: '2026-07-14T09:00:00.000Z',
+      status: 'ended',
+      endedAt: '2026-07-14T09:00:00.000Z',
+    })));
+
+    const merged = writeMergedActiveWorkoutSession(active({
+      updatedAt: '2026-07-14T08:30:00.000Z',
+      deviceId: 'device-b',
+    }));
+
+    expect(merged.status).toBe('ended');
+    expect(readStoredActiveWorkoutSession().status).toBe('ended');
+    expect(getStoredVisibleActiveWorkoutSession()).toBeNull();
   });
 });

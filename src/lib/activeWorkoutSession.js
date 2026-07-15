@@ -134,6 +134,12 @@ function writeStoredActiveWorkoutSession(session, storage = defaultStorage()) {
   return normalized;
 }
 
+export function writeMergedActiveWorkoutSession(remoteSession, storage = defaultStorage()) {
+  const localSession = readStoredActiveWorkoutSession(storage);
+  const merged = mergeActiveWorkoutSessions(localSession, remoteSession);
+  return writeStoredActiveWorkoutSession(merged, storage);
+}
+
 export function saveActiveWorkoutSession(command, storage = defaultStorage()) {
   const now = command?.now || new Date().toISOString();
 

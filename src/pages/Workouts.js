@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTimer } from '../context/TimerContext';
-import { pushPlan, pushExercise, pushSettings } from '../lib/sync';
+import { pushPlan, pushExercise, pushSettings, pushActiveWorkoutSession } from '../lib/sync';
 import {
   getStoredVisibleActiveWorkoutSession,
   saveActiveWorkoutSession,
@@ -402,6 +402,7 @@ export default function Workouts() {
       planName: currentPlan.name,
       now,
     });
+    pushActiveWorkoutSession(user?.id);
     setActiveSession(session);
     navigate(`/workout/${currentPlan.id}`);
   }
@@ -410,6 +411,7 @@ export default function Workouts() {
   function handleEndSession() {
     timer.stopAll(); // Stop all timers when workout ends
     saveActiveWorkoutSession({ action: 'end', now: new Date().toISOString() });
+    pushActiveWorkoutSession(user?.id);
     setActiveSession(null);
     setElapsed('');
   }

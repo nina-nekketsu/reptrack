@@ -7,6 +7,10 @@
 //   Conflict resolution: last-write-wins (Supabase data overwrites local on pull).
 
 import { supabase } from './supabase';
+import {
+  pullActiveWorkoutSession,
+  pushActiveWorkoutSession as pushDedicatedActiveWorkoutSession,
+} from './activeWorkoutSessionSync';
 
 // ─── Status tracking ────────────────────────────────────────────────────
 let _syncStatus = 'idle'; // 'idle' | 'syncing' | 'error' | 'offline'
@@ -135,6 +139,8 @@ export async function pullAll(userId) {
       }
     }
 
+    await pullActiveWorkoutSession(supabase, userId);
+
     setStatus('idle');
   } catch (err) {
     console.error('[sync] pullAll failed:', err);
@@ -250,6 +256,16 @@ export async function pushSettings(userId) {
   if (error) console.error('[sync] pushSettings:', error);
 }
 
+export async function pushActiveWorkoutSession(userId) {
+  if (!supabase || !userId) return;
+  try {
+    return await pushDedicatedActiveWorkoutSession(supabase, userId);
+  } catch (error) {
+    console.error('[sync] pushActiveWorkoutSession:', error);
+    return null;
+  }
+}
+
 export async function pushAll(userId) {
   if (!supabase || !userId) return;
   setStatus('syncing');
@@ -259,6 +275,7 @@ export async function pushAll(userId) {
       pushPlans(userId),
       pushLogs(userId),
       pushSettings(userId),
+      pushDedicatedActiveWorkoutSession(supabase, userId),
     ]);
     setStatus('idle');
   } catch (err) {
