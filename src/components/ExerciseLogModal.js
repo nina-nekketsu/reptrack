@@ -45,7 +45,13 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs, sta
   const [rir, setRir] = useState('');
   const [lastSavedSet, setLastSavedSet] = useState(null);
   const [savedSetFeedback, setSavedSetFeedback] = useState([]);
+  const [isSaving, setIsSaving] = useState(false);
   const logScrollRef = useRef(null);
+  const mountedRef = useRef(true);
+
+  useEffect(() => () => {
+    mountedRef.current = false;
+  }, []);
 
   // Coach-related derived data
   const isCoachActive = coach.isOnboarded && coach.coachActive;
@@ -84,7 +90,9 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs, sta
               reps: s.reps?.toString() ?? '',
               weight: s.weight?.toString() ?? '',
             }));
-            initialSets = prevSets;
+            // Preserve the established quick-entry flow: saved values remain
+            // pre-filled and the next set is ready without another tap.
+            initialSets = [...prevSets, { reps: '', weight: '' }];
             setEditingSession({ ...latestSession });
             setSavedSetFeedback(getSessionRepFeedback(currentLogs, exercise.id, latestSession));
           }
@@ -186,7 +194,8 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs, sta
     if (onSaved) onSaved(updatedLogs);
   }
 
-  function saveSession() {
+  async function saveSession() {
+    if (isSaving) return;
     const validSets = sets.filter((s) => s.reps !== '' || s.weight !== '');
     if (validSets.length === 0) return;
 
@@ -213,50 +222,59 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs, sta
     let persistedSession;
 
     if (editingSession) {
-      const updatedEntry = {
+      persistedSession = {
         ...editingSession,
         ...baseSession,
         date: editingSession.date,
       };
-      persistedSession = updatedEntry;
-      const merged = existingSessions.map((s) =>
-        s.date === editingSession.date ? updatedEntry : s
-      );
       updatedLogs = {
         ...currentLogs,
-        [exercise.id]: merged,
+        [exercise.id]: existingSessions.map((session) =>
+          session.date === editingSession.date ? persistedSession : session
+        ),
       };
-
-      if (user) {
-        const syncPromise = editingSession.remoteId
-          ? updateRemoteSession(editingSession.remoteId, exercise.id, updatedEntry, user.id)
-          : upsertSession(exercise.id, updatedEntry, user.id);
-        syncPromise.catch((err) =>
-          console.warn('[Supabase] session sync failed:', err)
-        );
-      }
     } else {
-      const newSession = {
+      persistedSession = {
         date: new Date().toISOString(),
         ...baseSession,
       };
-      persistedSession = newSession;
       updatedLogs = {
         ...currentLogs,
-        [exercise.id]: [...existingSessions, newSession],
+        [exercise.id]: [...existingSessions, persistedSession],
       };
-      if (user) {
-        upsertSession(exercise.id, newSession, user.id).catch((err) =>
-          console.warn('[Supabase] session sync failed:', err)
-        );
-      }
     }
 
+    // Local-first: make the completed set/session durable before waiting on the network.
     saveLogs(updatedLogs);
     window.dispatchEvent(new Event('exerciseLogged'));
     if (onSaved) onSaved(updatedLogs);
 
+    const syncPromise = user
+      ? persistedSession.remoteId
+        ? updateRemoteSession(persistedSession.remoteId, exercise.id, persistedSession, user.id)
+        : upsertSession(exercise.id, persistedSession, user.id)
+      : null;
+
+    const persistReturnedRemoteId = (remoteId) => {
+      if (persistedSession.remoteId || typeof remoteId !== 'string' || !remoteId) {
+        return false;
+      }
+      persistedSession = { ...persistedSession, remoteId };
+      const latestLogs = loadLogs();
+      updatedLogs = {
+        ...latestLogs,
+        [exercise.id]: (latestLogs[exercise.id] || []).map((session) =>
+          session.date === persistedSession.date ? { ...session, remoteId } : session
+        ),
+      };
+      saveLogs(updatedLogs);
+      window.dispatchEvent(new Event('exerciseLogged'));
+      return true;
+    };
+
     if (stayOpenOnSave) {
+      // Commit the local UI state immediately. Remote latency must not rehydrate over
+      // edits the user makes while the insert is in flight.
       setEditingSession({ ...persistedSession });
       setSets(persistedSession.sets.map((set) => ({
         reps: set.reps?.toString() ?? '',
@@ -265,7 +283,35 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs, sta
       setSavedSetFeedback(getSessionRepFeedback(updatedLogs, exercise.id, persistedSession));
       setActiveTab('log');
       scrollToTop();
+
+      if (syncPromise) {
+        setIsSaving(true);
+        try {
+          const remoteResult = await syncPromise;
+          const attachedRemoteId = persistReturnedRemoteId(remoteResult);
+          if (attachedRemoteId && mountedRef.current) {
+            setEditingSession((current) =>
+              current?.date === persistedSession.date
+                ? { ...current, remoteId: persistedSession.remoteId }
+                : current
+            );
+            if (onSaved) onSaved(updatedLogs);
+          }
+        } catch (err) {
+          console.warn('[Supabase] session sync failed:', err);
+        } finally {
+          if (mountedRef.current) setIsSaving(false);
+        }
+      }
       return;
+    }
+
+    if (syncPromise) {
+      syncPromise
+        .then((remoteResult) => persistReturnedRemoteId(remoteResult))
+        .catch((err) =>
+          console.warn('[Supabase] session sync failed:', err)
+        );
     }
     closeModal();
   }
@@ -550,9 +596,9 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs, sta
                 type="button"
                 className="btn-primary"
                 onClick={saveSession}
-                disabled={liveTotals.totalReps === 0 && liveTotals.totalVolume === 0}
+                disabled={isSaving || (liveTotals.totalReps === 0 && liveTotals.totalVolume === 0)}
               >
-                Done
+                {isSaving ? 'Saving…' : 'Done'}
               </button>
               <button type="button" className="btn-secondary" onClick={closeModal}>
                 Cancel

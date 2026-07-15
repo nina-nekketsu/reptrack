@@ -23,6 +23,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Supabase credentials
+# Supabase credentials and linked-project metadata
 .env
 .vercel
+supabase/.temp/

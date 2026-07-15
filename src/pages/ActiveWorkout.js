@@ -317,7 +317,11 @@ export default function ActiveWorkout() {
               onClick={() => openExerciseLog(ex)}
             >
               <div className="aw-exercise-status">
-                <span className="aw-number">{i + 1}</span>
+                {done ? (
+                  <span className="aw-check" aria-label={`${ex.name} completed`}>✓</span>
+                ) : (
+                  <span className="aw-number">{i + 1}</span>
+                )}
               </div>
 
               <div className="aw-exercise-thumb">
