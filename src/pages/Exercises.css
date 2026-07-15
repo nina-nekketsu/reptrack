@@ -1748,3 +1748,81 @@
 .overload-hint.negative {
   color: var(--c-danger);
 }
+
+/* === Canonical June/July logging recovery overrides === */
+.sets-header,
+.set-row {
+  grid-template-columns: 24px 1fr 1fr 42px 38px 20px;
+  gap: 5px;
+}
+
+.sets-header { align-items: center; }
+.sets-header__icon { color: #009944; font-size: 15px; text-align: center; }
+.set-row { padding: 1px 0; }
+.set-row--dropset { background: #f5fff4; }
+.set-row--dropset-child {
+  background: #f7fff8;
+  border-left: 3px solid #8bddaa;
+  padding-left: 3px;
+}
+.set-num--dropset-child { color: #0d7038; font-size: 11px; }
+.set-input { padding: 8px; border-radius: 8px; }
+.set-type-child {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0d7038;
+  background: #ecfff4;
+  border-color: #b9eccd;
+}
+.set-done-btn {
+  width: 38px;
+  height: 36px;
+  border: 2px solid #9fb0c9;
+  border-radius: 8px;
+  background: #eef2f7;
+  color: #6f7894;
+  font-size: 19px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.12s, box-shadow 0.15s;
+}
+.set-done-btn:not(:disabled):active { transform: scale(0.96); }
+.set-done-btn--active {
+  background: #00b84f;
+  border-color: #007f36;
+  color: #fff;
+  box-shadow: 0 0 0 3px rgba(0, 184, 79, 0.24), 0 5px 12px rgba(0, 127, 54, 0.28);
+}
+.set-done-btn:disabled { opacity: 0.35; cursor: default; }
+.set-completion-summary {
+  color: #0d7038;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+  margin-top: -2px;
+  padding: 5px 8px;
+  border: 1px solid #b9eccd;
+  border-radius: 9px;
+  background: #ecfff4;
+}
+.modal--log { max-height: min(96dvh, 96vh); }
+.modal--log .log-timer-zone { padding: 8px 12px 6px; }
+.log-tabs-wrapper { padding: 0 12px 6px; }
+.modal--log .log-scroll-body {
+  padding: 6px 12px max(62px, env(safe-area-inset-bottom, 16px) + 48px);
+  gap: 8px;
+}
+.log-actions {
+  padding: 5px 12px calc(5px + env(safe-area-inset-bottom, 16px));
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.log-actions button {
+  width: 100%;
+  min-height: 36px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}

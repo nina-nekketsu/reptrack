@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ExerciseLogModal from '../components/ExerciseLogModal';
 import WorkoutSummary from '../components/WorkoutSummary';
@@ -17,6 +17,8 @@ import {
   saveActiveWorkoutSession,
 } from '../lib/activeWorkoutSession';
 import { pushActiveWorkoutSession } from '../lib/sync';
+import { beginCoachWorkout, endCoachWorkout } from '../lib/coachCloud';
+import { countCompletedSets, getExerciseProgressState } from '../utils/workoutProgress';
 import './Page.css';
 import './Exercises.css';
 import './Workouts.css';
@@ -79,17 +81,30 @@ export default function ActiveWorkout() {
   const [activeSession, setActiveSession] = useState(getStoredVisibleActiveWorkoutSession);
   const [elapsed, setElapsed] = useState('0:00');
   const [selectedExercise, setSelectedExercise] = useState(null);
+  const [selectedPlanExercise, setSelectedPlanExercise] = useState(null);
+  const [completedExerciseIds, setCompletedExerciseIds] = useState(
+    () => getStoredVisibleActiveWorkoutSession()?.completedExerciseIds || []
+  );
   const [showSummary, setShowSummary] = useState(false);
   const [summaryData, setSummaryData] = useState(null);
   const [warmupDismissed, setWarmupDismissed] = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const startedCoachSessionRef = useRef(null);
 
   const plan = plans.find((p) => p.id === planId);
 
   // Activate coach when workout starts
   useEffect(() => {
-    if (coach.isOnboarded && activeSession) {
+    if (
+      coach.isOnboarded
+      && activeSession
+      && startedCoachSessionRef.current !== activeSession.startedAt
+    ) {
+      startedCoachSessionRef.current = activeSession.startedAt;
       coach.activateCoach();
+      beginCoachWorkout(activeSession).catch((error) => {
+        console.warn('[coach] cloud workout start failed:', error);
+      });
     }
     return () => {
       // Don't deactivate here — let handleEndWorkout do it
@@ -115,6 +130,7 @@ export default function ActiveWorkout() {
       });
       pushActiveWorkoutSession(user?.id);
       setActiveSession(session);
+      setCompletedExerciseIds(session.completedExerciseIds || []);
     }
   }, [plan, planId, activeSession, navigate, user?.id]);
 
@@ -141,8 +157,8 @@ export default function ActiveWorkout() {
     const sessionStart = new Date(activeSession.startedAt).getTime();
     let total = 0;
     for (const s of sessions) {
-      if (new Date(s.date).getTime() >= sessionStart) {
-        total += (s.sets ? s.sets.length : 0);
+      if (new Date(s.workoutSessionStartedAt || s.date).getTime() >= sessionStart) {
+        total += countCompletedSets(s.sets || []);
       }
     }
     return total;
@@ -150,7 +166,8 @@ export default function ActiveWorkout() {
 
   // Check if ALL prescribed sets are logged
   function isFullyLogged(exerciseId, prescribedSets) {
-    return getSetsLoggedThisSession(exerciseId) >= (prescribedSets || 1);
+    return completedExerciseIds.includes(exerciseId)
+      || getSetsLoggedThisSession(exerciseId) >= (prescribedSets || 1);
   }
 
   // Count how many exercises are fully completed
@@ -161,6 +178,12 @@ export default function ActiveWorkout() {
 
   function handleEndWorkout() {
     timer.stopAll();
+    endCoachWorkout(activeSession, {
+      status: 'ended',
+      completedExerciseIds,
+    }).catch((error) => {
+      console.warn('[coach] cloud workout end failed:', error);
+    });
 
     // Generate workout summary if coach is active
     if (coach.isOnboarded && plan && activeSession) {
@@ -227,12 +250,28 @@ export default function ActiveWorkout() {
     setLogs(updatedLogs);
   }
 
-  function openExerciseLog(exercise) {
+  function openExerciseLog(exercise, planExercise) {
     setSelectedExercise(exercise);
+    setSelectedPlanExercise(planExercise);
   }
 
   function closeExerciseLog() {
     setSelectedExercise(null);
+    setSelectedPlanExercise(null);
+  }
+
+  function handleExerciseCompletion(exerciseId, done) {
+    const next = done
+      ? [...new Set([...completedExerciseIds, exerciseId])]
+      : completedExerciseIds.filter((id) => id !== exerciseId);
+    setCompletedExerciseIds(next);
+    const updatedSession = saveActiveWorkoutSession({
+      action: 'update',
+      patch: { completedExerciseIds: next },
+      now: new Date().toISOString(),
+    });
+    if (updatedSession) setActiveSession(updatedSession);
+    pushActiveWorkoutSession(user?.id);
   }
 
   if (!plan) return null;
@@ -307,14 +346,15 @@ export default function ActiveWorkout() {
           if (!ex) return null;
           const setsLogged = getSetsLoggedThisSession(planEx.exerciseId);
           const targetSets = planEx.prescribedSets || 1;
-          const done = setsLogged >= targetSets;
-          const partial = setsLogged > 0 && !done;
+          const done = isFullyLogged(planEx.exerciseId, targetSets);
+          const progressState = getExerciseProgressState(setsLogged, targetSets, done);
+          const partial = progressState === 'partial' || progressState === 'almost';
 
           return (
             <div
               key={`${planEx.exerciseId}-${i}`}
-              className={`aw-exercise-row ${done ? 'aw-exercise-row--done' : partial ? 'aw-exercise-row--partial' : ''}`}
-              onClick={() => openExerciseLog(ex)}
+              className={`aw-exercise-row aw-exercise-row--${progressState}`}
+              onClick={() => openExerciseLog(ex, planEx)}
             >
               <div className="aw-exercise-status">
                 {done ? (
@@ -370,6 +410,10 @@ export default function ActiveWorkout() {
           onClose={closeExerciseLog}
           onSaved={handleLogSaved}
           stayOpenOnSave
+          prescribedSets={selectedPlanExercise?.prescribedSets || 1}
+          prescribedReps={selectedPlanExercise?.prescribedReps || null}
+          isExerciseDone={completedExerciseIds.includes(selectedExercise.id)}
+          onCompletionChange={(done) => handleExerciseCompletion(selectedExercise.id, done)}
         />
       )}
 

@@ -7,6 +7,7 @@ import {
   getTempoCue,
   suggestOverloadLever,
 } from '../lib/coachEngine';
+import { useAiCoachMessage } from '../hooks/useAiCoachMessage';
 
 export default function CoachFeedback({
   exerciseId,
@@ -17,15 +18,27 @@ export default function CoachFeedback({
   encouragementStyle,
   feedbackFrequency,
   metadata,
+  aiContext = null,
 }) {
   const overload = useMemo(
     () => detectOverload(exerciseId, currentSet, previousSets),
     [exerciseId, currentSet, previousSets]
   );
 
+  const { aiMessage, loading, source } = useAiCoachMessage({
+    enabled: Boolean(aiContext && currentSet && (currentSet.reps || currentSet.weight)),
+    exerciseLogId: aiContext?.exerciseLogId,
+    exerciseId: aiContext?.exerciseId || exerciseId,
+    setIndex: aiContext?.setIndex,
+    clientSetId: aiContext?.clientSetId,
+    setFingerprint: aiContext?.setFingerprint,
+    localStartedAt: aiContext?.localStartedAt,
+  });
+
   if (!currentSet || (!currentSet.reps && !currentSet.weight)) return null;
 
   const message = generateCoachMessage(overload, encouragementStyle || 'balanced');
+  const displayMessage = aiMessage || message;
   const guidance = getNextSetGuidance(overload, goal, targetReps);
   const tempoCue = getTempoCue(goal);
   const overloadSuggestion = overload.type === 'maintained' || overload.type === 'regressed'
@@ -54,7 +67,9 @@ export default function CoachFeedback({
     <div className={`coach-feedback ${statusClass}`}>
       <div className="coach-fb-header">
         <span className="coach-fb-status">{statusIcon}</span>
-        <span className="coach-fb-message">{message}</span>
+        <span className="coach-fb-message">{displayMessage}</span>
+        {loading && !aiMessage && <span className="coach-fb-loading">...</span>}
+        {aiMessage && <span className="coach-fb-badge">{source === 'deterministic' ? 'Cloud' : 'AI'}</span>}
       </div>
 
       {/* Overload lever details */}

@@ -114,6 +114,66 @@ describe('active workout exercise session integrity', () => {
     expect(updatedLogs[exercise.id][1].remoteId).toBeUndefined();
   });
 
+  test('prefills the previous training as an unchecked template outside the active session', () => {
+    const previous = {
+      ...existingSession,
+      date: '2026-07-14T08:30:00.000Z',
+      sets: [{ reps: '10', weight: '100', done: true }],
+    };
+    localStorage.setItem('activeWorkoutSession', JSON.stringify(activeWorkout));
+    localStorage.setItem('exerciseLogs', JSON.stringify({ [exercise.id]: [previous] }));
+
+    render(
+      <ExerciseLogModal
+        exercise={exercise}
+        logs={{ [exercise.id]: [previous] }}
+        onSaved={jest.fn()}
+        onClose={jest.fn()}
+      />
+    );
+
+    expect(screen.queryByText(/Editing session:/)).not.toBeInTheDocument();
+    const inputs = screen.getAllByRole('spinbutton');
+    expect(inputs[0]).toHaveValue(10);
+    expect(inputs[1]).toHaveValue(100);
+    expect(screen.getByRole('button', { name: 'Mark set 1 done' })).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  test('persists checked sets, stable identity, and explicit exercise completion', async () => {
+    localStorage.setItem('activeWorkoutSession', JSON.stringify(activeWorkout));
+    localStorage.setItem('exerciseLogs', JSON.stringify({}));
+    const onSaved = jest.fn();
+    const onCompletionChange = jest.fn();
+
+    render(
+      <ExerciseLogModal
+        exercise={exercise}
+        logs={{}}
+        onSaved={onSaved}
+        onClose={jest.fn()}
+        prescribedSets={1}
+        onCompletionChange={onCompletionChange}
+      />
+    );
+
+    const inputs = screen.getAllByRole('spinbutton');
+    fireEvent.change(inputs[0], { target: { value: '5' } });
+    fireEvent.change(inputs[1], { target: { value: '80' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Mark set 1 done' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    expect(onCompletionChange).toHaveBeenCalledWith(true);
+    expect(onSaved.mock.calls[0][0][exercise.id][0].sets[0]).toEqual(expect.objectContaining({
+      reps: '5',
+      weight: '80',
+      done: true,
+      clientSetId: expect.any(String),
+      setIndex: 0,
+      setFingerprint: expect.any(String),
+    }));
+  });
+
   test('a normal close save also stores the returned remote id for a later reopen', async () => {
     mockUser = { id: 'user-1' };
     mockPushSession.mockResolvedValue('remote-closed');

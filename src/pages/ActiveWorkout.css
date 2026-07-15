@@ -159,14 +159,26 @@
   box-shadow: 0 2px 10px rgba(0, 204, 85, 0.08);
 }
 
-.aw-exercise-row--partial {
+.aw-exercise-row--almost,
+.aw-exercise-row--ready {
   background: #fef9ee;
   border-color: #f0d68a;
 }
 
-.aw-exercise-row--partial:hover {
+.aw-exercise-row--almost:hover,
+.aw-exercise-row--ready:hover {
   background: #fdf3dc;
   box-shadow: 0 2px 10px rgba(211, 153, 50, 0.08);
+}
+
+.aw-exercise-row--partial {
+  background: #f5f7ff;
+  border-color: #d7ddff;
+}
+
+.aw-exercise-row--partial:hover {
+  background: #eef2ff;
+  box-shadow: 0 2px 10px rgba(76, 76, 255, 0.08);
 }
 
 /* ── Status indicator ── */
