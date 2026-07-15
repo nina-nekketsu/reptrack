@@ -1,0 +1,90 @@
+.error-boundary {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: calc(var(--space-6) + var(--safe-top))
+    calc(var(--space-5) + var(--safe-right))
+    calc(var(--space-6) + var(--safe-bottom))
+    calc(var(--space-5) + var(--safe-left));
+  background: var(--surface-app);
+  color: var(--text-primary);
+}
+
+.error-boundary__card {
+  width: min(100%, var(--content-max-width));
+  padding: var(--space-7);
+  border: var(--border-hairline);
+  border-radius: var(--r-lg);
+  background: var(--surface-card);
+  box-shadow: var(--shadow-e1);
+}
+
+.error-boundary__eyebrow {
+  margin: 0 0 var(--space-3);
+  color: var(--text-tertiary);
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-label);
+  letter-spacing: var(--letter-spacing-caption);
+  text-transform: uppercase;
+}
+
+.error-boundary h1 {
+  margin: 0 0 var(--space-4);
+  font-size: var(--type-title1-size);
+  line-height: var(--type-title1-line);
+}
+
+.error-boundary h1:focus {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.error-boundary__card > p:not(.error-boundary__eyebrow) {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-line);
+}
+
+.error-boundary__actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+.error-boundary button {
+  min-height: var(--touch-target-min);
+  padding: var(--space-4) var(--space-5);
+  border: var(--border-hairline);
+  border-radius: var(--r-md);
+  font: inherit;
+  font-weight: var(--font-weight-strong);
+  cursor: pointer;
+}
+
+.error-boundary button:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.error-boundary__primary {
+  border-color: var(--accent-primary);
+  background: var(--accent-primary);
+  color: var(--ink-on-accent);
+}
+
+.error-boundary__secondary {
+  background: var(--surface-raised);
+  color: var(--text-primary);
+}
+
+@media (max-width: 360px) {
+  .error-boundary__card {
+    padding: var(--space-5);
+  }
+
+  .error-boundary__actions {
+    grid-template-columns: 1fr;
+  }
+}
