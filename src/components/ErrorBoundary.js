@@ -12,7 +12,8 @@ class ErrorBoundary extends React.Component {
     return { hasError: true };
   }
 
-  componentDidCatch() {
+  componentDidCatch(error) {
+    this.props.onError?.(error, { source: 'react-boundary', category: 'runtime' });
     this.headingRef.current?.focus();
   }
 

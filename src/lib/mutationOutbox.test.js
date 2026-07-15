@@ -172,6 +172,25 @@ describe('mutation outbox storage safety', () => {
     expect(outbox.isFlushing()).toBe(false);
   });
 
+  test('does not reset an in-flight operation when retry is clicked from a stale snapshot', async () => {
+    const outbox = createMutationOutbox({ storage: localStorage, now: () => 800 });
+    const operation = outbox.enqueue({
+      kind: 'exercise/update',
+      entityId: 'exercise-1',
+      idempotencyKey: 'in-flight-retry',
+      payload: { name: 'Bench' },
+    });
+    let release;
+    const gate = new Promise((resolve) => { release = resolve; });
+    const flush = outbox.flush(() => gate);
+
+    expect(outbox.retry(operation.id)).toEqual(expect.objectContaining({ status: 'syncing' }));
+    release();
+    await flush;
+
+    expect(outbox.pendingCount()).toBe(0);
+  });
+
   test('keeps a newer coalesced payload queued when an older payload succeeds in flight', async () => {
     const outbox = createMutationOutbox({ storage: localStorage, now: () => 900 });
     const firstOperation = outbox.enqueue({

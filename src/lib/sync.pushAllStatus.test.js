@@ -1,5 +1,12 @@
 const mockFrom = jest.fn();
 const mockPushActiveWorkoutSession = jest.fn();
+const mockIncrementSyncFailure = jest.fn();
+
+jest.mock('./clientDiagnosticsRuntime', () => ({
+  clientDiagnostics: {
+    incrementSyncFailure: (...args) => mockIncrementSyncFailure(...args),
+  },
+}));
 
 jest.mock('./supabase', () => ({
   supabase: {
@@ -18,6 +25,7 @@ describe('pushAll truthful status', () => {
   beforeEach(() => {
     localStorage.clear();
     jest.clearAllMocks();
+    mockIncrementSyncFailure.mockReset();
     localStorage.setItem('exercises', JSON.stringify([
       { id: 'exercise-1', name: 'Bench press', muscleGroup: 'Chest', type: 'Strength' },
     ]));
@@ -43,6 +51,7 @@ describe('pushAll truthful status', () => {
     await pushAll('user-1');
 
     expect(statuses).toEqual(['syncing', 'error']);
+    expect(mockIncrementSyncFailure).toHaveBeenCalledWith('unknown');
     expect(getSyncSnapshot()).toEqual(expect.objectContaining({
       status: 'error',
       lastSuccessfulSyncAt: null,

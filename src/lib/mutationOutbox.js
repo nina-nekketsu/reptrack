@@ -153,6 +153,7 @@ export function createMutationOutbox({
   function retry(id) {
     const index = operations.findIndex((operation) => operation.id === id);
     if (index < 0) return null;
+    if (operations[index].status === 'syncing') return clone(operations[index]);
     operations[index] = {
       ...operations[index],
       status: 'pending',

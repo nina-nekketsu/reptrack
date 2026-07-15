@@ -30,8 +30,9 @@ describe('ErrorBoundary', () => {
 
   test('renders a generic accessible recovery screen without leaking exception details', () => {
     const onReload = jest.fn();
+    const onError = jest.fn();
     render(
-      <ErrorBoundary onReload={onReload}>
+      <ErrorBoundary onReload={onReload} onError={onError}>
         <BrokenWorkout />
       </ErrorBoundary>
     );
@@ -42,6 +43,10 @@ describe('ErrorBoundary', () => {
     expect(alert).toHaveTextContent('Your locally saved workout data has not been deleted.');
     expect(alert).not.toHaveTextContent('student@example.com');
     expect(alert).not.toHaveTextContent('secret-workout-note');
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({ message: expect.stringContaining('secret-workout-note') }),
+      { source: 'react-boundary', category: 'runtime' }
+    );
 
     fireEvent.click(screen.getByRole('button', { name: 'Reload RepTrack' }));
     expect(onReload).toHaveBeenCalledTimes(1);
@@ -69,6 +74,7 @@ describe('ErrorBoundary', () => {
   test('is wired around the root App render', () => {
     const source = fs.readFileSync(path.join(__dirname, '../index.js'), 'utf8');
     expect(source).toMatch(/import ErrorBoundary from ['"]\.\/components\/ErrorBoundary['"]/);
-    expect(source).toMatch(/<ErrorBoundary>[\s\S]*<App \/>[\s\S]*<\/ErrorBoundary>/);
+    expect(source).toMatch(/installGlobalDiagnostics\(window,\s*clientDiagnostics\)/);
+    expect(source).toMatch(/<ErrorBoundary\s+onError=\{clientDiagnostics\.recordError\}>[\s\S]*<App \/>[\s\S]*<\/ErrorBoundary>/);
   });
 });

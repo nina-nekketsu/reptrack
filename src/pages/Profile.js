@@ -11,6 +11,7 @@ import {
 import { isConfigured } from '../lib/supabase'
 import { loadGlobalRestDefault, saveGlobalRestDefault } from '../utils/timer'
 import { applyDataImport, createDataExport, previewDataImport } from '../utils/dataTransfer'
+import DiagnosticsPanel from '../components/DiagnosticsPanel'
 
 const BASE_URL = 'https://nina-nekketsu.github.io/reptrack/#/coach/';
 
@@ -341,7 +342,7 @@ export default function Profile() {
         {transferMessage && <p className="profile-transfer-status" role="status">{transferMessage}</p>}
         {transferError && <p className="profile-transfer-error" role="alert">{transferError}</p>}
       </section>
-
+      <DiagnosticsPanel />
       <div className="profile-build-footer">
         <span className="build-id-tag">{formatBuildId()}</span>
       </div>

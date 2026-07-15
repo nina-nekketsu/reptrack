@@ -12,6 +12,19 @@ function countLabel(count, singular, plural = `${singular}s`) {
   return `${count} ${count === 1 ? singular : plural}`;
 }
 
+function isReconnectableFailure(operation) {
+  if (operation.status !== 'failed') return false;
+  const code = String(operation.lastError?.code || '').toUpperCase();
+  const message = String(operation.lastError?.message || '').toLowerCase();
+  return code.includes('NETWORK')
+    || code.includes('FETCH')
+    || code.includes('OFFLINE')
+    || message.includes('failed to fetch')
+    || message.includes('network request failed')
+    || message.includes('networkerror')
+    || message === 'load failed';
+}
+
 export default function SyncIndicator() {
   const { user, isConfigured } = useAuth();
   const [snapshot, setSnapshot] = useState(() => getSyncSnapshot());
@@ -25,6 +38,9 @@ export default function SyncIndicator() {
 
   useEffect(() => {
     if (!isConfigured || !user || !online) return undefined;
+    getSyncSnapshot().operations
+      .filter(isReconnectableFailure)
+      .forEach((operation) => retryPendingMutation(operation.id));
     flushPendingMutations().catch(() => {});
     return undefined;
   }, [isConfigured, online, user]);

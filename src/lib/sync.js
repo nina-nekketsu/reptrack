@@ -12,13 +12,22 @@ import {
   pushActiveWorkoutSession as pushDedicatedActiveWorkoutSession,
 } from './activeWorkoutSessionSync';
 import { createMutationOutbox } from './mutationOutbox';
+import { clientDiagnostics } from './clientDiagnosticsRuntime';
 
 let _mutationOutbox = null;
 let _snapshotListeners = [];
 const LAST_SUCCESS_STORAGE_KEY = 'reptrackLastSuccessfulSyncAt';
-let _lastSuccessfulSyncAt = typeof localStorage === 'undefined'
-  ? null
-  : localStorage.getItem(LAST_SUCCESS_STORAGE_KEY);
+
+function readLastSuccessfulSyncAt() {
+  if (typeof localStorage === 'undefined') return null;
+  try {
+    return localStorage.getItem(LAST_SUCCESS_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+let _lastSuccessfulSyncAt = readLastSuccessfulSyncAt();
 
 function notifySyncSnapshot() {
   const snapshot = getSyncSnapshot();
@@ -86,6 +95,25 @@ export function onSyncSnapshotChange(listener) {
   };
 }
 
+function classifySyncFailure(error = {}) {
+  const code = String(error.code || '').toUpperCase();
+  const message = String(error.message || '').toLowerCase();
+  if (code === '401' || code === '403' || code.includes('AUTH') || code.includes('JWT')) {
+    return 'auth-expired';
+  }
+  if (code.includes('NETWORK')
+    || code.includes('FETCH')
+    || message.includes('failed to fetch')
+    || message.includes('network request failed')
+    || message.includes('networkerror')
+    || message === 'load failed'
+    || (typeof navigator !== 'undefined' && navigator.onLine === false)) {
+    return 'offline';
+  }
+  if (/^5\d\d$/.test(code) || code.includes('SERVER')) return 'server';
+  return 'unknown';
+}
+
 export async function flushPendingMutations() {
   const outbox = getMutationOutbox();
   if (!supabase) {
@@ -99,7 +127,18 @@ export async function flushPendingMutations() {
 
   const totals = { processed: 0, succeeded: 0, failed: 0, pending: outbox.pendingCount() };
   do {
+    const attemptsBefore = new Map(
+      outbox.listPending().map((operation) => [operation.id, operation.attempts])
+    );
     const result = await outbox.flush(executePendingMutation);
+    outbox.listPending()
+      .filter((operation) => (
+        operation.status === 'failed'
+        && operation.attempts > (attemptsBefore.get(operation.id) || 0)
+      ))
+      .forEach((operation) => {
+        clientDiagnostics.incrementSyncFailure(classifySyncFailure(operation.lastError));
+      });
     totals.processed += result.processed;
     totals.succeeded += result.succeeded;
     totals.failed += result.failed;
@@ -247,6 +286,7 @@ export async function pullAll(userId) {
 
     setSuccessfulStatus();
   } catch (err) {
+    clientDiagnostics.incrementSyncFailure(classifySyncFailure(err));
     console.error('[sync] pullAll failed:', err);
     setStatus('error');
     throw err;
@@ -260,14 +300,25 @@ export async function pushExercises(userId) {
   const exercises = safeParseJSON(localStorage.getItem('exercises'), []);
   if (exercises.length === 0) return;
 
-  const rows = exercises.map(ex => ({
-    id: String(ex.id),
-    user_id: userId,
-    name: ex.name,
-    muscle_group: ex.muscleGroup,
-    type: ex.type || 'Strength',
-  }));
+  const queuedExerciseIds = new Set(
+    getMutationOutbox().listPending()
+      .filter((operation) => (
+        operation.kind === 'exercise/update'
+        && operation.payload?.user_id === userId
+      ))
+      .map((operation) => String(operation.entityId))
+  );
+  const rows = exercises
+    .filter((exercise) => !queuedExerciseIds.has(String(exercise.id)))
+    .map(ex => ({
+      id: String(ex.id),
+      user_id: userId,
+      name: ex.name,
+      muscle_group: ex.muscleGroup,
+      type: ex.type || 'Strength',
+    }));
 
+  if (rows.length === 0) return;
   const { error } = await supabase.from('exercises').upsert(rows, { onConflict: 'id,user_id' });
   if (error) throw error;
 }
@@ -382,6 +433,7 @@ export async function pushAll(userId) {
     ]);
     setSuccessfulStatus();
   } catch (err) {
+    clientDiagnostics.incrementSyncFailure(classifySyncFailure(err));
     console.error('[sync] pushAll failed:', err);
     setStatus('error');
   }

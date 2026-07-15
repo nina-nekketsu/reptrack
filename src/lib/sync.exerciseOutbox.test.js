@@ -1,5 +1,12 @@
 const mockUpsert = jest.fn();
 const mockFrom = jest.fn(() => ({ upsert: mockUpsert }));
+const mockIncrementSyncFailure = jest.fn();
+
+jest.mock('./clientDiagnosticsRuntime', () => ({
+  clientDiagnostics: {
+    incrementSyncFailure: (...args) => mockIncrementSyncFailure(...args),
+  },
+}));
 
 jest.mock('./supabase', () => ({
   supabase: {
@@ -18,11 +25,12 @@ describe('exercise mutation outbox integration', () => {
     mockFrom.mockReset();
     mockFrom.mockImplementation(() => ({ upsert: mockUpsert }));
     mockUpsert.mockReset();
+    mockIncrementSyncFailure.mockReset();
   });
 
   test('retains a failed exercise upsert and replays it only after explicit retry', async () => {
     mockUpsert.mockResolvedValueOnce({
-      error: Object.assign(new Error('network unavailable'), { code: 'NETWORK' }),
+      error: Object.assign(new Error('TypeError: Failed to fetch'), { code: '' }),
     });
     const {
       flushPendingMutations,
@@ -46,6 +54,8 @@ describe('exercise mutation outbox integration', () => {
     });
 
     expect(mockFrom).toHaveBeenCalledWith('exercises');
+    expect(mockIncrementSyncFailure).toHaveBeenCalledTimes(1);
+    expect(mockIncrementSyncFailure).toHaveBeenCalledWith('offline');
     expect(mockUpsert).toHaveBeenCalledWith({
       id: 'bench-1',
       user_id: 'user-1',
@@ -66,7 +76,7 @@ describe('exercise mutation outbox integration', () => {
       entityId: 'bench-1',
       status: 'failed',
       attempts: 1,
-      lastError: { message: 'network unavailable', code: 'NETWORK' },
+      lastError: { message: 'TypeError: Failed to fetch', code: 'UNKNOWN' },
     }));
 
     const secondExecutorCall = jest.fn();
@@ -148,5 +158,21 @@ describe('exercise mutation outbox integration', () => {
       { onConflict: 'id,user_id' }
     );
     expect(listPendingMutations()).toEqual([]);
+  });
+
+  test('bulk exercise sync skips entities already represented by retained outbox work', async () => {
+    mockUpsert.mockResolvedValueOnce({ error: new Error('offline') });
+    const { pushExercise, pushExercises } = loadSyncModule();
+    localStorage.setItem('exercises', JSON.stringify([
+      { id: 'queued-1', name: 'Queued press', muscleGroup: 'Chest' },
+    ]));
+
+    await pushExercise({ id: 'queued-1', name: 'Queued press', muscleGroup: 'Chest' }, 'user-5');
+    expect(mockUpsert).toHaveBeenCalledTimes(1);
+
+    mockUpsert.mockResolvedValueOnce({ error: null });
+    await pushExercises('user-5');
+
+    expect(mockUpsert).toHaveBeenCalledTimes(1);
   });
 });

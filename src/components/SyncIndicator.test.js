@@ -119,4 +119,33 @@ describe('SyncIndicator truthful states', () => {
 
     await waitFor(() => expect(mockFlushPendingMutations).toHaveBeenCalledTimes(1));
   });
+
+  test('retries only network-class failed work when connectivity returns', async () => {
+    setOnline(false);
+    mockSnapshot = {
+      ...mockSnapshot,
+      failedCount: 2,
+      operations: [
+        {
+          id: 'network-failure',
+          status: 'failed',
+          lastError: { code: 'UNKNOWN', message: 'TypeError: Failed to fetch' },
+        },
+        {
+          id: 'server-failure',
+          status: 'failed',
+          lastError: { code: 'PGRST500', message: 'Database error' },
+        },
+      ],
+    };
+    render(<SyncIndicator />);
+    mockFlushPendingMutations.mockClear();
+
+    setOnline(true);
+    act(() => window.dispatchEvent(new Event('online')));
+
+    await waitFor(() => expect(mockRetryPendingMutation).toHaveBeenCalledWith('network-failure'));
+    expect(mockRetryPendingMutation).not.toHaveBeenCalledWith('server-failure');
+    await waitFor(() => expect(mockFlushPendingMutations).toHaveBeenCalledTimes(1));
+  });
 });
