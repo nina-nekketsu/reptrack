@@ -3,7 +3,6 @@
 // All persisted to localStorage with coach_ prefix.
 
 import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
-import { STORAGE_AVAILABLE } from '../utils/storageCheck';
 
 const CoachContext = createContext(null);
 

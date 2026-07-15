@@ -10,6 +10,7 @@ import {
   bestSet,
   deleteSession,
   getRecords,
+  getSessionRepFeedback,
   getSessionsAsc,
   getSessionsDesc,
   loadLogs,
@@ -32,7 +33,7 @@ import './CoachComponents.css';
  *   onSaved    — callback after a session is saved (receives updated logs)
  *   logs       — current logs object (from parent state)
  */
-export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
+export default function ExerciseLogModal({ exercise, onClose, onSaved, logs, stayOpenOnSave = false }) {
   const { user } = useAuth();
   const coach = useCoach();
 
@@ -43,6 +44,7 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
   const [intensity, setIntensity] = useState('moderate');
   const [rir, setRir] = useState('');
   const [lastSavedSet, setLastSavedSet] = useState(null);
+  const [savedSetFeedback, setSavedSetFeedback] = useState([]);
   const logScrollRef = useRef(null);
 
   // Coach-related derived data
@@ -57,6 +59,7 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
     logScrollRef.current?.scrollTo({ top: 0 });
     setActiveTab('log');
     setEditingSession(null);
+    setSavedSetFeedback([]);
 
     // Check if this exercise was already logged during the current active workout session
     let initialSets = [{ reps: '', weight: '' }];
@@ -74,13 +77,16 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
             .filter((s) => new Date(s.date) >= sessionStart)
             .sort((a, b) => new Date(b.date) - new Date(a.date));
           if (sessionsDuringWorkout.length > 0) {
-            // Pre-populate with the most recently logged sets + one empty row
-            const prevSets = sessionsDuringWorkout[0].sets.map((s) => ({
+            // Reopen the current workout's latest log in edit mode so saving
+            // updates it instead of duplicating volume and remote rows.
+            const latestSession = sessionsDuringWorkout[0];
+            const prevSets = latestSession.sets.map((s) => ({
               reps: s.reps?.toString() ?? '',
               weight: s.weight?.toString() ?? '',
             }));
-            // Add empty row at the bottom for adding more sets
-            initialSets = [...prevSets, { reps: '', weight: '' }];
+            initialSets = prevSets;
+            setEditingSession({ ...latestSession });
+            setSavedSetFeedback(getSessionRepFeedback(currentLogs, exercise.id, latestSession));
           }
         }
       }
@@ -101,6 +107,7 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
     : null;
 
   function updateSet(index, field, value) {
+    setSavedSetFeedback([]);
     setSets((prev) => {
       const next = [...prev];
       next[index] = { ...next[index], [field]: value };
@@ -109,10 +116,12 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
   }
 
   function addSet() {
+    setSavedSetFeedback([]);
     setSets((prev) => [...prev, { reps: '', weight: '' }]);
   }
 
   function removeSet(index) {
+    setSavedSetFeedback([]);
     setSets((prev) => prev.filter((_, i) => i !== index));
   }
 
@@ -124,6 +133,7 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
     setEditingSession(null);
     setSets([{ reps: '', weight: '' }]);
     setActiveTab('log');
+    setSavedSetFeedback([]);
     onClose();
   }
 
@@ -144,7 +154,15 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
     }
     setSets(normalizedSets);
     setEditingSession({ ...session });
+    setSavedSetFeedback(getSessionRepFeedback(logs, exercise.id, session));
     setActiveTab('log');
+    scrollToTop();
+  }
+
+  function handleLogAsNewSession() {
+    setEditingSession(null);
+    setSets([{ reps: '', weight: '' }]);
+    setSavedSetFeedback([]);
     scrollToTop();
   }
 
@@ -192,6 +210,7 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
     const currentLogs = loadLogs();
     const existingSessions = currentLogs[exercise.id] || [];
     let updatedLogs;
+    let persistedSession;
 
     if (editingSession) {
       const updatedEntry = {
@@ -199,6 +218,7 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
         ...baseSession,
         date: editingSession.date,
       };
+      persistedSession = updatedEntry;
       const merged = existingSessions.map((s) =>
         s.date === editingSession.date ? updatedEntry : s
       );
@@ -220,6 +240,7 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
         date: new Date().toISOString(),
         ...baseSession,
       };
+      persistedSession = newSession;
       updatedLogs = {
         ...currentLogs,
         [exercise.id]: [...existingSessions, newSession],
@@ -234,6 +255,18 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
     saveLogs(updatedLogs);
     window.dispatchEvent(new Event('exerciseLogged'));
     if (onSaved) onSaved(updatedLogs);
+
+    if (stayOpenOnSave) {
+      setEditingSession({ ...persistedSession });
+      setSets(persistedSession.sets.map((set) => ({
+        reps: set.reps?.toString() ?? '',
+        weight: set.weight?.toString() ?? '',
+      })));
+      setSavedSetFeedback(getSessionRepFeedback(updatedLogs, exercise.id, persistedSession));
+      setActiveTab('log');
+      scrollToTop();
+      return;
+    }
     closeModal();
   }
 
@@ -293,7 +326,10 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
 
               {editingSession && (
                 <div className="editing-banner">
-                  Editing session: {editingDateLabel}
+                  <span>Editing session: {editingDateLabel}</span>
+                  <button type="button" className="editing-banner__new" onClick={handleLogAsNewSession}>
+                    Log as new session
+                  </button>
                 </div>
               )}
 
@@ -304,35 +340,26 @@ export default function ExerciseLogModal({ exercise, onClose, onSaved, logs }) {
                 <span></span>
               </div>
 
-              {sets.map((s, i) => (
-                <div className="set-row" key={i}>
-                  <span className="set-num">{i + 1}</span>
-                  <input
-                    className="set-input"
-                    type="number"
-                    min="0"
-                    placeholder="0"
-                    value={s.reps}
-                    onChange={(e) => updateSet(i, 'reps', e.target.value)}
-                  />
-                  <input
-                    className="set-input"
-                    type="number"
-                    min="0"
-                    step="0.5"
-                    placeholder="0"
-                    value={s.weight}
-                    onChange={(e) => updateSet(i, 'weight', e.target.value)}
-                  />
-                  <button
-                    className="remove-set-btn"
-                    onClick={() => removeSet(i)}
-                    disabled={sets.length === 1}
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
+              {sets.map((s, i) => {
+                const feedback = savedSetFeedback[i] || null;
+                const feedbackId = feedback ? `set-feedback-${i}` : undefined;
+                return (
+                  <React.Fragment key={i}>
+                    <div className={`set-row ${feedback ? `set-row--${feedback.state}` : ''}`}>
+                      <span className="set-num">{i + 1}</span>
+                      <input className={`set-input ${feedback ? `set-input--${feedback.state}` : ''}`} type="number" min="0" placeholder="0" value={s.reps} onChange={(e) => updateSet(i, 'reps', e.target.value)} aria-describedby={feedbackId} />
+                      <input className={`set-input ${feedback ? `set-input--${feedback.state}` : ''}`} type="number" min="0" step="0.5" placeholder="0" value={s.weight} onChange={(e) => updateSet(i, 'weight', e.target.value)} aria-describedby={feedbackId} />
+                      <button className="remove-set-btn" onClick={() => removeSet(i)} disabled={sets.length === 1}>✕</button>
+                    </div>
+                    {feedback && (
+                      <div id={feedbackId} className={`set-feedback set-feedback--${feedback.state}`} role="status">
+                        <span className="set-feedback__icon" aria-hidden="true">{feedback.icon}</span>
+                        <span className="set-feedback__text">{feedback.label}</span>
+                      </div>
+                    )}
+                  </React.Fragment>
+                );
+              })}
 
               <button className="add-set-btn" onClick={addSet}>
                 + Add Set

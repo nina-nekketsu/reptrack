@@ -17,7 +17,7 @@ describe('active workout session sync integration', () => {
   });
 
   test('the additive migration provides an RLS-protected row and atomic LWW merge', () => {
-    const migration = repoSource('supabase/migrations/001_active_sessions.sql');
+    const migration = repoSource('supabase/migrations/20260715125500_active_sessions.sql');
 
     expect(migration).toMatch(/create table if not exists public\.active_sessions/i);
     expect(migration).toMatch(/user_id\s+uuid\s+primary key/i);

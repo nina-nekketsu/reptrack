@@ -365,6 +365,7 @@ export default function ActiveWorkout() {
           logs={logs}
           onClose={closeExerciseLog}
           onSaved={handleLogSaved}
+          stayOpenOnSave
         />
       )}
 

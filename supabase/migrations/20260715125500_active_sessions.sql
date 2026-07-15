@@ -1,4 +1,4 @@
--- Dedicated cross-device active-workout lifecycle state.
+-- Dedicated cross-device active-workout lifecycle state (2026-07-15).
 -- Apply through the normal Supabase migration path; do not run ad hoc in production.
 
 create table if not exists public.active_sessions (

@@ -109,6 +109,41 @@ export function getSessionsDesc(logs, exerciseId) {
   return [...entry].sort((a, b) => new Date(b.date) - new Date(a.date));
 }
 
+function toFiniteNumber(value) {
+  if (value === '' || value === null || value === undefined) return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+export function getSetRepFeedback(currentSet, previousSet) {
+  if (!previousSet) return { state: 'neutral', reason: 'missing-match', icon: '•', label: 'No matching set last time' };
+  const currentWeight = toFiniteNumber(currentSet?.weight);
+  const previousWeight = toFiniteNumber(previousSet?.weight);
+  if (currentWeight === null || previousWeight === null || currentWeight !== previousWeight) {
+    return { state: 'neutral', reason: 'different-weight', icon: '•', label: 'Different weight than last time' };
+  }
+  const currentReps = toFiniteNumber(currentSet?.reps);
+  const previousReps = toFiniteNumber(previousSet?.reps);
+  if (currentReps === null || previousReps === null) return { state: 'neutral', reason: 'missing-reps', icon: '•', label: 'No rep comparison available' };
+  if (currentReps > previousReps) return { state: 'positive', reason: 'more-reps', icon: '▲', label: 'More reps than last time' };
+  if (currentReps < previousReps) return { state: 'negative', reason: 'fewer-reps', icon: '▼', label: 'Fewer reps than last time' };
+  return { state: 'neutral', reason: 'same-reps', icon: '•', label: 'Same reps as last time' };
+}
+
+export function getSessionRepFeedback(logs, exerciseId, sessionOrDate) {
+  const sessions = getSessionsAsc(logs, exerciseId);
+  if (sessions.length === 0) return [];
+  const targetDate = typeof sessionOrDate === 'string' ? sessionOrDate : sessionOrDate?.date;
+  if (!targetDate) return [];
+  const targetSession = sessions.find((session) => session.date === targetDate) || (typeof sessionOrDate === 'object' ? sessionOrDate : null);
+  if (!targetSession?.sets?.length) return [];
+  const sessionIndex = sessions.findIndex((session) => session.date === targetDate);
+  const previousSession = sessionIndex > 0
+    ? sessions[sessionIndex - 1]
+    : [...sessions].filter((session) => new Date(session.date) < new Date(targetDate)).at(-1) || null;
+  return targetSession.sets.map((set, index) => getSetRepFeedback(set, previousSession?.sets?.[index]));
+}
+
 // ── Supabase sync helpers (delegated to src/lib/sync.js) ─────────────────
 
 /**

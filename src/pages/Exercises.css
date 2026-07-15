@@ -73,7 +73,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.15s, box-shadow 0.15s;
   padding: 0;
   line-height: 1;
 }
@@ -417,6 +417,9 @@
   background: #fffbe6;
 }
 
+.set-row--positive { box-shadow: 0 0 0 1px rgba(92, 99, 62, 0.18); }
+.set-row--negative { box-shadow: 0 0 0 1px rgba(174, 82, 56, 0.18); }
+
 .set-num {
   font-size: 13px;
   font-weight: 700;
@@ -442,6 +445,16 @@
   border-color: #4c4cff;
   background: #f0f0ff;
 }
+
+.set-input--positive { border-color: rgba(92, 99, 62, 0.55); background: rgba(92, 99, 62, 0.12); color: var(--c-text); }
+.set-input--negative { border-color: rgba(174, 82, 56, 0.55); background: rgba(174, 82, 56, 0.12); color: var(--c-text); }
+.set-input--neutral { border-color: rgba(211, 153, 50, 0.55); background: rgba(211, 153, 50, 0.12); color: var(--c-text); }
+
+.set-feedback { display: flex; align-items: center; gap: 8px; margin: 2px 0 6px 34px; font-size: 12px; font-weight: 700; }
+.set-feedback__icon { width: 14px; text-align: center; }
+.set-feedback--positive { color: var(--c-secondary); }
+.set-feedback--negative { color: var(--c-danger); }
+.set-feedback--neutral { color: var(--c-accent); }
 
 .remove-set-btn {
   background: none;
