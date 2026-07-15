@@ -11,6 +11,58 @@ import {
   pullActiveWorkoutSession,
   pushActiveWorkoutSession as pushDedicatedActiveWorkoutSession,
 } from './activeWorkoutSessionSync';
+import { createMutationOutbox } from './mutationOutbox';
+
+let _mutationOutbox = null;
+
+function getMutationOutbox() {
+  if (!_mutationOutbox) {
+    _mutationOutbox = createMutationOutbox({
+      storage: typeof localStorage === 'undefined' ? null : localStorage,
+    });
+  }
+  return _mutationOutbox;
+}
+
+async function executePendingMutation(operation) {
+  if (operation.kind !== 'exercise/update') {
+    throw Object.assign(new Error('Unsupported mutation kind'), { code: 'UNSUPPORTED_KIND' });
+  }
+  const { error } = await supabase
+    .from('exercises')
+    .upsert(operation.payload, { onConflict: 'id,user_id' });
+  if (error) throw error;
+}
+
+export function listPendingMutations() {
+  return getMutationOutbox().listPending();
+}
+
+export function retryPendingMutation(operationId) {
+  return getMutationOutbox().retry(operationId);
+}
+
+export async function flushPendingMutations() {
+  const outbox = getMutationOutbox();
+  if (!supabase) {
+    return {
+      processed: 0,
+      succeeded: 0,
+      failed: 0,
+      pending: outbox.pendingCount(),
+    };
+  }
+
+  const totals = { processed: 0, succeeded: 0, failed: 0, pending: outbox.pendingCount() };
+  do {
+    const result = await outbox.flush(executePendingMutation);
+    totals.processed += result.processed;
+    totals.succeeded += result.succeeded;
+    totals.failed += result.failed;
+    totals.pending = outbox.pendingCount();
+  } while (outbox.listPending().some((operation) => operation.status === 'pending'));
+  return totals;
+}
 
 // ─── Status tracking ────────────────────────────────────────────────────
 let _syncStatus = 'idle'; // 'idle' | 'syncing' | 'error' | 'offline'
@@ -324,15 +376,21 @@ export async function deleteRemoteExercise(exerciseId, userId) {
 // ─── Single-entity push helpers (fire-and-forget after local write) ────
 
 export async function pushExercise(exercise, userId) {
-  if (!supabase || !userId) return;
-  const { error } = await supabase.from('exercises').upsert({
+  if (!exercise?.id || !userId) return undefined;
+  const payload = {
     id: String(exercise.id),
     user_id: userId,
     name: exercise.name,
     muscle_group: exercise.muscleGroup,
     type: exercise.type || 'Strength',
-  }, { onConflict: 'id,user_id' });
-  if (error) console.error('[sync] pushExercise:', error);
+  };
+  getMutationOutbox().enqueue({
+    kind: 'exercise/update',
+    entityId: String(exercise.id),
+    idempotencyKey: `${userId}:exercise:${exercise.id}`,
+    payload,
+  });
+  return flushPendingMutations();
 }
 
 export async function pushPlan(plan, userId) {
