@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTimer } from '../context/TimerContext';
 import {
   formatMs,
@@ -8,159 +8,192 @@ import {
   saveAutoStart,
 } from '../utils/timer';
 
-// Flash colours for alert phase
-const FLASH_COLORS = ['#ffffff', '#00cc44', '#000000'];
+const QUICK_REST_OPTIONS = [30, 60, 90, 120, 180, 240];
 
 export default function SetTimer({ exerciseId }) {
   const timer = useTimer();
-
   const [restSeconds, setRestSeconds] = useState(() => loadRestDefault(exerciseId));
-  const [autoStart, setAutoStart]     = useState(loadAutoStart);
+  const [autoStart, setAutoStart] = useState(loadAutoStart);
+  const [restSheetOpen, setRestSheetOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const chooseRestRef = useRef(null);
+  const sheetRef = useRef(null);
 
-  // When exerciseId changes, update the timer context and load per-exercise rest default
   useEffect(() => {
-    if (exerciseId) {
-      timer.setExerciseId(exerciseId);
-      const defaultRest = loadRestDefault(exerciseId);
-      setRestSeconds(defaultRest);
-      timer.setRestDuration(defaultRest * 1000);
-    }
+    if (!exerciseId) return;
+    timer.setExerciseId(exerciseId);
+    const defaultRest = loadRestDefault(exerciseId);
+    setRestSeconds(defaultRest);
+    timer.setRestDuration(defaultRest * 1000);
   }, [exerciseId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  function handleRestSecondsChange(val) {
-    const n = Math.max(5, Math.min(600, Number(val) || 90));
-    setRestSeconds(n);
-    saveRestDefault(exerciseId, n);
-    timer.setRestDuration(n * 1000);
+  useEffect(() => {
+    if (!restSheetOpen) return undefined;
+    const trigger = chooseRestRef.current;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const firstButton = sheetRef.current?.querySelector('button');
+    firstButton?.focus();
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') setRestSheetOpen(false);
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', onKeyDown);
+      trigger?.focus();
+    };
+  }, [restSheetOpen]);
+
+  function updateRestSeconds(value) {
+    const seconds = Math.max(5, Math.min(600, Number(value) || 90));
+    setRestSeconds(seconds);
+    saveRestDefault(exerciseId, seconds);
+    timer.setRestDuration(seconds * 1000);
   }
 
-  function handleAutoStartToggle() {
+  function chooseRest(seconds) {
+    updateRestSeconds(seconds);
+    setRestSheetOpen(false);
+  }
+
+  function toggleAutoStart() {
     const next = !autoStart;
     setAutoStart(next);
     saveAutoStart(next);
   }
 
-  function handleStart() {
-    timer.startExercise(exerciseId);
-  }
-
-  function handleRest() {
-    if (timer.isResting) return;
-    timer.startRest(restSeconds * 1000);
-  }
-
-  function handleStop() {
-    timer.reset();
-  }
-
-  const flashColor = timer.isAlert ? FLASH_COLORS[timer.flashIdx] : 'transparent';
-  const restTextColor = timer.isAlert
-    ? (flashColor === '#000000' ? '#ffffff' : '#000000')
-    : '#e05555';
+  const activeIsRest = timer.isResting || timer.isAlert;
+  const activeLabel = activeIsRest ? 'REST TIMER' : 'EXERCISE TIMER';
+  const activeDisplay = activeIsRest
+    ? timer.restDisplay
+    : (timer.isExercising ? timer.exerciseDisplay : formatMs(timer.exerciseElapsedMs));
+  const inactiveLabel = activeIsRest ? 'EXERCISE TIMER' : 'REST TIMER';
+  const inactiveDisplay = activeIsRest
+    ? formatMs(timer.exerciseElapsedMs)
+    : formatMs(restSeconds * 1000);
 
   return (
-    <div className={`set-timer ${timer.isAlert ? 'set-timer--alert' : ''}`}>
-      {timer.isAlert && (
-        <div
-          className="timer-flash-overlay"
-          style={{ backgroundColor: flashColor }}
-          aria-hidden="true"
-        />
-      )}
+    <section className={`set-timer set-timer--ds11 ${timer.isAlert ? 'set-timer--alert' : ''}`} aria-label="Set timer">
+      <p className="sr-only" aria-live="polite">Rest started, {restSeconds} seconds</p>
 
-      <div className="timer-row">
-        <div className={`timer-block timer-block--exercise ${timer.isExercising ? 'timer-block--active' : ''}`}>
-          <div className="timer-label">Exercise</div>
-          <div className="timer-display timer-display--exercise">
-            {timer.isExercising ? timer.exerciseDisplay : formatMs(timer.exerciseElapsedMs)}
-          </div>
-        </div>
-
-        <div className={`timer-block timer-block--rest ${timer.isResting ? 'timer-block--active' : ''} ${timer.isAlert ? 'timer-block--alert' : ''}`}>
-          <div className="timer-label">Rest</div>
-          <div
-            className="timer-display timer-display--rest"
-            style={timer.isAlert ? { color: restTextColor, position: 'relative', zIndex: 2 } : {}}
-          >
-            {timer.isResting ? timer.restDisplay : formatMs(restSeconds * 1000)}
-          </div>
-          {timer.isAlert && (
-            <div className="timer-alert-label" style={{ color: restTextColor, position: 'relative', zIndex: 2 }}>
-              GET READY!
-            </div>
-          )}
-        </div>
+      <div
+        className={`timer-phase timer-phase--active ${timer.isAlert ? 'timer-phase--pulse' : ''}`}
+        data-testid="timer-active-phase"
+      >
+        <span className="timer-phase__label">{activeLabel}</span>
+        <strong className="timer-phase__display">{activeDisplay}</strong>
+        {timer.isAlert && <span className="timer-phase__hint">Get ready</span>}
       </div>
 
-      <div className="timer-controls">
+      <div className="timer-phase timer-phase--inactive" data-testid="timer-inactive-phase">
+        <span className="timer-phase__label">{inactiveLabel}</span>
+        <span className="timer-phase__display timer-phase__display--small">{inactiveDisplay}</span>
+      </div>
+
+      <div className="timer-controls timer-controls--ds11">
         <button
+          type="button"
           className={`timer-btn timer-btn--start ${timer.isExercising ? 'timer-btn--active' : ''}`}
-          onClick={handleStart}
-          title={timer.isExercising ? 'Already exercising' : timer.isResting ? 'Cancel rest & start' : 'Start exercise timer'}
+          onClick={() => timer.startExercise(exerciseId)}
         >
-          {timer.isExercising ? '▶ Running' : timer.isResting ? '▶ Start (cancel rest)' : '▶ Start'}
+          {timer.isExercising ? 'Running' : timer.isResting ? 'Start set' : 'Start'}
         </button>
-
         <button
+          type="button"
           className={`timer-btn timer-btn--rest ${timer.isResting ? 'timer-btn--active' : ''}`}
-          onClick={handleRest}
+          onClick={() => !timer.isResting && timer.startRest(restSeconds * 1000)}
           disabled={timer.isResting}
-          title={timer.isResting ? 'Already resting' : 'Stop exercise & start rest'}
         >
-          {timer.isResting ? '💤 Resting…' : '💤 Rest'}
+          {timer.isResting ? 'Resting…' : 'Start rest'}
         </button>
-
         {!timer.isIdle && (
-          <button className="timer-btn timer-btn--stop" onClick={handleStop} title="Stop & reset">
-            ✕ Reset
-          </button>
+          <button type="button" className="timer-btn timer-btn--stop" onClick={timer.reset}>Reset</button>
         )}
       </div>
 
-      <div className="timer-settings">
-        <div className="timer-setting-row">
-          <label className="timer-setting-label" htmlFor="rest-seconds">
-            Rest (s)
+      <button
+        ref={chooseRestRef}
+        type="button"
+        className="timer-rest-picker"
+        aria-label={`Choose rest duration, current ${restSeconds} seconds`}
+        onClick={() => setRestSheetOpen(true)}
+        disabled={timer.isResting}
+      >
+        <span>Rest duration</span>
+        <strong>{restSeconds}s</strong>
+      </button>
+
+      <button
+        type="button"
+        className="timer-settings-toggle"
+        aria-expanded={settingsOpen}
+        onClick={() => setSettingsOpen((open) => !open)}
+      >
+        Rest settings
+      </button>
+
+      {settingsOpen && (
+        <div className="timer-settings timer-settings--expanded">
+          <label className="timer-setting-row" htmlFor="rest-seconds">
+            <span className="timer-setting-label">Custom rest seconds</span>
+            <input
+              id="rest-seconds"
+              aria-label="Custom rest seconds"
+              className="timer-setting-input"
+              type="number"
+              min="5"
+              max="600"
+              step="5"
+              value={restSeconds}
+              onChange={(event) => updateRestSeconds(event.target.value)}
+              disabled={timer.isResting}
+            />
           </label>
-          <div className="timer-quick-rest">
-            {[30, 60, 90].map((sec) => (
-              <button
-                key={sec}
-                className={`timer-quick-btn ${restSeconds === sec ? 'timer-quick-btn--active' : ''}`}
-                onClick={() => handleRestSecondsChange(sec)}
-                disabled={timer.isResting}
-              >
-                {sec}s
-              </button>
-            ))}
+          <div className="timer-setting-row">
+            <span className="timer-setting-label">Auto-start next set after rest</span>
+            <button
+              type="button"
+              className={`timer-toggle ${autoStart ? 'timer-toggle--on' : ''}`}
+              onClick={toggleAutoStart}
+              role="switch"
+              aria-label="Auto-start next set after rest"
+              aria-checked={autoStart}
+            >
+              <span className="timer-toggle-knob" aria-hidden="true" />
+            </button>
           </div>
-          <input
-            id="rest-seconds"
-            className="timer-setting-input"
-            type="number"
-            min="5"
-            max="600"
-            step="5"
-            value={restSeconds}
-            onChange={(e) => handleRestSecondsChange(e.target.value)}
-            disabled={timer.isResting}
-          />
         </div>
-        <div className="timer-setting-row">
-          <label className="timer-setting-label" htmlFor="auto-start-toggle">
-            Auto-start after rest
-          </label>
-          <button
-            id="auto-start-toggle"
-            className={`timer-toggle ${autoStart ? 'timer-toggle--on' : ''}`}
-            onClick={handleAutoStartToggle}
-            role="switch"
-            aria-checked={autoStart}
+      )}
+
+      {restSheetOpen && (
+        <div className="timer-sheet-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setRestSheetOpen(false)}>
+          <div
+            ref={sheetRef}
+            className="timer-rest-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="rest-sheet-title"
           >
-            <span className="timer-toggle-knob" />
-          </button>
+            <div className="timer-sheet-handle" aria-hidden="true" />
+            <h3 id="rest-sheet-title">Choose rest duration</h3>
+            <p>Suggested 2–4 min for hard hypertrophy sets. Pick what matches this set.</p>
+            <div className="timer-rest-options">
+              {QUICK_REST_OPTIONS.map((seconds) => (
+                <button
+                  type="button"
+                  key={seconds}
+                  className={seconds === restSeconds ? 'timer-rest-option timer-rest-option--active' : 'timer-rest-option'}
+                  onClick={() => chooseRest(seconds)}
+                >
+                  {seconds}s
+                </button>
+              ))}
+            </div>
+            <button type="button" className="timer-sheet-close" onClick={() => setRestSheetOpen(false)}>Cancel</button>
+          </div>
         </div>
-      </div>
-    </div>
+      )}
+    </section>
   );
 }

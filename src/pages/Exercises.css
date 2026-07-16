@@ -2009,3 +2009,193 @@
   .set-row > .set-done-btn { grid-column: 3; grid-row: 3; }
   .set-row > .remove-set-btn { grid-column: 4; grid-row: 3; }
 }
+
+/* DS-11 timer card — deliberately last so recovery-era timer rules cannot override it. */
+.set-timer--ds11 {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--bg-1);
+  overflow: visible;
+}
+
+.timer-phase {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.timer-phase--active {
+  grid-column: 1;
+  grid-row: 1;
+  display: grid;
+  align-content: center;
+  min-height: 104px;
+  padding: 12px 16px;
+  border-color: var(--rest);
+  background: var(--rest-dim);
+}
+
+.timer-phase--inactive {
+  grid-column: 2;
+  grid-row: 1;
+  display: grid;
+  place-content: center;
+  min-width: 82px;
+  padding: 10px;
+  color: var(--ink-low);
+  background: var(--bg-2);
+  text-align: center;
+}
+
+.timer-phase__label {
+  color: var(--ink-mid);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.timer-phase__display {
+  color: var(--ink-hi);
+  font-size: clamp(2.5rem, 12vw, 4.25rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.timer-phase__display--small {
+  margin-top: 6px;
+  font-size: 1.15rem;
+  letter-spacing: 0;
+}
+
+.timer-phase__hint {
+  margin-top: 6px;
+  color: var(--rest);
+  font-weight: 850;
+}
+
+.timer-phase--pulse {
+  animation: timer-rest-pulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes timer-rest-pulse {
+  from { box-shadow: 0 0 0 0 rgba(255, 176, 32, 0); }
+  to { box-shadow: 0 0 0 4px rgba(255, 176, 32, 0.22); }
+}
+
+.timer-controls--ds11 {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.timer-controls--ds11 .timer-btn {
+  min-height: 48px;
+}
+
+.timer-controls--ds11 .timer-btn--stop {
+  grid-column: 1 / -1;
+}
+
+.timer-rest-picker,
+.timer-settings-toggle {
+  grid-column: 1 / -1;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--ink-hi);
+  background: var(--bg-2);
+}
+
+.timer-rest-picker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+}
+
+.timer-rest-picker strong { color: var(--rest); }
+.timer-settings-toggle { color: var(--ink-mid); }
+
+.timer-settings--expanded {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 10px;
+}
+
+.timer-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 12px;
+  background: rgba(8, 10, 13, 0.72);
+}
+
+.timer-rest-sheet {
+  width: min(100%, 520px);
+  padding: 12px 16px calc(16px + env(safe-area-inset-bottom));
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl) var(--r-xl) var(--r-md) var(--r-md);
+  color: var(--ink-hi);
+  background: var(--bg-1);
+  box-shadow: var(--shadow-e2);
+}
+
+.timer-sheet-handle {
+  width: 42px;
+  height: 4px;
+  margin: 0 auto 12px;
+  border-radius: 999px;
+  background: var(--line-strong);
+}
+
+.timer-rest-sheet h3 { margin: 0; }
+.timer-rest-sheet p { color: var(--ink-mid); }
+
+.timer-rest-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.timer-rest-option,
+.timer-sheet-close {
+  min-height: 48px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--ink-hi);
+  background: var(--bg-2);
+  font-weight: 800;
+}
+
+.timer-rest-option--active {
+  border-color: var(--rest);
+  color: var(--rest);
+  background: var(--rest-dim);
+}
+
+.timer-sheet-close {
+  width: 100%;
+  margin-top: 10px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .timer-phase--pulse { animation: none; box-shadow: 0 0 0 3px rgba(255, 176, 32, 0.22); }
+}
+
+@media (max-width: 360px) {
+  .set-timer--ds11 { padding: 10px; gap: 8px; }
+  .timer-phase--inactive { min-width: 72px; }
+  .timer-rest-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
