@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { getStoredVisibleActiveWorkoutSession } from '../lib/activeWorkoutSession'
 import './BottomNav.css'
@@ -38,6 +38,7 @@ function readStatus() {
 const formatVolume = value => value >= 1000 ? `${(value / 1000).toFixed(1)}t` : `${value}kg`
 
 export default function BottomNav() {
+  const location = useLocation()
   const [status, setStatus] = useState(readStatus)
   useEffect(() => {
     const refresh = () => setStatus(readStatus())
@@ -46,6 +47,8 @@ export default function BottomNav() {
     window.addEventListener('activeWorkoutSessionChanged', refresh)
     return () => ['storage', 'exerciseLogged', 'activeWorkoutSessionChanged'].forEach(type => window.removeEventListener(type, refresh))
   }, [])
+
+  if (/^\/workout\/[^/]+$/.test(location.pathname)) return null
 
   return <nav className="bottom-nav" aria-label="Main">
     {tabs.map(tab => <NavLink key={tab.to} to={tab.to} end={tab.end}

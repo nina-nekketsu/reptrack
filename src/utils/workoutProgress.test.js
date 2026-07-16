@@ -2,6 +2,7 @@ import {
   countCompletedSets,
   countMeaningfulSets,
   getExerciseProgressState,
+  getNextIncompleteIndex,
   isDropsetChild,
 } from './workoutProgress';
 
@@ -17,6 +18,12 @@ describe('recovered active-workout progress semantics', () => {
     expect(isDropsetChild(rows[1])).toBe(true);
     expect(countMeaningfulSets(rows)).toBe(2);
     expect(countCompletedSets(rows)).toBe(1);
+  });
+
+  test('selects the first incomplete exercise as next up', () => {
+    expect(getNextIncompleteIndex([true, false, false])).toBe(1);
+    expect(getNextIncompleteIndex([false, true, false])).toBe(0);
+    expect(getNextIncompleteIndex([true, true])).toBe(-1);
   });
 
   test.each([

@@ -24,6 +24,10 @@ export function countCompletedSets(sets = []) {
   }).length;
 }
 
+export function getNextIncompleteIndex(completionStates = []) {
+  return completionStates.findIndex((isComplete) => !isComplete);
+}
+
 export function getExerciseProgressState(setsDone, prescribedSets, isMarkedDone = false) {
   const targetSets = Math.max(1, Number(prescribedSets) || 1);
   const completedSets = Math.max(0, Number(setsDone) || 0);

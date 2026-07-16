@@ -18,7 +18,11 @@ import {
 } from '../lib/activeWorkoutSession';
 import { pushActiveWorkoutSession } from '../lib/sync';
 import { beginCoachWorkout, endCoachWorkout } from '../lib/coachCloud';
-import { countCompletedSets, getExerciseProgressState } from '../utils/workoutProgress';
+import {
+  countCompletedSets,
+  getExerciseProgressState,
+  getNextIncompleteIndex,
+} from '../utils/workoutProgress';
 import './Page.css';
 import './Exercises.css';
 import './Workouts.css';
@@ -88,6 +92,7 @@ export default function ActiveWorkout() {
   const [showSummary, setShowSummary] = useState(false);
   const [summaryData, setSummaryData] = useState(null);
   const [warmupDismissed, setWarmupDismissed] = useState(false);
+  const [showWorkoutMenu, setShowWorkoutMenu] = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const startedCoachSessionRef = useRef(null);
 
@@ -170,11 +175,29 @@ export default function ActiveWorkout() {
       || getSetsLoggedThisSession(exerciseId) >= (prescribedSets || 1);
   }
 
-  // Count how many exercises are fully completed
-  const completedCount = plan
-    ? plan.exercises.filter((pe) => isFullyLogged(pe.exerciseId, pe.prescribedSets)).length
-    : 0;
-  const totalExercises = plan ? plan.exercises.length : 0;
+  const exerciseProgress = plan
+    ? plan.exercises.map((planExercise, index) => {
+        const exercise = getExercise(planExercise.exerciseId);
+        const setsLogged = getSetsLoggedThisSession(planExercise.exerciseId);
+        const targetSets = planExercise.prescribedSets || 1;
+        const done = isFullyLogged(planExercise.exerciseId, targetSets);
+        return {
+          done,
+          exercise,
+          index,
+          planExercise,
+          progressState: getExerciseProgressState(setsLogged, targetSets, done),
+          setsLogged,
+          targetSets,
+        };
+      })
+    : [];
+  const completedCount = exerciseProgress.filter(({ done }) => done).length;
+  const totalExercises = exerciseProgress.length;
+  const nextExerciseIndex = getNextIncompleteIndex(
+    exerciseProgress.map(({ done, exercise }) => done || !exercise)
+  );
+  const nextExercise = nextExerciseIndex >= 0 ? exerciseProgress[nextExerciseIndex] : null;
 
   function handleEndWorkout() {
     timer.stopAll();
@@ -285,9 +308,7 @@ export default function ActiveWorkout() {
             <div className="aw-header__label">Active Workout</div>
             <div className="aw-header__name">{plan.name}</div>
           </div>
-          <button className="aw-end-btn" onClick={() => setShowEndConfirm(true)}>
-            End Workout
-          </button>
+          <div className="aw-header__elapsed" aria-label={`${elapsed} elapsed`}>{elapsed}</div>
         </div>
 
         <div className="aw-header__stats">
@@ -341,19 +362,47 @@ export default function ActiveWorkout() {
 
       {/* Exercise list */}
       <div className="aw-exercise-list">
-        {plan.exercises.map((planEx, i) => {
-          const ex = getExercise(planEx.exerciseId);
-          if (!ex) return null;
-          const setsLogged = getSetsLoggedThisSession(planEx.exerciseId);
-          const targetSets = planEx.prescribedSets || 1;
-          const done = isFullyLogged(planEx.exerciseId, targetSets);
-          const progressState = getExerciseProgressState(setsLogged, targetSets, done);
+        {exerciseProgress.map((progress) => {
+          const {
+            done,
+            exercise: ex,
+            index: i,
+            planExercise: planEx,
+            progressState,
+            setsLogged,
+            targetSets,
+          } = progress;
+
+          if (!ex) {
+            return (
+              <div
+                key={`${planEx.exerciseId}-${i}`}
+                className="aw-exercise-row aw-exercise-row--missing"
+              >
+                <div className="aw-exercise-status" aria-hidden="true">
+                  <span className="aw-number">{i + 1}</span>
+                </div>
+                <div className="aw-exercise-info">
+                  <div className="aw-exercise-name">Unknown exercise (removed?)</div>
+                  <div className="aw-exercise-meta">This plan entry can no longer be logged.</div>
+                </div>
+                <button
+                  className="aw-edit-plan-btn"
+                  onClick={() => navigate('/workouts')}
+                >
+                  Edit plan
+                </button>
+              </div>
+            );
+          }
+
           const partial = progressState === 'partial' || progressState === 'almost';
+          const isNext = i === nextExerciseIndex;
 
           return (
             <div
               key={`${planEx.exerciseId}-${i}`}
-              className={`aw-exercise-row aw-exercise-row--${progressState}`}
+              className={`aw-exercise-row aw-exercise-row--${progressState} ${isNext ? 'aw-exercise-row--next' : ''}`}
               onClick={() => openExerciseLog(ex, planEx)}
             >
               <div className="aw-exercise-status">
@@ -369,6 +418,7 @@ export default function ActiveWorkout() {
               </div>
 
               <div className="aw-exercise-info">
+                {isNext && <div className="aw-exercise-next-label">Next</div>}
                 <div className={`aw-exercise-name ${done ? 'aw-exercise-name--done' : ''}`}>
                   {ex.name}
                 </div>
@@ -402,6 +452,33 @@ export default function ActiveWorkout() {
         </div>
       )}
 
+      <div className="aw-bottom-bar">
+        <button
+          className="aw-bottom-bar__next"
+          disabled={!nextExercise}
+          onClick={() => nextExercise && openExerciseLog(nextExercise.exercise, nextExercise.planExercise)}
+        >
+          {nextExercise ? `Log next: ${nextExercise.exercise.name}` : 'All exercises logged'}
+        </button>
+        <div className="aw-bottom-bar__secondary">
+          <button
+            className="aw-bottom-bar__rest"
+            disabled={timer.isResting}
+            onClick={() => timer.startRest(90000)}
+          >
+            {timer.isResting ? `Rest ${timer.restDisplay}` : 'Rest 90s'}
+          </button>
+          <button
+            className="aw-bottom-bar__menu"
+            aria-label="Workout menu"
+            aria-haspopup="dialog"
+            onClick={() => setShowWorkoutMenu(true)}
+          >
+            ⋯
+          </button>
+        </div>
+      </div>
+
       {/* Exercise log modal */}
       {selectedExercise && (
         <ExerciseLogModal
@@ -427,6 +504,35 @@ export default function ActiveWorkout() {
         />
       )}
 
+      {showWorkoutMenu && (
+        <div className="aw-menu-overlay" onClick={() => setShowWorkoutMenu(false)}>
+          <div
+            className="aw-workout-menu"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="aw-workout-menu-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h3 id="aw-workout-menu-title">Workout menu</h3>
+            <button
+              className="aw-workout-menu__end"
+              onClick={() => {
+                setShowWorkoutMenu(false);
+                setShowEndConfirm(true);
+              }}
+            >
+              End workout
+            </button>
+            <button
+              className="aw-workout-menu__cancel"
+              onClick={() => setShowWorkoutMenu(false)}
+            >
+              Keep going
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* End workout confirmation overlay */}
       {showEndConfirm && (
         <div className="aw-end-overlay" onClick={() => setShowEndConfirm(false)}>
@@ -436,6 +542,11 @@ export default function ActiveWorkout() {
             <p className="aw-end-confirm__subtitle">
               {completedCount}/{totalExercises} exercises logged · {elapsed}
             </p>
+            {completedCount < totalExercises && (
+              <p className="aw-end-confirm__note">
+                {totalExercises - completedCount} exercises not logged — they'll stay in the plan.
+              </p>
+            )}
             <div className="aw-end-confirm__actions">
               <button
                 className="aw-end-confirm__btn aw-end-confirm__btn--cancel"
