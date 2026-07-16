@@ -214,11 +214,12 @@ export default function ExerciseLogModal({
   onCompletionChange,
   prescribedSets = null,
   prescribedReps = null,
+  initialTab = 'log',
 }) {
   const { user } = useAuth();
   const coach = useCoach();
 
-  const [activeTab, setActiveTab] = useState('log'); // 'log' | 'overview'
+  const [activeTab, setActiveTab] = useState(initialTab); // 'log' | 'overview'
   const [sets, setSets] = useState([emptySetRow()]);
   const [editingSession, setEditingSession] = useState(null);
   const [confirmDeleteDate, setConfirmDeleteDate] = useState(null);
