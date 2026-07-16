@@ -127,13 +127,18 @@ function isParentDropset(set = {}) {
   return set.setType === 'dropset' && !isDropsetChild(set);
 }
 
+function isWarmupRow(set = {}) {
+  return set.setType === 'warmup' || set.warmup === true;
+}
+
 function countFullSets(rows = []) {
-  return rows.filter((row) => !isDropsetChild(row) && isMeaningfulSet(row)).length;
+  return rows.filter((row) => !isDropsetChild(row) && !isWarmupRow(row) && isMeaningfulSet(row)).length;
 }
 
 function getSetLabel(rows, index) {
   const row = rows[index];
-  const fullSetNumber = rows.slice(0, index + 1).filter((set) => !isDropsetChild(set)).length;
+  const fullSetNumber = rows.slice(0, index + 1).filter((set) => !isDropsetChild(set) && !isWarmupRow(set)).length;
+  if (isWarmupRow(row)) return 'W';
   if (!isDropsetChild(row)) return fullSetNumber;
   let childNumber = 1;
   for (let i = index - 1; i >= 0; i -= 1) {
@@ -676,7 +681,7 @@ export default function ExerciseLogModal({
                 const describedBy = [feedbackId, validationId].filter(Boolean).join(' ') || undefined;
                 return (
                   <React.Fragment key={s.clientSetId || i}>
-                    <div className={`set-row ${feedback ? `set-row--${feedback.state}` : ''} ${isParentDropset(s) ? 'set-row--dropset' : ''} ${childRow ? 'set-row--dropset-child' : ''}`}>
+                    <div className={`set-row ${feedback ? `set-row--${feedback.state}` : ''} ${isWarmupRow(s) ? 'set-row--warmup' : ''} ${isParentDropset(s) ? 'set-row--dropset' : ''} ${childRow ? 'set-row--dropset-child' : ''}`}>
                       <span className={`set-num ${childRow ? 'set-num--dropset-child' : ''}`}>{getSetLabel(sets, i)}</span>
                       <div className="set-stepper set-stepper--reps">
                         <span className="set-stepper__label" aria-hidden="true">Reps</span>
@@ -734,6 +739,7 @@ export default function ExerciseLogModal({
                           aria-label={`Set ${getSetLabel(sets, i)} type`}
                         >
                           <option value="normal">N</option>
+                          <option value="warmup">W</option>
                           <option value="dropset">D</option>
                         </select>
                       )}

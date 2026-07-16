@@ -3,6 +3,7 @@ import {
   countMeaningfulSets,
   getExerciseProgressState,
   getNextIncompleteIndex,
+  getRestRecommendation,
   isDropsetChild,
 } from './workoutProgress';
 
@@ -24,6 +25,11 @@ describe('recovered active-workout progress semantics', () => {
     expect(getNextIncompleteIndex([true, false, false])).toBe(1);
     expect(getNextIncompleteIndex([false, true, false])).toBe(0);
     expect(getNextIncompleteIndex([true, true])).toBe(-1);
+  });
+
+  test('applies a shorter rest range between superset exercises', () => {
+    expect(getRestRecommendation({ superset: 'A' })).toEqual({ milliseconds: 75000, label: '75s', rangeLabel: '60–90s rest' });
+    expect(getRestRecommendation({}).milliseconds).toBe(90000);
   });
 
   test.each([

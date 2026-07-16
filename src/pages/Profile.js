@@ -9,7 +9,14 @@ import {
   rotateCoachToken,
 } from '../lib/coachShare'
 import { isConfigured } from '../lib/supabase'
-import { loadGlobalRestDefault, saveGlobalRestDefault } from '../utils/timer'
+import {
+  loadGlobalRestDefault,
+  saveGlobalRestDefault,
+  loadSoundEnabled,
+  saveSoundEnabled,
+  loadHapticsEnabled,
+  saveHapticsEnabled,
+} from '../utils/timer'
 import { applyDataImport, createDataExport, previewDataImport } from '../utils/dataTransfer'
 import DiagnosticsPanel from '../components/DiagnosticsPanel'
 
@@ -28,6 +35,8 @@ export default function Profile() {
   const [shareError, setShareError]     = useState(null);
   const [copied, setCopied]             = useState(false);
   const [globalRest, setGlobalRest]     = useState(() => loadGlobalRestDefault());
+  const [soundEnabled, setSoundEnabled] = useState(() => loadSoundEnabled());
+  const [hapticsEnabled, setHapticsEnabled] = useState(() => loadHapticsEnabled());
   const [importSnapshot, setImportSnapshot] = useState(null);
   const [importPreview, setImportPreview] = useState(null);
   const [transferMessage, setTransferMessage] = useState('');
@@ -193,6 +202,16 @@ export default function Profile() {
           <p className="profile-rest-hint">
             Used for all exercises unless you set a custom rest time per exercise.
           </p>
+          <div className="profile-feedback-toggles">
+            <label className="profile-feedback-toggle">
+              <span><strong>Timer sounds</strong><small>Play the rest-complete alert</small></span>
+              <input type="checkbox" checked={soundEnabled} onChange={(event) => { const value = event.target.checked; setSoundEnabled(value); saveSoundEnabled(value); }} />
+            </label>
+            <label className="profile-feedback-toggle">
+              <span><strong>Haptics</strong><small>Vibrate for timer and PR feedback when supported</small></span>
+              <input type="checkbox" checked={hapticsEnabled} onChange={(event) => { const value = event.target.checked; setHapticsEnabled(value); saveHapticsEnabled(value); }} />
+            </label>
+          </div>
         </div>
       </div>
 

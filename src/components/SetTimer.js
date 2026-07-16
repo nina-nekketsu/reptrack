@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTimer } from '../context/TimerContext';
+import Sheet from './Sheet';
 import {
   formatMs,
   loadRestDefault,
@@ -16,8 +17,6 @@ export default function SetTimer({ exerciseId }) {
   const [autoStart, setAutoStart] = useState(loadAutoStart);
   const [restSheetOpen, setRestSheetOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const chooseRestRef = useRef(null);
-  const sheetRef = useRef(null);
 
   useEffect(() => {
     if (!exerciseId) return;
@@ -26,24 +25,6 @@ export default function SetTimer({ exerciseId }) {
     setRestSeconds(defaultRest);
     timer.setRestDuration(defaultRest * 1000);
   }, [exerciseId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (!restSheetOpen) return undefined;
-    const trigger = chooseRestRef.current;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    const firstButton = sheetRef.current?.querySelector('button');
-    firstButton?.focus();
-    const onKeyDown = (event) => {
-      if (event.key === 'Escape') setRestSheetOpen(false);
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      document.removeEventListener('keydown', onKeyDown);
-      trigger?.focus();
-    };
-  }, [restSheetOpen]);
 
   function updateRestSeconds(value) {
     const seconds = Math.max(5, Math.min(600, Number(value) || 90));
@@ -113,7 +94,6 @@ export default function SetTimer({ exerciseId }) {
       </div>
 
       <button
-        ref={chooseRestRef}
         type="button"
         className="timer-rest-picker"
         aria-label={`Choose rest duration, current ${restSeconds} seconds`}
@@ -166,34 +146,21 @@ export default function SetTimer({ exerciseId }) {
         </div>
       )}
 
-      {restSheetOpen && (
-        <div className="timer-sheet-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setRestSheetOpen(false)}>
-          <div
-            ref={sheetRef}
-            className="timer-rest-sheet"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="rest-sheet-title"
-          >
-            <div className="timer-sheet-handle" aria-hidden="true" />
-            <h3 id="rest-sheet-title">Choose rest duration</h3>
-            <p>Suggested 2–4 min for hard hypertrophy sets. Pick what matches this set.</p>
-            <div className="timer-rest-options">
-              {QUICK_REST_OPTIONS.map((seconds) => (
-                <button
-                  type="button"
-                  key={seconds}
-                  className={seconds === restSeconds ? 'timer-rest-option timer-rest-option--active' : 'timer-rest-option'}
-                  onClick={() => chooseRest(seconds)}
-                >
-                  {seconds}s
-                </button>
-              ))}
-            </div>
-            <button type="button" className="timer-sheet-close" onClick={() => setRestSheetOpen(false)}>Cancel</button>
-          </div>
+      <Sheet open={restSheetOpen} onClose={() => setRestSheetOpen(false)} title="Choose rest duration" className="timer-rest-sheet">
+        <p>Suggested 2–4 min for hard hypertrophy sets. Pick what matches this set.</p>
+        <div className="timer-rest-options">
+          {QUICK_REST_OPTIONS.map((seconds) => (
+            <button
+              type="button"
+              key={seconds}
+              className={seconds === restSeconds ? 'timer-rest-option timer-rest-option--active' : 'timer-rest-option'}
+              onClick={() => chooseRest(seconds)}
+            >
+              {seconds}s
+            </button>
+          ))}
         </div>
-      )}
+      </Sheet>
     </section>
   );
 }

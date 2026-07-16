@@ -102,6 +102,7 @@ export function formatMs(ms) {
 
 /** Simple beep via Web Audio API */
 export function playBeep() {
+  if (!loadSoundEnabled()) return false;
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     const osc = ctx.createOscillator();
@@ -143,10 +144,11 @@ export function playBeep() {
 }
 
 /** Vibrate device if supported */
-export function vibrate() {
+export function vibrate(pattern = [200, 100, 200, 100, 400]) {
+  if (!loadHapticsEnabled()) return false;
   try {
     if (navigator.vibrate) {
-      navigator.vibrate([200, 100, 200, 100, 400]);
+      navigator.vibrate(pattern);
     }
   } catch (e) {
     // Not supported — silent fail
@@ -156,6 +158,28 @@ export function vibrate() {
 /** LocalStorage helpers for rest defaults & auto-start */
 const LS_REST_KEY = 'timerRestDefaults';
 const LS_AUTOSTART_KEY = 'timerAutoStart';
+const LS_SOUND_KEY = 'timerSoundEnabled';
+const LS_HAPTICS_KEY = 'timerHapticsEnabled';
+
+function loadBooleanPreference(key, defaultValue = true) {
+  if (!STORAGE_AVAILABLE) return defaultValue;
+  try {
+    const value = localStorage.getItem(key);
+    return value === null ? defaultValue : value === 'true';
+  } catch {
+    return defaultValue;
+  }
+}
+
+function saveBooleanPreference(key, value) {
+  if (!STORAGE_AVAILABLE) return;
+  try { localStorage.setItem(key, String(Boolean(value))); } catch {}
+}
+
+export function loadSoundEnabled() { return loadBooleanPreference(LS_SOUND_KEY, true); }
+export function saveSoundEnabled(value) { saveBooleanPreference(LS_SOUND_KEY, value); }
+export function loadHapticsEnabled() { return loadBooleanPreference(LS_HAPTICS_KEY, true); }
+export function saveHapticsEnabled(value) { saveBooleanPreference(LS_HAPTICS_KEY, value); }
 
 export function loadRestDefault(exerciseId) {
   if (!STORAGE_AVAILABLE) return loadGlobalRestDefault();

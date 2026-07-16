@@ -546,3 +546,9 @@
   .today-stats-grid .stat-card--accent { grid-column: auto; }
   .history-detail { padding: 14px; }
 }
+
+.profile-feedback-toggles { display: grid; gap: 8px; margin-top: 14px; }
+.profile-feedback-toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--bg-2); }
+.profile-feedback-toggle span { display: grid; gap: 2px; }
+.profile-feedback-toggle small { color: var(--ink-mid); }
+.profile-feedback-toggle input { width: 22px; height: 22px; accent-color: var(--go); }

@@ -178,11 +178,12 @@ function formatElapsed(startIso) {
 function EditExerciseModal({ planEx, exercise, onSave, onClose }) {
   const [sets, setSets] = useState(String(planEx.prescribedSets));
   const [reps, setReps] = useState(String(planEx.prescribedReps));
+  const [superset, setSuperset] = useState(planEx.superset || '');
 
   function handleSave() {
     const s = Math.max(1, parseInt(sets, 10) || 1);
     const r = Math.max(1, parseInt(reps, 10) || 1);
-    onSave(s, r);
+    onSave(s, r, superset || null);
   }
 
   return (
@@ -221,6 +222,11 @@ function EditExerciseModal({ planEx, exercise, onSave, onClose }) {
             </div>
           </div>
         </div>
+        <label className="prescription-label" htmlFor="superset-group">Superset group</label>
+        <select id="superset-group" className="prescription-input" value={superset} onChange={(event) => setSuperset(event.target.value)}>
+          <option value="">None</option>
+          {['A', 'B', 'C', 'D'].map((group) => <option key={group} value={group}>Group {group}</option>)}
+        </select>
 
         <div className="workout-modal__actions">
           <button className="btn-primary" onClick={handleSave}>Save</button>
@@ -236,6 +242,7 @@ function EditExerciseModal({ planEx, exercise, onSave, onClose }) {
 // ═══════════════════════════════════════════
 function AddExerciseModal({ allExercises, planExerciseIds, onAdd, onClose }) {
   const [query, setQuery] = useState('');
+  const [newMuscleGroup, setNewMuscleGroup] = useState('');
 
   const filtered = allExercises.filter(e => {
     const q = query.toLowerCase();
@@ -255,11 +262,11 @@ function AddExerciseModal({ allExercises, planExerciseIds, onAdd, onClose }) {
 
   function handleCreateNew() {
     const name = query.trim();
-    if (!name) return;
+    if (!name || !newMuscleGroup) return;
     const newEx = {
       id: `ex-${Date.now()}`,
       name,
-      muscleGroup: 'Legs',
+      muscleGroup: newMuscleGroup,
       type: 'Strength',
     };
     onAdd(newEx, true);
@@ -300,8 +307,15 @@ function AddExerciseModal({ allExercises, planExerciseIds, onAdd, onClose }) {
           })}
 
           {showCreateNew && (
-            <div className="exercise-search-row create-new" onClick={handleCreateNew}>
-              + Create "{query}"
+            <div className="exercise-create-new">
+              <label htmlFor="new-exercise-muscle">Muscle group</label>
+              <select id="new-exercise-muscle" value={newMuscleGroup} onChange={(event) => setNewMuscleGroup(event.target.value)}>
+                <option value="">Choose a muscle group</option>
+                {['Chest', 'Back', 'Shoulders', 'Arms', 'Legs', 'Core', 'Cardio', 'Other'].map((group) => <option key={group} value={group}>{group}</option>)}
+              </select>
+              <button type="button" className="exercise-search-row create-new" onClick={handleCreateNew} disabled={!newMuscleGroup}>
+                + Create "{query}"
+              </button>
             </div>
           )}
 
@@ -443,11 +457,11 @@ export default function Workouts() {
   }
 
   // ── Edit exercise prescription ──
-  function handleSavePrescription(index, sets, reps) {
+  function handleSavePrescription(index, sets, reps, superset) {
     const updated = plans.map(p => {
       if (p.id !== currentPlanId) return p;
       const exs = p.exercises.map((ex, i) =>
-        i === index ? { ...ex, prescribedSets: sets, prescribedReps: reps } : ex
+        i === index ? { ...ex, prescribedSets: sets, prescribedReps: reps, ...(superset ? { superset } : { superset: undefined }) } : ex
       );
       return { ...p, exercises: exs };
     });
@@ -455,6 +469,21 @@ export default function Workouts() {
     savePlans(updated);
     setEditingPlanEx(null);
     const changedPlan = updated.find(p => p.id === currentPlanId);
+    if (user && changedPlan) pushPlan(changedPlan, user.id).catch(console.warn);
+  }
+
+  function handleMoveExercise(index, direction) {
+    const target = index + direction;
+    if (!currentPlan || target < 0 || target >= currentPlan.exercises.length) return;
+    const updated = plans.map((plan) => {
+      if (plan.id !== currentPlanId) return plan;
+      const exercises = [...plan.exercises];
+      [exercises[index], exercises[target]] = [exercises[target], exercises[index]];
+      return { ...plan, exercises };
+    });
+    setPlans(updated);
+    savePlans(updated);
+    const changedPlan = updated.find((plan) => plan.id === currentPlanId);
     if (user && changedPlan) pushPlan(changedPlan, user.id).catch(console.warn);
   }
 
@@ -598,7 +627,10 @@ export default function Workouts() {
                   onClick={() => setEditingPlanEx(i)}
                 >
                   {editMode && (
-                    <span className="plan-drag-handle">⋮⋮</span>
+                    <span className="plan-reorder-controls" aria-label={`Reorder ${ex.name}`}>
+                      <button type="button" onClick={(event) => { event.stopPropagation(); handleMoveExercise(i, -1); }} disabled={i === 0} aria-label={`Move ${ex.name} up`}>↑</button>
+                      <button type="button" onClick={(event) => { event.stopPropagation(); handleMoveExercise(i, 1); }} disabled={i === currentPlan.exercises.length - 1} aria-label={`Move ${ex.name} down`}>↓</button>
+                    </span>
                   )}
 
                   <div className="plan-exercise-thumb">
@@ -668,7 +700,7 @@ export default function Workouts() {
           <EditExerciseModal
             planEx={planEx}
             exercise={ex}
-            onSave={(s, r) => handleSavePrescription(editingPlanEx, s, r)}
+            onSave={(s, r, superset) => handleSavePrescription(editingPlanEx, s, r, superset)}
             onClose={() => setEditingPlanEx(null)}
           />
         ) : null;

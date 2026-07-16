@@ -28,6 +28,11 @@ export function getNextIncompleteIndex(completionStates = []) {
   return completionStates.findIndex((isComplete) => !isComplete);
 }
 
+export function getRestRecommendation(planExercise = {}) {
+  if (planExercise.superset) return { milliseconds: 75000, label: '75s', rangeLabel: '60–90s rest' };
+  return { milliseconds: 90000, label: '90s', rangeLabel: '90s rest' };
+}
+
 export function getExerciseProgressState(setsDone, prescribedSets, isMarkedDone = false) {
   const targetSets = Math.max(1, Number(prescribedSets) || 1);
   const completedSets = Math.max(0, Number(setsDone) || 0);

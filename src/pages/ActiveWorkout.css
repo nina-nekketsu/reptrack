@@ -653,3 +653,6 @@
   font-size: 13px;
   line-height: 1.4;
 }
+
+.aw-exercise-row--superset { border-left: 3px solid var(--info); }
+.aw-exercise-row--superset + .aw-exercise-row--superset { margin-top: -5px; border-top-left-radius: 0; border-top-right-radius: 0; }

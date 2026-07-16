@@ -570,3 +570,7 @@
 .plan-start-btn,.plan-start-btn:hover,.plan-start-btn.active{background:var(--go);color:var(--ink-on-accent)}.plan-edit-btn,.plan-edit-btn:hover{background:var(--bg-2);border-color:var(--line-strong);color:var(--ink-hi)}
 .active-session-banner{background:var(--go-dim);border:1px solid var(--go);color:var(--ink-hi)}.plan-exercise-row,.plan-exercise-row:hover{background:var(--bg-1);border-color:var(--line);box-shadow:none}.plan-exercise-row:hover{background:var(--bg-3)}.plan-exercise-thumb{background:var(--bg-3)}.plan-exercise-name{color:var(--ink-hi)}.plan-exercise-label{color:var(--ink-mid)}.plan-exercise-prescription{color:var(--go)}
 .plan-picker-select,.plan-name-input,.prescription-input,.exercise-search-input{background:var(--bg-2);border-color:var(--line-strong);color:var(--ink-hi)}.new-plan-btn,.plan-add-exercise-btn{background:var(--bg-2);border-color:var(--line-strong);color:var(--go)}.workout-modal{background:var(--bg-2);color:var(--ink-hi)}.workout-modal__title{color:var(--ink-hi)}.workout-modal__sub{color:var(--ink-mid)}
+.plan-reorder-controls { display: grid; grid-template-columns: repeat(2, 40px); gap: 4px; }
+.plan-reorder-controls button { min-width: 40px; min-height: 40px; border: 1px solid var(--line); border-radius: 10px; color: var(--ink-hi); background: var(--bg-3); }
+.exercise-create-new { display: grid; gap: 8px; padding: 10px 0; }
+.exercise-create-new select { min-height: 44px; border: 1px solid var(--line-strong); border-radius: 10px; color: var(--ink-hi); background: var(--bg-2); font-size: 16px; }

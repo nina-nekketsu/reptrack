@@ -22,6 +22,7 @@ import {
   countCompletedSets,
   getExerciseProgressState,
   getNextIncompleteIndex,
+  getRestRecommendation,
 } from '../utils/workoutProgress';
 import './Page.css';
 import './Exercises.css';
@@ -198,6 +199,7 @@ export default function ActiveWorkout() {
     exerciseProgress.map(({ done, exercise }) => done || !exercise)
   );
   const nextExercise = nextExerciseIndex >= 0 ? exerciseProgress[nextExerciseIndex] : null;
+  const restRecommendation = getRestRecommendation(nextExercise?.planExercise);
 
   function handleEndWorkout() {
     timer.stopAll();
@@ -402,7 +404,7 @@ export default function ActiveWorkout() {
           return (
             <div
               key={`${planEx.exerciseId}-${i}`}
-              className={`aw-exercise-row aw-exercise-row--${progressState} ${isNext ? 'aw-exercise-row--next' : ''}`}
+              className={`aw-exercise-row aw-exercise-row--${progressState} ${planEx.superset ? 'aw-exercise-row--superset' : ''} ${isNext ? 'aw-exercise-row--next' : ''}`}
               onClick={() => openExerciseLog(ex, planEx)}
             >
               <div className="aw-exercise-status">
@@ -424,6 +426,7 @@ export default function ActiveWorkout() {
                 </div>
                 <div className="aw-exercise-meta">
                   {ex.muscleGroup} · {planEx.prescribedSets}×{planEx.prescribedReps}
+                  {planEx.superset ? ` · Superset ${planEx.superset} · ${getRestRecommendation(planEx).rangeLabel}` : ''}
                 </div>
               </div>
 
@@ -464,9 +467,9 @@ export default function ActiveWorkout() {
           <button
             className="aw-bottom-bar__rest"
             disabled={timer.isResting}
-            onClick={() => timer.startRest(90000)}
+            onClick={() => timer.startRest(restRecommendation.milliseconds)}
           >
-            {timer.isResting ? `Rest ${timer.restDisplay}` : 'Rest 90s'}
+            {timer.isResting ? `Rest ${timer.restDisplay}` : `Rest ${restRecommendation.label}`}
           </button>
           <button
             className="aw-bottom-bar__menu"

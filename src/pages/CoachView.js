@@ -146,6 +146,15 @@ export default function CoachView() {
     });
   };
 
+  const fmtFreshness = (iso) => {
+    if (!iso) return 'Freshness unavailable';
+    const minutes = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+    if (minutes < 2) return 'Updated just now';
+    if (minutes < 60) return `Updated ${minutes} minutes ago`;
+    const hours = Math.round(minutes / 60);
+    return `Updated ${hours} hour${hours === 1 ? '' : 's'} ago`;
+  };
+
   return (
     <div className="cv-screen">
       <div className="cv-shell">
@@ -156,7 +165,7 @@ export default function CoachView() {
           <div>
             <h1 className="cv-title">RepTrack Coach View</h1>
             <p className="cv-muted cv-synced">
-              Last synced: <strong>{fmtDateTime(syncedAt)}</strong>
+              Last synced: <strong>{fmtDateTime(syncedAt)}</strong> · {fmtFreshness(syncedAt)}
             </p>
           </div>
         </div>
