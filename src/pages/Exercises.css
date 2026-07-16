@@ -456,6 +456,66 @@
 .set-feedback--negative { color: var(--c-danger); }
 .set-feedback--neutral { color: var(--c-accent); }
 
+.set-ghost {
+  margin: 0 0 6px 34px;
+  color: var(--ink-low);
+  font-size: 12px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.set-validation {
+  min-height: 18px;
+  margin: 0 0 6px 34px;
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.set-input[aria-invalid="true"] {
+  border-color: var(--danger);
+  background: var(--danger-dim);
+}
+
+.set-stepper {
+  display: grid;
+  grid-template-columns: 44px minmax(48px, 1fr) 44px;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.set-stepper__label {
+  display: none;
+  color: var(--ink-low);
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 700;
+}
+
+.set-stepper .set-input {
+  min-width: 0;
+  padding-inline: 4px;
+}
+
+.set-stepper__button {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background: var(--bg-3);
+  color: var(--ink-hi);
+  font: inherit;
+  font-size: 20px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.set-stepper__button:active {
+  background: var(--go-dim);
+  color: var(--go);
+}
+
 .remove-set-btn {
   background: none;
   border: none;
@@ -485,6 +545,65 @@
 
 .add-set-btn:hover {
   background: #e4e4ff;
+}
+
+.set-add-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.same-as-last-btn {
+  min-height: 48px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background: var(--go-dim);
+  color: var(--go);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.same-as-last-btn:disabled {
+  background: var(--bg-1);
+  color: var(--ink-low);
+  cursor: default;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  z-index: 1200;
+  width: min(calc(100vw - 32px), 488px);
+  min-height: 52px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 8px 8px 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--ink-hi);
+  color: var(--bg-0);
+  box-shadow: var(--shadow-e2);
+}
+
+.toast__message {
+  font-weight: 700;
+}
+
+.toast__action {
+  min-width: 72px;
+  min-height: 44px;
+  border: 1px solid currentColor;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
 }
 
 /* ── Previous best hint (kept for safety) ── */
@@ -1764,8 +1883,8 @@
 /* === Canonical June/July logging recovery overrides === */
 .sets-header,
 .set-row {
-  grid-template-columns: 24px 1fr 1fr 42px 38px 20px;
-  gap: 5px;
+  grid-template-columns: 28px minmax(144px, 1fr) minmax(144px, 1fr) 48px 44px 44px;
+  gap: 6px;
 }
 
 .sets-header { align-items: center; }
@@ -1834,7 +1953,59 @@
 }
 .log-actions button {
   width: 100%;
-  min-height: 36px;
+  min-height: 44px;
   padding-top: 6px;
   padding-bottom: 6px;
+}
+
+/* DS-10 responsive set-entry controls must follow the late recovery overrides above. */
+.set-done-btn,
+.remove-set-btn {
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
+}
+
+@media (max-width: 600px) {
+  .sets-header {
+    display: none;
+  }
+
+  .set-row {
+    grid-template-columns: 28px minmax(0, 1fr) 44px 44px;
+    gap: 8px;
+    padding-block: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .set-num {
+    grid-column: 1;
+    grid-row: 1 / 4;
+    align-self: center;
+  }
+
+  .set-stepper--reps,
+  .set-stepper--weight {
+    grid-column: 2 / 5;
+    grid-template-rows: 16px 44px;
+    row-gap: 4px;
+  }
+
+  .set-stepper__label {
+    display: block;
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .set-stepper__button,
+  .set-stepper .set-input {
+    grid-row: 2;
+  }
+
+  .set-stepper--reps { grid-row: 1; }
+  .set-stepper--weight { grid-row: 2; }
+  .set-row > .set-input { grid-column: 2; grid-row: 3; }
+  .set-row > .set-done-btn { grid-column: 3; grid-row: 3; }
+  .set-row > .remove-set-btn { grid-column: 4; grid-row: 3; }
 }

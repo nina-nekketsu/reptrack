@@ -136,7 +136,249 @@ describe('active workout exercise session integrity', () => {
     const inputs = screen.getAllByRole('spinbutton');
     expect(inputs[0]).toHaveValue(10);
     expect(inputs[1]).toHaveValue(100);
+    expect(screen.getByText('Last: 10 reps · 100 kg')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Mark set 1 done' })).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  test('shows the older session as the ghost while editing the current workout session', () => {
+    const previous = {
+      ...existingSession,
+      date: '2026-07-14T08:30:00.000Z',
+      sets: [{ reps: '10', weight: '100', done: true }],
+    };
+    const current = {
+      ...existingSession,
+      workoutSessionStartedAt: activeWorkout.startedAt,
+      sets: [{ reps: '8', weight: '110', done: false }],
+    };
+    const logs = { [exercise.id]: [previous, current] };
+    localStorage.setItem('activeWorkoutSession', JSON.stringify(activeWorkout));
+    localStorage.setItem('exerciseLogs', JSON.stringify(logs));
+
+    render(
+      <ExerciseLogModal
+        exercise={exercise}
+        logs={logs}
+        onSaved={jest.fn()}
+        onClose={jest.fn()}
+      />
+    );
+
+    expect(screen.getByText(/Editing session:/)).toBeInTheDocument();
+    expect(screen.getByRole('spinbutton', { name: 'Set 1 reps' })).toHaveValue(8);
+    expect(screen.getByRole('spinbutton', { name: 'Set 1 weight' })).toHaveValue(110);
+    expect(screen.getByText('Last: 10 reps · 100 kg')).toBeInTheDocument();
+  });
+
+  test('appends the last meaningful set in one tap, keeps one ready row, and ignores decrement taps on that blank row', () => {
+    const onSaved = jest.fn();
+    localStorage.setItem('activeWorkoutSession', JSON.stringify(activeWorkout));
+    localStorage.setItem('exerciseLogs', JSON.stringify({}));
+
+    render(
+      <ExerciseLogModal
+        exercise={exercise}
+        logs={{}}
+        onSaved={onSaved}
+        onClose={jest.fn()}
+      />
+    );
+
+    let inputs = screen.getAllByRole('spinbutton');
+    fireEvent.change(inputs[0], { target: { value: '8' } });
+    fireEvent.change(inputs[1], { target: { value: '92.5' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Same as last set' }));
+
+    inputs = screen.getAllByRole('spinbutton');
+    expect(inputs).toHaveLength(6);
+    expect(inputs[0]).toHaveValue(8);
+    expect(inputs[1]).toHaveValue(92.5);
+    expect(inputs[2]).toHaveValue(8);
+    expect(inputs[3]).toHaveValue(92.5);
+    expect(inputs[4]).toHaveValue(null);
+    expect(inputs[5]).toHaveValue(null);
+
+    const stepperButtons = screen.getAllByTestId('set-stepper-button');
+    fireEvent.click(stepperButtons[8]);
+    fireEvent.click(stepperButtons[10]);
+    expect(inputs[4]).toHaveValue(null);
+    expect(inputs[5]).toHaveValue(null);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+    expect(onSaved).toHaveBeenCalledTimes(1);
+    expect(onSaved.mock.calls[0][0][exercise.id][0].sets).toHaveLength(2);
+  });
+
+  test('adjusts reps and weight with steppers and Enter moves from reps to weight', () => {
+    localStorage.setItem('activeWorkoutSession', JSON.stringify(activeWorkout));
+    localStorage.setItem('exerciseLogs', JSON.stringify({}));
+
+    render(
+      <ExerciseLogModal
+        exercise={exercise}
+        logs={{}}
+        onSaved={jest.fn()}
+        onClose={jest.fn()}
+      />
+    );
+
+    const repsInput = screen.getByRole('spinbutton', { name: 'Set 1 reps' });
+    const weightInput = screen.getByRole('spinbutton', { name: 'Set 1 weight' });
+    const [decreaseReps, increaseReps, , increaseWeight] = screen.getAllByTestId('set-stepper-button');
+    expect(repsInput).toHaveAttribute('enterkeyhint', 'next');
+    expect(screen.getAllByText('Reps')).toHaveLength(2);
+    expect(screen.getAllByText('Weight (kg)')).toHaveLength(2);
+    expect(increaseReps).toHaveAttribute('aria-hidden', 'true');
+    expect(increaseReps).toHaveAttribute('tabindex', '-1');
+
+    fireEvent.click(increaseReps);
+    expect(repsInput).toHaveValue(1);
+    fireEvent.click(decreaseReps);
+    fireEvent.click(decreaseReps);
+    expect(repsInput).toHaveValue(0);
+
+    fireEvent.click(increaseWeight);
+    expect(weightInput).toHaveValue(2.5);
+    fireEvent.keyDown(repsInput, { key: 'Enter' });
+    expect(weightInput).toHaveFocus();
+  });
+
+  test('restores a removed set from the undo toast without losing its values', () => {
+    const previous = {
+      ...existingSession,
+      date: '2026-07-14T08:30:00.000Z',
+      sets: [{ reps: '10', weight: '100', done: false }],
+    };
+    localStorage.setItem('activeWorkoutSession', JSON.stringify(activeWorkout));
+    localStorage.setItem('exerciseLogs', JSON.stringify({ [exercise.id]: [previous] }));
+
+    render(
+      <ExerciseLogModal
+        exercise={exercise}
+        logs={{ [exercise.id]: [previous] }}
+        onSaved={jest.fn()}
+        onClose={jest.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove set 1' }));
+    expect(screen.getByRole('status')).toHaveTextContent('Set removed');
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+
+    expect(screen.queryByText('Set removed')).not.toBeInTheDocument();
+    expect(screen.getByRole('spinbutton', { name: 'Set 1 reps' })).toHaveValue(10);
+    expect(screen.getByRole('spinbutton', { name: 'Set 1 weight' })).toHaveValue(100);
+  });
+
+  test('restores a removed dropset parent with its children and original order', () => {
+    localStorage.setItem('activeWorkoutSession', JSON.stringify(activeWorkout));
+    localStorage.setItem('exerciseLogs', JSON.stringify({}));
+
+    render(
+      <ExerciseLogModal
+        exercise={exercise}
+        logs={{}}
+        onSaved={jest.fn()}
+        onClose={jest.fn()}
+      />
+    );
+
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 reps' }), { target: { value: '8' } });
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 weight' }), { target: { value: '100' } });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Set 1 type' }), { target: { value: 'dropset' } });
+    expect(screen.getByText('1↓1')).toBeInTheDocument();
+    expect(screen.getByText('1↓2')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove set 1' }));
+    expect(screen.queryByText('1↓1')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+
+    const inputs = screen.getAllByRole('spinbutton');
+    expect(inputs).toHaveLength(8);
+    expect(inputs[0]).toHaveValue(8);
+    expect(inputs[1]).toHaveValue(100);
+    expect(inputs[3]).toHaveValue(70);
+    expect(inputs[5]).toHaveValue(49);
+    expect(screen.getByText('1↓1')).toBeInTheDocument();
+    expect(screen.getByText('1↓2')).toBeInTheDocument();
+  });
+
+  test('keeps undo available for four seconds and then dismisses it', () => {
+    jest.useFakeTimers();
+    try {
+      const previous = {
+        ...existingSession,
+        date: '2026-07-14T08:30:00.000Z',
+        sets: [{ reps: '10', weight: '100', done: false }],
+      };
+      localStorage.setItem('activeWorkoutSession', JSON.stringify(activeWorkout));
+      localStorage.setItem('exerciseLogs', JSON.stringify({ [exercise.id]: [previous] }));
+
+      render(
+        <ExerciseLogModal
+          exercise={exercise}
+          logs={{ [exercise.id]: [previous] }}
+          onSaved={jest.fn()}
+          onClose={jest.fn()}
+        />
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: 'Remove set 1' }));
+      act(() => jest.advanceTimersByTime(3999));
+      expect(screen.getByRole('button', { name: 'Undo' })).toBeInTheDocument();
+      act(() => jest.advanceTimersByTime(1));
+      expect(screen.queryByRole('button', { name: 'Undo' })).not.toBeInTheDocument();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  test('keeps an incomplete row visible with an explicit validation message', () => {
+    localStorage.setItem('activeWorkoutSession', JSON.stringify(activeWorkout));
+    localStorage.setItem('exerciseLogs', JSON.stringify({}));
+
+    render(
+      <ExerciseLogModal
+        exercise={exercise}
+        logs={{}}
+        onSaved={jest.fn()}
+        onClose={jest.fn()}
+      />
+    );
+
+    const repsInput = screen.getByRole('spinbutton', { name: 'Set 1 reps' });
+    const weightInput = screen.getByRole('spinbutton', { name: 'Set 1 weight' });
+    fireEvent.change(weightInput, { target: { value: '50' } });
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Enter reps above 0 for set 1');
+    expect(repsInput).toHaveAttribute('aria-invalid', 'true');
+    expect(weightInput).toHaveValue(50);
+
+    fireEvent.change(repsInput, { target: { value: '8' } });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  test('blocks saving an explicitly invalid touched row', () => {
+    const onSaved = jest.fn();
+    localStorage.setItem('activeWorkoutSession', JSON.stringify(activeWorkout));
+    localStorage.setItem('exerciseLogs', JSON.stringify({}));
+
+    render(
+      <ExerciseLogModal
+        exercise={exercise}
+        logs={{}}
+        onSaved={onSaved}
+        onClose={jest.fn()}
+      />
+    );
+
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 reps' }), { target: { value: '8' } });
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 weight' }), { target: { value: '-1' } });
+    expect(screen.getByRole('alert')).toHaveTextContent('Enter a valid weight for set 1');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+    expect(onSaved).not.toHaveBeenCalled();
+    expect(JSON.parse(localStorage.getItem('exerciseLogs'))).toEqual({});
   });
 
   test('persists checked sets, stable identity, and explicit exercise completion', async () => {

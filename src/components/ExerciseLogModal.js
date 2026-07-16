@@ -4,6 +4,7 @@ import RecordBadges from './RecordBadges';
 import VolumeGraph from './VolumeGraph';
 import CoachFeedback from './CoachFeedback';
 import RestAdvisor from './RestAdvisor';
+import Toast from './Toast';
 import { formatBuildId } from '../utils/buildInfo';
 import {
   calcTotals,
@@ -80,8 +81,46 @@ export function withTrailingEmptyRow(rows = [], options = {}) {
   return [...normalized.slice(0, -1), { ...lastRow, done: false }];
 }
 
+export function appendSameAsLastSet(rows = []) {
+  const source = [...rows]
+    .reverse()
+    .find((row) => !isDropsetChild(row) && isMeaningfulSet(row));
+  if (!source) return rows;
+
+  const rowsWithoutTrailingBlank = [...rows];
+  while (rowsWithoutTrailingBlank.length > 0) {
+    const last = rowsWithoutTrailingBlank[rowsWithoutTrailingBlank.length - 1];
+    if (last.reps !== '' || last.weight !== '' || last.setType !== 'normal') break;
+    rowsWithoutTrailingBlank.pop();
+  }
+
+  const copy = ensureSetIdentity({
+    reps: source.reps?.toString() ?? '',
+    weight: source.weight?.toString() ?? '',
+    setType: 'normal',
+    done: false,
+  });
+  return withTrailingEmptyRow([...rowsWithoutTrailingBlank, copy]);
+}
+
 function isMeaningfulSet(set = {}) {
   return Number(set.reps) > 0 || Number(set.weight) > 0;
+}
+
+export function getSetValidation(set = {}, setNumber = 1) {
+  const touched = set.reps !== '' || set.weight !== '';
+  if (!touched) return null;
+  const reps = Number(set.reps);
+  if (set.reps === '' || !Number.isFinite(reps) || reps <= 0) {
+    return `Enter reps above 0 for set ${setNumber}`;
+  }
+  if (set.weight !== '') {
+    const weight = Number(set.weight);
+    if (!Number.isFinite(weight) || weight < 0) {
+      return `Enter a valid weight for set ${setNumber}`;
+    }
+  }
+  return null;
 }
 
 function isParentDropset(set = {}) {
@@ -188,13 +227,22 @@ export default function ExerciseLogModal({
   const [lastSavedSet, setLastSavedSet] = useState(null);
   const [lastSavedCoachContext, setLastSavedCoachContext] = useState(null);
   const [savedSetFeedback, setSavedSetFeedback] = useState([]);
+  const [previousSessionSets, setPreviousSessionSets] = useState([]);
+  const [undoRemoval, setUndoRemoval] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const logScrollRef = useRef(null);
+  const weightInputRefs = useRef([]);
   const mountedRef = useRef(true);
 
   useEffect(() => () => {
     mountedRef.current = false;
   }, []);
+
+  useEffect(() => {
+    if (!undoRemoval) return undefined;
+    const timeoutId = window.setTimeout(() => setUndoRemoval(null), 4000);
+    return () => window.clearTimeout(timeoutId);
+  }, [undoRemoval]);
 
   // Coach-related derived data
   const isCoachActive = coach.isOnboarded && coach.coachActive;
@@ -209,6 +257,7 @@ export default function ExerciseLogModal({
     setActiveTab('log');
     setEditingSession(null);
     setSavedSetFeedback([]);
+    setPreviousSessionSets([]);
     setLastSavedCoachContext(null);
 
     // Check if this exercise was already logged during the current active workout session
@@ -217,6 +266,8 @@ export default function ExerciseLogModal({
     try {
       const currentLogs = loadLogs();
       const exerciseSessions = exercise?.id ? (currentLogs[exercise.id] || []) : [];
+      const sessionsNewestFirst = [...exerciseSessions]
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
       const activeWorkoutSession = getStoredVisibleActiveWorkoutSession();
       if (activeWorkoutSession && exercise?.id) {
         const sessionStart = activeWorkoutSession.startedAt
@@ -237,13 +288,23 @@ export default function ExerciseLogModal({
             setEditingSession({ ...latestSession });
             setSavedSetFeedback(getSessionRepFeedback(currentLogs, exercise.id, latestSession));
           }
+          const latestBeforeWorkout = sessionsNewestFirst.find(
+            (session) => new Date(session.workoutSessionStartedAt || session.date) < sessionStart
+          );
+          if (latestBeforeWorkout) {
+            setPreviousSessionSets(
+              (latestBeforeWorkout.sets || []).map((set) => normalizeSetRow(set, { resetDone: true }))
+            );
+          }
         }
       }
 
       if (!foundCurrentSession && exerciseSessions.length > 0) {
-        const latestPrevious = [...exerciseSessions]
-          .sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+        const latestPrevious = sessionsNewestFirst[0];
         initialSets = withTrailingEmptyRow(latestPrevious.sets || [], { resetDone: true });
+        setPreviousSessionSets(
+          (latestPrevious.sets || []).map((set) => normalizeSetRow(set, { resetDone: true }))
+        );
       }
     } catch (e) {
       // Fall back to empty row if anything goes wrong
@@ -274,22 +335,53 @@ export default function ExerciseLogModal({
     setSets((prev) => applySetUpdate(prev, index, field, value));
   }
 
+  function stepSetValue(index, field, delta) {
+    setSavedSetFeedback([]);
+    setSets((prev) => {
+      const rawValue = prev[index]?.[field];
+      if ((rawValue === '' || rawValue === null || rawValue === undefined) && delta < 0) return prev;
+      const current = Number(rawValue) || 0;
+      const stepped = Math.max(0, current + delta);
+      const value = String(Number(stepped.toFixed(field === 'weight' ? 2 : 0)));
+      return applySetUpdate(prev, index, field, value);
+    });
+  }
+
   function addSet() {
     setSavedSetFeedback([]);
     setSets((prev) => [...prev, emptySetRow()]);
   }
 
+  function addSameAsLastSet() {
+    setSavedSetFeedback([]);
+    setSets((prev) => appendSameAsLastSet(prev));
+  }
+
   function removeSet(index) {
     setSavedSetFeedback([]);
-    setSets((prev) => {
-      const target = prev[index];
-      if (!target) return prev;
-      let next = isParentDropset(target)
-        ? removeDropsetChildrenAfter(prev, index)
-        : [...prev];
-      next = next.filter((_, i) => i !== index);
-      return next.length > 0 ? next : [emptySetRow()];
+    const target = sets[index];
+    if (!target) return;
+    let endIndex = index + 1;
+    if (isParentDropset(target)) {
+      while (endIndex < sets.length && isDropsetChild(sets[endIndex])) endIndex += 1;
+    }
+    const removedRows = sets.slice(index, endIndex);
+    const next = [...sets.slice(0, index), ...sets.slice(endIndex)];
+    setSets(next.length > 0 ? next : [emptySetRow()]);
+    setUndoRemoval({ index, rows: removedRows });
+  }
+
+  function undoRemoveSet() {
+    if (!undoRemoval) return;
+    setSets((current) => {
+      const insertionIndex = Math.min(undoRemoval.index, current.length);
+      return [
+        ...current.slice(0, insertionIndex),
+        ...undoRemoval.rows,
+        ...current.slice(insertionIndex),
+      ];
     });
+    setUndoRemoval(null);
   }
 
   function scrollToTop() {
@@ -348,6 +440,7 @@ export default function ExerciseLogModal({
 
   async function saveSession() {
     if (isSaving) return;
+    if (sets.some((set, index) => getSetValidation(set, index + 1))) return;
     const validSets = sets.filter((s) => s.reps !== '' || s.weight !== '');
     if (validSets.length === 0) return;
 
@@ -577,12 +670,59 @@ export default function ExerciseLogModal({
                 const feedbackId = feedback ? `set-feedback-${i}` : undefined;
                 const childRow = isDropsetChild(s);
                 const meaningful = isMeaningfulSet(s);
+                const validation = getSetValidation(s, i + 1);
+                const validationId = validation ? `set-validation-${i}` : undefined;
+                const describedBy = [feedbackId, validationId].filter(Boolean).join(' ') || undefined;
                 return (
                   <React.Fragment key={s.clientSetId || i}>
                     <div className={`set-row ${feedback ? `set-row--${feedback.state}` : ''} ${isParentDropset(s) ? 'set-row--dropset' : ''} ${childRow ? 'set-row--dropset-child' : ''}`}>
                       <span className={`set-num ${childRow ? 'set-num--dropset-child' : ''}`}>{getSetLabel(sets, i)}</span>
-                      <input className={`set-input ${feedback ? `set-input--${feedback.state}` : ''}`} type="number" inputMode="numeric" min="0" placeholder="0" value={s.reps} onChange={(e) => updateSet(i, 'reps', e.target.value)} aria-label={`Set ${i + 1} reps`} aria-describedby={feedbackId} />
-                      <input className={`set-input ${feedback ? `set-input--${feedback.state}` : ''}`} type="number" inputMode="decimal" min="0" step="0.5" placeholder="0" value={s.weight} onChange={(e) => updateSet(i, 'weight', e.target.value)} aria-label={`Set ${i + 1} weight`} aria-describedby={feedbackId} />
+                      <div className="set-stepper set-stepper--reps">
+                        <span className="set-stepper__label" aria-hidden="true">Reps</span>
+                        <button type="button" className="set-stepper__button" data-testid="set-stepper-button" aria-hidden="true" tabIndex={-1} aria-label={`Decrease set ${i + 1} reps`} onClick={() => stepSetValue(i, 'reps', -1)}>−</button>
+                        <input
+                          className={`set-input ${feedback ? `set-input--${feedback.state}` : ''}`}
+                          type="number"
+                          inputMode="numeric"
+                          enterKeyHint="next"
+                          min="0"
+                          placeholder="0"
+                          value={s.reps}
+                          onFocus={(event) => event.currentTarget.select()}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter') {
+                              event.preventDefault();
+                              weightInputRefs.current[i]?.focus();
+                            }
+                          }}
+                          onChange={(e) => updateSet(i, 'reps', e.target.value)}
+                          aria-label={`Set ${i + 1} reps`}
+                          aria-describedby={describedBy}
+                          aria-invalid={Boolean(validation)}
+                        />
+                        <button type="button" className="set-stepper__button" data-testid="set-stepper-button" aria-hidden="true" tabIndex={-1} aria-label={`Increase set ${i + 1} reps`} onClick={() => stepSetValue(i, 'reps', 1)}>+</button>
+                      </div>
+                      <div className="set-stepper set-stepper--weight">
+                        <span className="set-stepper__label" aria-hidden="true">Weight (kg)</span>
+                        <button type="button" className="set-stepper__button" data-testid="set-stepper-button" aria-hidden="true" tabIndex={-1} aria-label={`Decrease set ${i + 1} weight`} onClick={() => stepSetValue(i, 'weight', -2.5)}>−</button>
+                        <input
+                          ref={(node) => { weightInputRefs.current[i] = node; }}
+                          className={`set-input ${feedback ? `set-input--${feedback.state}` : ''}`}
+                          type="number"
+                          inputMode="decimal"
+                          enterKeyHint="done"
+                          min="0"
+                          step="0.5"
+                          placeholder="0"
+                          value={s.weight}
+                          onFocus={(event) => event.currentTarget.select()}
+                          onChange={(e) => updateSet(i, 'weight', e.target.value)}
+                          aria-label={`Set ${i + 1} weight`}
+                          aria-describedby={describedBy}
+                          aria-invalid={Boolean(validation)}
+                        />
+                        <button type="button" className="set-stepper__button" data-testid="set-stepper-button" aria-hidden="true" tabIndex={-1} aria-label={`Increase set ${i + 1} weight`} onClick={() => stepSetValue(i, 'weight', 2.5)}>+</button>
+                      </div>
                       {childRow ? (
                         <span className="set-input set-type-child" title="Dropset child">↳</span>
                       ) : (
@@ -614,13 +754,33 @@ export default function ExerciseLogModal({
                         <span className="set-feedback__text">{feedback.label}</span>
                       </div>
                     )}
+                    {validation && (
+                      <div id={validationId} className="set-validation" role="alert">
+                        {validation}
+                      </div>
+                    )}
+                    {previousSessionSets[i] && isMeaningfulSet(previousSessionSets[i]) && (
+                      <div className="set-ghost" aria-label={`Previous session set ${i + 1}`}>
+                        Last: {previousSessionSets[i].reps || 0} reps · {previousSessionSets[i].weight || 0} kg
+                      </div>
+                    )}
                   </React.Fragment>
                 );
               })}
 
-              <button className="add-set-btn" onClick={addSet}>
-                + Add Set
-              </button>
+              <div className="set-add-actions">
+                <button
+                  type="button"
+                  className="same-as-last-btn"
+                  onClick={addSameAsLastSet}
+                  disabled={!sets.some((set) => !isDropsetChild(set) && isMeaningfulSet(set))}
+                >
+                  Same as last set
+                </button>
+                <button type="button" className="add-set-btn" onClick={addSet}>
+                  + Add Set
+                </button>
+              </div>
 
               {(completedSetCount > 0 || isExerciseDone) && (
                 <div className="set-completion-summary" role="status">
@@ -836,6 +996,9 @@ export default function ExerciseLogModal({
           )}
         </div>
       </div>
+      {undoRemoval && (
+        <Toast message="Set removed" actionLabel="Undo" onAction={undoRemoveSet} />
+      )}
       {confirmDeleteDate && (
         <div className="confirm-overlay" onClick={handleCancelDelete}>
           <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
