@@ -10,6 +10,7 @@ import {
 } from '../lib/coachShare'
 import { isConfigured } from '../lib/supabase'
 import { loadGlobalRestDefault, saveGlobalRestDefault } from '../utils/timer'
+import { applyDataImport, createDataExport, previewDataImport } from '../utils/dataTransfer'
 
 const BASE_URL = 'https://nina-nekketsu.github.io/reptrack/#/coach/';
 
@@ -26,6 +27,10 @@ export default function Profile() {
   const [shareError, setShareError]     = useState(null);
   const [copied, setCopied]             = useState(false);
   const [globalRest, setGlobalRest]     = useState(() => loadGlobalRestDefault());
+  const [importSnapshot, setImportSnapshot] = useState(null);
+  const [importPreview, setImportPreview] = useState(null);
+  const [transferMessage, setTransferMessage] = useState('');
+  const [transferError, setTransferError] = useState('');
 
   const loadShare = useCallback(async () => {
     if (!user || !isConfigured) return;
@@ -47,6 +52,56 @@ export default function Profile() {
     const n = Math.max(5, Math.min(600, Number(val) || 90));
     setGlobalRest(n);
     saveGlobalRestDefault(n);
+  }
+
+  function handleExportData() {
+    const snapshot = createDataExport();
+    const blob = new Blob([`${JSON.stringify(snapshot, null, 2)}\n`], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `reptrack-export-${snapshot.exportedAt.slice(0, 10)}.json`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+    setTransferError('');
+    setTransferMessage('Export ready');
+  }
+
+  async function handleImportFile(event) {
+    const file = event.target.files?.[0];
+    setImportSnapshot(null);
+    setImportPreview(null);
+    setTransferMessage('');
+    setTransferError('');
+    if (!file) return;
+    if (file.size && file.size > 5 * 1024 * 1024) {
+      setTransferError('That export is larger than 5 MB. Choose a smaller RepTrack export.');
+      return;
+    }
+    try {
+      const snapshot = JSON.parse(await file.text());
+      const preview = previewDataImport(snapshot);
+      if (!preview.valid) throw new Error(preview.error);
+      setImportSnapshot(snapshot);
+      setImportPreview(preview);
+    } catch (error) {
+      setTransferError(error.message || 'This file is not a valid RepTrack export.');
+    }
+  }
+
+  function handleApplyImport() {
+    if (!importSnapshot) return;
+    try {
+      applyDataImport(importSnapshot);
+      setTransferError('');
+      setTransferMessage('Import complete. Existing records were kept.');
+      setImportSnapshot(null);
+      setImportPreview(null);
+    } catch (error) {
+      setTransferError(error.message || 'Import failed. No data was changed.');
+    }
   }
 
   async function handleToggleShare(enabled) {
@@ -248,6 +303,45 @@ export default function Profile() {
           </p>
         </div>
       )}
+
+      <section className="profile-auth-section profile-data-section" aria-labelledby="data-privacy-title">
+        <h3 id="data-privacy-title">Data & privacy</h3>
+        <p className="profile-rest-hint">
+          Training data is stored on this device first. If cloud sync is configured and you sign in,
+          supported records are also copied to your private Supabase account.
+        </p>
+        <div className="profile-data-actions">
+          <button type="button" className="btn-secondary" onClick={handleExportData}>
+            Export data
+          </button>
+          <label className="btn-secondary profile-import-label" htmlFor="reptrack-import">
+            Choose import file
+          </label>
+          <input
+            id="reptrack-import"
+            className="profile-import-input"
+            type="file"
+            accept="application/json,.json"
+            aria-label="Choose RepTrack export"
+            onChange={handleImportFile}
+          />
+        </div>
+        <p className="profile-rest-hint">
+          Import is additive: existing exercises, plans, sessions, and settings are kept. Review the preview before applying.
+        </p>
+        {importPreview && (
+          <div className="profile-import-preview" role="region" aria-label="Import preview">
+            <strong>Import preview</strong>
+            <p>{importPreview.summary.exercises.add} exercise will be added; {importPreview.summary.exercises.keep} kept.</p>
+            <p>{importPreview.summary.workoutPlans.add} plan will be added; {importPreview.summary.workoutPlans.keep} kept.</p>
+            <p>{importPreview.summary.sessions.add} session will be added; {importPreview.summary.sessions.keep} kept.</p>
+            <button type="button" className="btn-primary" onClick={handleApplyImport}>Import additively</button>
+          </div>
+        )}
+        {transferMessage && <p className="profile-transfer-status" role="status">{transferMessage}</p>}
+        {transferError && <p className="profile-transfer-error" role="alert">{transferError}</p>}
+      </section>
+
       <div className="profile-build-footer">
         <span className="build-id-tag">{formatBuildId()}</span>
       </div>

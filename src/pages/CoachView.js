@@ -35,7 +35,7 @@ function MiniVolumeGraph({ history }) {
 
   const yTicks = [minV, minV + range / 2, maxV];
   const fmt = (v) => v >= 1000 ? `${(v / 1000).toFixed(1)}t` : `${Math.round(v)}`;
-  const fmtDate = (iso) => new Date(iso).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
+  const fmtDate = (iso) => new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
 
   return (
     <div className="cv-graph-wrap">
@@ -140,7 +140,7 @@ export default function CoachView() {
 
   const fmtDateTime = (iso) => {
     if (!iso) return '—';
-    return new Date(iso).toLocaleString('nl-NL', {
+    return new Date(iso).toLocaleString(undefined, {
       day: 'numeric', month: 'short', year: 'numeric',
       hour: '2-digit', minute: '2-digit',
     });

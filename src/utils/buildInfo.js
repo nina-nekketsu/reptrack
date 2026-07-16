@@ -21,7 +21,7 @@ export function formatBuildId(label = 'Build') {
   }
 
   const dateLabel = hasValidDate
-    ? builtAtDate.toLocaleDateString('nl-NL', {
+    ? builtAtDate.toLocaleDateString(undefined, {
         day: 'numeric',
         month: 'short',
       })

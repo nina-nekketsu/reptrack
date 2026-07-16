@@ -322,7 +322,7 @@ export default function ExerciseLogModal({
   }, [exercise?.id, prescribedSets]);
 
   const editingDateLabel = editingSession
-    ? new Date(editingSession.date).toLocaleDateString('nl-NL', {
+    ? new Date(editingSession.date).toLocaleDateString(undefined, {
         weekday: 'short',
         day: 'numeric',
         month: 'short',
@@ -880,7 +880,7 @@ export default function ExerciseLogModal({
                     <div className="last-session-sets__header">
                       <span className="last-session-sets__title">📋 Last session</span>
                       <span className="last-session-sets__date">
-                        {new Date(lastSession.date).toLocaleDateString('nl-NL', {
+                        {new Date(lastSession.date).toLocaleDateString(undefined, {
                           weekday: 'short',
                           day: 'numeric',
                           month: 'short',
@@ -917,7 +917,7 @@ export default function ExerciseLogModal({
                       <div className="session-card" key={session.date}>
                         <div className="session-card-header">
                           <div className="session-date">
-                            {new Date(session.date).toLocaleDateString('nl-NL', {
+                            {new Date(session.date).toLocaleDateString(undefined, {
                               weekday: 'short',
                               day: 'numeric',
                               month: 'short',

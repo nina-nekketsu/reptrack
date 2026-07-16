@@ -84,7 +84,7 @@ export default function ExerciseHistoryModal({ exercise, logs, onClose, onOpenLo
                   <div className="session-card" key={session.date}>
                     <div className="session-card-header">
                       <div className="session-date">
-                        {new Date(session.date).toLocaleDateString('nl-NL', {
+                        {new Date(session.date).toLocaleDateString(undefined, {
                           weekday: 'short',
                           day: 'numeric',
                           month: 'short',
