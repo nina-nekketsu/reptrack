@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>RepTrack Mobile Readability Fixture</title>
+    <link rel="stylesheet" href="../../../src/index.css" />
+    <link rel="stylesheet" href="../../../src/App.css" />
+    <link rel="stylesheet" href="../../../src/pages/Exercises.css" />
+    <style>
+      body {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 12px;
+      }
+      .qa-result { display: none; }
+    </style>
+  </head>
+  <body>
+    <div class="modal-overlay">
+      <div class="modal modal--log" role="dialog" aria-modal="true" aria-labelledby="exercise-log-title">
+        <div class="log-sticky-top">
+          <div id="log-timer-top" class="log-timer-zone">
+            <div class="log-header-text">
+              <div class="log-header-title-row">
+                <h3 class="modal-title" id="exercise-log-title">Legs</h3>
+                <span class="build-id-tag build-id-tag--modal">Build: qa · 18 Jul</span>
+              </div>
+              <p class="modal-sub">Legs · Log your sets</p>
+            </div>
+
+            <section class="set-timer set-timer--ds11" aria-label="Set timer">
+              <p class="sr-only" aria-live="polite">Rest started, 90 seconds</p>
+              <div class="timer-phase timer-phase--active timer-phase--rest" data-testid="timer-active-phase">
+                <span class="timer-phase__label">REST TIMER</span>
+                <strong class="timer-phase__display">0:25</strong>
+              </div>
+              <div class="timer-phase timer-phase--inactive timer-phase--exercise" data-testid="timer-inactive-phase">
+                <span class="timer-phase__label">EXERCISE TIMER</span>
+                <span class="timer-phase__display timer-phase__display--small">0:00</span>
+              </div>
+              <div class="timer-controls timer-controls--ds11">
+                <button type="button" class="timer-btn timer-btn--start">Start set</button>
+                <button type="button" class="timer-btn timer-btn--rest" disabled>Resting...</button>
+              </div>
+              <button type="button" class="timer-rest-picker" aria-label="Choose rest duration, current 90 seconds">
+                <span>Rest duration</span>
+                <strong>90s</strong>
+              </button>
+              <button type="button" class="timer-settings-toggle" aria-expanded="false">Settings</button>
+            </section>
+          </div>
+          <div class="log-tabs-wrapper">
+            <div class="log-tabs" role="tablist" aria-label="Exercise tabs">
+              <button type="button" class="log-tab active" role="tab" aria-selected="true">Log</button>
+              <button type="button" class="log-tab" role="tab" aria-selected="false">Overview</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="log-scroll-body">
+          <div class="modal-divider"></div>
+          <div class="sets-header">
+            <span>Set</span>
+            <span>Reps</span>
+            <span>Weight (kg)</span>
+            <span>Type</span>
+            <span class="sets-header__icon" aria-label="Done">✓</span>
+            <span></span>
+          </div>
+
+          <div class="set-row">
+            <span class="set-num">1</span>
+            <div class="set-stepper set-stepper--reps"><span class="set-stepper__label">Reps</span><button class="set-stepper__button">−</button><input class="set-input" value="11" /><button class="set-stepper__button">+</button></div>
+            <div class="set-stepper set-stepper--weight"><span class="set-stepper__label">Weight (kg)</span><button class="set-stepper__button">−</button><input class="set-input" value="73" /><button class="set-stepper__button">+</button></div>
+            <div class="set-row-actions">
+              <select class="set-input"><option>N</option></select>
+              <button class="set-done-btn set-done-btn--active">✓</button>
+              <button class="remove-set-btn">✕</button>
+            </div>
+            <div class="set-ghost">Last: 10 reps · 73 kg</div>
+          </div>
+
+          <div class="set-row">
+            <span class="set-num">2</span>
+            <div class="set-stepper set-stepper--reps"><span class="set-stepper__label">Reps</span><button class="set-stepper__button">−</button><input class="set-input" value="8" /><button class="set-stepper__button">+</button></div>
+            <div class="set-stepper set-stepper--weight"><span class="set-stepper__label">Weight (kg)</span><button class="set-stepper__button">−</button><input class="set-input" value="73" /><button class="set-stepper__button">+</button></div>
+            <div class="set-row-actions">
+              <select class="set-input"><option>N</option></select>
+              <button class="set-done-btn set-done-btn--active">✓</button>
+              <button class="remove-set-btn">✕</button>
+            </div>
+            <div class="set-ghost">Last: 8 reps · 73 kg</div>
+          </div>
+
+          <div class="set-row set-row--warmup">
+            <span class="set-num">3</span>
+            <div class="set-stepper set-stepper--reps"><span class="set-stepper__label">Reps</span><button class="set-stepper__button">−</button><input class="set-input" value="8" /><button class="set-stepper__button">+</button></div>
+            <div class="set-stepper set-stepper--weight"><span class="set-stepper__label">Weight (kg)</span><button class="set-stepper__button">−</button><input class="set-input" value="68" /><button class="set-stepper__button">+</button></div>
+            <div class="set-row-actions">
+              <select class="set-input"><option>W</option></select>
+              <button class="set-done-btn">○</button>
+              <button class="remove-set-btn">✕</button>
+            </div>
+            <div class="set-ghost">Last: 8 reps · 68 kg</div>
+          </div>
+
+          <div class="set-row">
+            <span class="set-num">4</span>
+            <div class="set-stepper set-stepper--reps"><span class="set-stepper__label">Reps</span><button class="set-stepper__button">−</button><input class="set-input" value="" placeholder="0" /><button class="set-stepper__button">+</button></div>
+            <div class="set-stepper set-stepper--weight"><span class="set-stepper__label">Weight (kg)</span><button class="set-stepper__button">−</button><input class="set-input" value="" placeholder="0" /><button class="set-stepper__button">+</button></div>
+            <div class="set-row-actions">
+              <select class="set-input"><option>N</option></select>
+              <button class="set-done-btn" disabled>○</button>
+              <button class="remove-set-btn">✕</button>
+            </div>
+            <div class="set-ghost">Last: 7 reps · 68 kg</div>
+          </div>
+        </div>
+
+        <div class="log-actions">
+          <button type="button" class="btn-primary">Done</button>
+          <button type="button" class="btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+    <pre id="qa-result" class="qa-result"></pre>
+    <script>
+      function rgb(color) {
+        const match = color.match(/rgba?\(([^)]+)\)/);
+        if (!match) return [0, 0, 0];
+        return match[1].split(',').slice(0, 3).map((part) => Number.parseFloat(part));
+      }
+      function luminance(color) {
+        return rgb(color).map((value) => {
+          const channel = value / 255;
+          return channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+        }).reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0);
+      }
+      function contrast(fg, bg) {
+        const a = luminance(fg);
+        const b = luminance(bg);
+        return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+      }
+      function rect(selector) {
+        const r = document.querySelector(selector).getBoundingClientRect();
+        return { top: r.top, left: r.left, right: r.right, bottom: r.bottom, width: r.width, height: r.height };
+      }
+      function style(selector) {
+        return getComputedStyle(document.querySelector(selector));
+      }
+      function isLightBackground(selector) {
+        const [r, g, b] = rgb(style(selector).backgroundColor);
+        return r > 220 && g > 220 && b > 200;
+      }
+      function overlaps(a, b, tolerance = 1) {
+        return Math.min(a.right, b.right) - Math.max(a.left, b.left) > tolerance
+          && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > tolerance;
+      }
+      window.addEventListener('load', () => {
+        const footerTop = document.querySelector('.log-actions').getBoundingClientRect().top;
+        const rows = Array.from(document.querySelectorAll('.set-row'));
+        const completeRowsVisible = Array.from(document.querySelectorAll('.set-row')).filter((row) => {
+          const rowRect = row.getBoundingClientRect();
+          return rowRect.top >= 0 && rowRect.bottom <= footerTop;
+        }).length;
+        const rowLayouts = rows.map((row, rowIndex) => {
+          const elements = Array.from(row.querySelectorAll('.set-stepper__label, .set-stepper__button, input, select, .set-done-btn, .remove-set-btn, .set-ghost'))
+            .map((element) => ({
+              name: element.className || element.tagName,
+              rect: element.getBoundingClientRect().toJSON(),
+            }));
+          const overlapsFound = [];
+          for (let left = 0; left < elements.length; left += 1) {
+            for (let right = left + 1; right < elements.length; right += 1) {
+              if (overlaps(elements[left].rect, elements[right].rect)) {
+                overlapsFound.push([elements[left].name, elements[right].name]);
+              }
+            }
+          }
+          const ghost = row.querySelector('.set-ghost') || (row.nextElementSibling?.classList.contains('set-ghost') ? row.nextElementSibling : null);
+          const nextRow = ghost?.nextElementSibling?.classList.contains('set-row') ? ghost.nextElementSibling : null;
+          const rowRect = row.getBoundingClientRect().toJSON();
+          const ghostRect = ghost?.getBoundingClientRect().toJSON() || null;
+          const nextRowRect = nextRow?.getBoundingClientRect().toJSON() || null;
+          return {
+            rowIndex,
+            rowRect,
+            ghostRect,
+            nextRowRect,
+            elements,
+            controlOverlaps: overlapsFound,
+            contentEscapesRow: elements.some(({ rect }) => rect.top < rowRect.top - 1 || rect.bottom > rowRect.bottom + 1),
+            flowOverlap: Boolean((ghost && !row.contains(ghost) && overlaps(rowRect, ghostRect)) || (ghostRect && nextRowRect && overlaps(ghostRect, nextRowRect))),
+          };
+        });
+        const controls = Array.from(document.querySelectorAll('button, select, input'));
+        const metrics = {
+          viewport: { width: window.innerWidth, height: window.innerHeight },
+          documentOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+          modalOverflow: document.querySelector('.modal--log').scrollWidth - document.querySelector('.modal--log').clientWidth,
+          scrollBodyOverflow: document.querySelector('.log-scroll-body').scrollWidth - document.querySelector('.log-scroll-body').clientWidth,
+          modalHeight: rect('.modal--log').height,
+          stickyHeight: rect('.log-sticky-top').height,
+          timerHeight: rect('.set-timer--ds11').height,
+          activeDigitFontSize: Number.parseFloat(style('.timer-phase__display').fontSize),
+          inputFontSize: Number.parseFloat(style('.set-input').fontSize),
+          completeRowsVisible,
+          rowLayouts,
+          minControlSize: Math.min(...controls.map((el) => Math.min(el.getBoundingClientRect().width, el.getBoundingClientRect().height))),
+          srOnly: {
+            position: style('.sr-only').position,
+            width: style('.sr-only').width,
+            height: style('.sr-only').height,
+            overflow: style('.sr-only').overflow,
+          },
+          lightBackgrounds: ['.modal--log', '.log-sticky-top', '.log-timer-zone', '.log-tabs-wrapper', '.log-scroll-body', '.log-actions', '.set-timer--ds11'].filter(isLightBackground),
+          colors: {
+            activeBorder: style('.timer-phase--active').borderColor,
+            restPickerValue: style('.timer-rest-picker strong').color,
+            modalSubContrast: contrast(style('.modal-sub').color, style('.log-timer-zone').backgroundColor),
+            setGhostContrast: contrast(style('.set-ghost').color, style('.log-scroll-body').backgroundColor),
+            setNumContrast: contrast(style('.set-num').color, style('.log-scroll-body').backgroundColor),
+            timerLabelContrast: contrast(style('.timer-phase__label').color, style('.timer-phase--active').backgroundColor),
+          },
+        };
+        document.getElementById('qa-result').textContent = JSON.stringify(metrics, null, 2);
+      });
+    </script>
+  </body>
+</html>

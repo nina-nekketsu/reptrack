@@ -520,6 +520,10 @@
   color: var(--go);
 }
 
+.set-row-actions {
+  display: contents;
+}
+
 .remove-set-btn {
   background: none;
   border: none;
@@ -933,8 +937,7 @@
 
 /* ── Log modal: full-height, timer sticky at top ── */
 .modal--log {
-  /* Use 92vh so it fits the viewport with breathing room */
-  max-height: 92vh;
+  max-height: min(92dvh, 720px);
   /* Responsive: fills narrow phones, capped at 520px on wider screens */
   width: min(96vw, 520px);
   /* Round all corners — modal is centered, not a bottom-sheet */
@@ -958,20 +961,21 @@
   z-index: 3;
   display: flex;
   flex-direction: column;
-  background: var(--ink-hi);
+  padding-top: env(safe-area-inset-top, 0);
+  background: var(--bg-2);
 }
 
 /* Sticky timer zone — always visible, never clipped */
 .modal--log .log-timer-zone {
   flex-shrink: 0;
-  padding: 16px 16px 12px;
-  background: var(--ink-hi);
+  padding: 12px 16px 8px;
+  background: var(--bg-2);
 }
 
 .log-tabs-wrapper {
-  padding: 0 16px 12px;
+  padding: 0 16px 10px;
   border-bottom: 1px solid var(--line);
-  background: var(--ink-hi);
+  background: var(--bg-2);
 }
 
 /* Scrollable body below the timer
@@ -984,8 +988,7 @@
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   /* Bottom padding ensures Save/Cancel are reachable past safe-area */
-  padding: 12px 16px 0;
-  padding-bottom: max(120px, env(safe-area-inset-bottom, 16px) + 70px);
+  padding: 10px 16px max(88px, env(safe-area-inset-bottom, 16px) + 64px);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -1199,9 +1202,10 @@
 }
 
 .log-tab.active {
-  background: var(--go);
-  border-color: rgba(76, 76, 255, 0.65);
-  box-shadow: 0 10px 18px rgba(76, 76, 255, 0.25);
+  background: var(--rest-dim);
+  border-color: color-mix(in srgb, var(--rest) 58%, transparent);
+  color: var(--rest);
+  box-shadow: none;
 }
 
 @media (max-width: 360px) {
@@ -1212,9 +1216,9 @@
   position: sticky;
   bottom: 0;
   z-index: 3;
-  background: var(--ink-hi);
+  background: var(--bg-2);
   border-top: 1px solid var(--line);
-  padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 16px));
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 16px));
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -1256,13 +1260,15 @@
 }
 
 .build-id-tag--modal {
-  font-size: 0.7rem;
+  font-size: 0.625rem;
   font-weight: 600;
-  color: var(--go);
-  background: rgba(124, 106, 247, 0.12);
+  color: var(--ink-low);
+  background: var(--bg-3);
+  border: 1px solid var(--line);
   border-radius: 999px;
-  padding: 0.1rem 0.7rem;
+  padding: 0.05rem 0.5rem;
   letter-spacing: 0.04em;
+  opacity: 0.72;
 }
 
 .overview-btn {
@@ -1942,11 +1948,11 @@
   border-radius: 9px;
   background: var(--go-dim);
 }
-.modal--log { max-height: min(96dvh, 96vh); }
-.modal--log .log-timer-zone { padding: 8px 12px 6px; }
-.log-tabs-wrapper { padding: 0 12px 6px; }
+.modal--log { max-height: min(92dvh, 720px); background: var(--bg-2); }
+.modal--log .log-timer-zone { padding: 8px 12px 6px; background: var(--bg-2); }
+.log-tabs-wrapper { padding: 0 12px 6px; background: var(--bg-2); border-color: var(--line); }
 .modal--log .log-scroll-body {
-  padding: 6px 12px max(62px, env(safe-area-inset-bottom, 16px) + 48px);
+  padding: 8px 12px max(88px, env(safe-area-inset-bottom, 16px) + 64px);
   gap: 8px;
 }
 .log-actions {
@@ -1977,23 +1983,30 @@
   }
 
   .set-row {
-    grid-template-columns: 28px minmax(0, 1fr) 44px 44px;
-    gap: 8px;
-    padding-block: 8px;
+    grid-template-columns: 24px minmax(132px, 1fr) minmax(132px, 1fr);
+    grid-template-rows: auto 44px;
+    column-gap: clamp(4px, 1.4vw, 6px);
+    row-gap: 4px;
+    min-height: 0;
+    flex-shrink: 0;
+    padding-block: 6px;
     border-bottom: 1px solid var(--line);
+    min-width: 0;
+    overflow: hidden;
+    align-items: end;
   }
 
   .set-num {
     grid-column: 1;
-    grid-row: 1 / 4;
+    grid-row: 1 / 3;
     align-self: center;
   }
 
   .set-stepper--reps,
   .set-stepper--weight {
-    grid-column: 2 / 5;
     grid-template-rows: 16px 44px;
-    row-gap: 4px;
+    row-gap: 2px;
+    min-width: 0;
   }
 
   .set-stepper__label {
@@ -2007,11 +2020,123 @@
     grid-row: 2;
   }
 
-  .set-stepper--reps { grid-row: 1; }
-  .set-stepper--weight { grid-row: 2; }
-  .set-row > .set-input { grid-column: 2; grid-row: 3; }
-  .set-row > .set-done-btn { grid-column: 3; grid-row: 3; }
-  .set-row > .remove-set-btn { grid-column: 4; grid-row: 3; }
+  .set-stepper--reps { grid-column: 2; grid-row: 1; }
+  .set-stepper--weight { grid-column: 3; grid-row: 1; }
+
+  .set-row-actions {
+    grid-column: 2;
+    grid-row: 2;
+    display: grid;
+    grid-template-columns: repeat(3, 44px);
+    gap: 0;
+    align-items: center;
+    align-self: center;
+    min-width: 0;
+  }
+
+  .set-row-actions > .set-input,
+  .set-row-actions > .set-done-btn,
+  .set-row-actions > .remove-set-btn {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+  }
+
+  .set-row .set-ghost {
+    grid-column: 3;
+    grid-row: 2;
+    align-self: center;
+    justify-self: end;
+    max-width: 100%;
+    margin: 0;
+    overflow: hidden;
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .set-num {
+    font-size: clamp(0.75rem, 3vw, 0.8125rem);
+  }
+
+  .log-scroll-body > .set-ghost,
+  .set-feedback,
+  .set-validation {
+    margin-left: 28px;
+    margin-bottom: 4px;
+    font-size: 11px;
+    line-height: 1.25;
+  }
+}
+
+@media (max-width: 360px) {
+  .modal--log .log-scroll-body { padding-inline: 4px; }
+  .set-row {
+    grid-template-columns: 20px minmax(132px, 1fr) minmax(132px, 1fr);
+    column-gap: 4px;
+  }
+
+  .set-stepper {
+    grid-template-columns: 44px minmax(44px, 1fr) 44px;
+    gap: 3px;
+  }
+
+  .set-stepper__button {
+    width: 44px;
+    min-width: 44px;
+  }
+
+  .set-stepper .set-input {
+    font-size: 16px;
+    padding-inline: 3px;
+  }
+}
+
+.modal--log .set-input {
+  font-size: 16px;
+}
+
+.modal--log .set-row--dropset,
+.modal--log .set-row--dropset-child {
+  background: color-mix(in srgb, var(--go-dim) 48%, var(--bg-1));
+  border-color: var(--go-dim);
+}
+
+.modal--log .set-type-child {
+  color: var(--go);
+  background: var(--go-dim);
+  border-color: var(--go);
+}
+
+.modal--log .insights-panel,
+.modal--log .insights-row,
+.modal--log .graph-wrap,
+.modal--log .graph-placeholder,
+.modal--log .session-card,
+.modal--log .last-session-sets,
+.modal--log .last-session-sets__table,
+.modal--log .history-sessions,
+.modal--log .session-sets-detail,
+.modal--log .set-pill {
+  background: var(--bg-1);
+  border-color: var(--line);
+  color: var(--ink-hi);
+}
+
+.modal--log .insights-label,
+.modal--log .insights-no-history,
+.modal--log .graph-placeholder,
+.modal--log .session-stats,
+.modal--log .last-session-sets__date {
+  color: var(--ink-mid);
+}
+
+.modal--log .log-actions .btn-primary:disabled {
+  background: var(--bg-3);
+  color: var(--ink-low);
+  border: 1px solid var(--line-strong);
+  opacity: 1;
 }
 
 /* DS-11 timer card — deliberately last so recovery-era timer rules cannot override it. */
@@ -2019,10 +2144,10 @@
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px;
-  padding: 12px;
+  gap: 8px;
+  padding: clamp(8px, 2.5vw, 12px);
   border: 1px solid var(--line);
-  border-radius: var(--r-lg);
+  border-radius: var(--r-md);
   background: var(--bg-1);
   overflow: visible;
 }
@@ -2040,10 +2165,25 @@
   grid-row: 1;
   display: grid;
   align-content: center;
-  min-height: 104px;
-  padding: 12px 16px;
+  min-height: clamp(48px, 14vw, 60px);
+  padding: 8px 12px;
+  border-color: var(--go);
+  background: var(--go-dim);
+}
+
+.timer-phase--active.timer-phase--rest {
   border-color: var(--rest);
   background: var(--rest-dim);
+}
+
+.timer-phase--active.timer-phase--exercise {
+  border-color: var(--go);
+  background: var(--go-dim);
+}
+
+.set-timer--alert .timer-phase--active {
+  border-color: var(--danger);
+  background: var(--danger-dim);
 }
 
 .timer-phase--inactive {
@@ -2051,8 +2191,8 @@
   grid-row: 1;
   display: grid;
   place-content: center;
-  min-width: 82px;
-  padding: 10px;
+  min-width: 72px;
+  padding: 6px 8px;
   color: var(--ink-low);
   background: var(--bg-2);
   text-align: center;
@@ -2060,7 +2200,7 @@
 
 .timer-phase__label {
   color: var(--ink-mid);
-  font-size: 0.72rem;
+  font-size: 0.6875rem;
   font-weight: 850;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -2068,14 +2208,14 @@
 
 .timer-phase__display {
   color: var(--ink-hi);
-  font-size: clamp(2.5rem, 12vw, 4.25rem);
+  font-size: clamp(1.75rem, 7.5vw, 2.375rem);
   line-height: 1;
-  letter-spacing: -0.04em;
+  letter-spacing: 0;
 }
 
 .timer-phase__display--small {
-  margin-top: 6px;
-  font-size: 1.15rem;
+  margin-top: 2px;
+  font-size: clamp(0.9rem, 3.2vw, 1.05rem);
   letter-spacing: 0;
 }
 
@@ -2102,7 +2242,9 @@
 }
 
 .timer-controls--ds11 .timer-btn {
-  min-height: 48px;
+  min-height: 44px;
+  font-size: clamp(0.8125rem, 3.4vw, 0.9375rem);
+  padding-inline: 8px;
 }
 
 .timer-controls--ds11 .timer-btn--stop {
@@ -2111,19 +2253,21 @@
 
 .timer-rest-picker,
 .timer-settings-toggle {
-  grid-column: 1 / -1;
+  grid-column: auto;
   min-height: 44px;
   border: 1px solid var(--line);
   border-radius: var(--r-md);
   color: var(--ink-hi);
   background: var(--bg-2);
+  font-size: clamp(0.8125rem, 3.4vw, 0.9375rem);
 }
 
 .timer-rest-picker {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 14px;
+  padding: 0 10px;
+  gap: 6px;
 }
 
 .timer-rest-picker strong { color: var(--rest); }
@@ -2192,6 +2336,49 @@
 .timer-sheet-close {
   width: 100%;
   margin-top: 10px;
+}
+
+/* Primary mobile target: use the PRD's compact two-row timer bar. */
+@media (min-width: 375px) and (max-width: 600px) {
+  .set-timer--ds11 {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 72px 44px;
+  }
+
+  .timer-phase--active {
+    grid-column: 1 / 3;
+    grid-row: 1;
+  }
+
+  .timer-phase--inactive {
+    grid-column: 3;
+    grid-row: 1;
+    min-width: 0;
+  }
+
+  .timer-controls--ds11 {
+    grid-column: 1 / 3;
+    grid-row: 2;
+  }
+
+  .timer-rest-picker {
+    grid-column: 3 / 5;
+    grid-row: 2;
+  }
+
+  .timer-settings-toggle {
+    grid-column: 4;
+    grid-row: 1;
+    width: 44px;
+    min-width: 44px;
+    padding: 0;
+    font-size: 0;
+  }
+
+  .timer-settings-toggle::before {
+    content: "⚙";
+    font-size: 1.125rem;
+    line-height: 1;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
