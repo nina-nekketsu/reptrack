@@ -37,4 +37,10 @@ describe('active workout preserved completion affordances', () => {
 
     expect(source).toContain("if (/^\\/workout\\/[^/]+$/.test(location.pathname)) return null");
   });
+
+  test('allows workout stat cards to shrink at the 320px viewport', () => {
+    const css = fs.readFileSync(path.join(__dirname, 'ActiveWorkout.css'), 'utf8');
+
+    expect(css).toMatch(/\.aw-stat\s*\{[^}]*min-width:\s*0/s);
+  });
 });
