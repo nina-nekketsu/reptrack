@@ -13,6 +13,7 @@ import {
 } from './activeWorkoutSessionSync';
 import { createMutationOutbox } from './mutationOutbox';
 import { clientDiagnostics } from './clientDiagnosticsRuntime';
+import { applyRemoteCoachStateRows, toCoachStateRows } from './coachStateSync';
 
 let _mutationOutbox = null;
 let _snapshotListeners = [];
@@ -321,18 +322,20 @@ export async function pullAll(userId) {
   setStatus('syncing');
 
   try {
-    const [exRes, plansRes, logsRes, settingsRes, timerRes] = await Promise.all([
+    const [exRes, plansRes, logsRes, settingsRes, timerRes, coachStateRes] = await Promise.all([
       supabase.from('exercises').select('*').eq('user_id', userId),
       supabase.from('workout_plans').select('*').eq('user_id', userId),
       supabase.from('exercise_logs').select('*').eq('user_id', userId),
       supabase.from('user_settings').select('*').eq('user_id', userId).maybeSingle(),
       supabase.from('workout_timer_state').select('*').eq('user_id', userId).maybeSingle(),
+      supabase.from('coach_state').select('*').eq('user_id', userId),
     ]);
 
     if (exRes.error) throw exRes.error;
     if (plansRes.error) throw plansRes.error;
     if (logsRes.error) throw logsRes.error;
     if (settingsRes.error) throw settingsRes.error;
+    if (coachStateRes.error) throw coachStateRes.error;
     // Timer state pull is best-effort — don't throw on error
     if (timerRes.error) console.warn('[sync] timer state pull failed:', timerRes.error);
 
@@ -423,6 +426,10 @@ export async function pullAll(userId) {
       if (!localTimer || localTimer.phase === 'idle') {
         localStorage.setItem('workoutTimerState', JSON.stringify(remoteTimer));
       }
+    }
+
+    if (coachStateRes.data && coachStateRes.data.length > 0) {
+      applyRemoteCoachStateRows(coachStateRes.data, userId, localStorage);
     }
 
     await pullActiveWorkoutSession(supabase, userId);
@@ -565,6 +572,7 @@ export async function pushAll(userId) {
       pushPlans(userId),
       pushLogs(userId),
       pushSettings(userId),
+      pushCoachStates(userId),
       pushDedicatedActiveWorkoutSession(supabase, userId),
     ]);
     if (getMutationOutbox().pendingCount() > 0) {
@@ -719,6 +727,27 @@ export async function pushSettings(userId) {
     },
   });
   return flushPendingMutations();
+}
+
+export async function pushCoachStates(userId) {
+  if (!supabase || !userId) return undefined;
+  const rows = toCoachStateRows(userId, localStorage);
+  if (rows.length === 0) return undefined;
+  const queuedKeys = new Set(
+    getMutationOutbox().listPending()
+      .filter((operation) => (
+        operation.kind === 'coach_state/update'
+        && operation.payload?.user_id === userId
+      ))
+      .map((operation) => String(operation.entityId))
+  );
+  const payload = rows.filter((row) => !queuedKeys.has(String(row.key)));
+  if (payload.length === 0) return undefined;
+  const { error } = await supabase
+    .from('coach_state')
+    .upsert(payload, { onConflict: 'user_id,key' });
+  if (error) throw error;
+  return undefined;
 }
 
 export async function pushCoachState(key, state, userId) {

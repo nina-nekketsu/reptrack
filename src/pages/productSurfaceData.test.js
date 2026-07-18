@@ -34,7 +34,7 @@ describe('product surface data', () => {
     ]);
   });
 
-  test('builds Today from real logs and active session without fabricated streaks', () => {
+  test('builds Today from real logs and active session without fabricated goals', () => {
     const model = buildTodayModel({
       logs,
       exercises,
@@ -54,7 +54,7 @@ describe('product surface data', () => {
     expect(model.cardioSessions).toEqual([
       expect.objectContaining({ exerciseName: 'Run', value: '5 km · 32 min' }),
     ]);
-    expect(model.streak).toBeNull();
+    expect(model.streak).toEqual(expect.objectContaining({ trainingDays: 2, tolerant: true }));
     expect(model.goal).toBeNull();
   });
 
@@ -86,5 +86,20 @@ describe('product surface data', () => {
   test('formats volume honestly without pretending zero is a workout', () => {
     expect(formatVolume(0)).toBe('0 kg');
     expect(formatVolume(1130)).toBe('1.1t');
+  });
+
+  test('Today exposes completed analytics from real logs without fabricated fields', () => {
+    const model = buildTodayModel({
+      logs,
+      exercises,
+      activeSession: null,
+      now: new Date('2026-07-16T12:00:00.000Z'),
+    });
+
+    expect(model.sevenDayVolume).toBe(1130);
+    expect(model.weeklySessions).toBe(2);
+    expect(model.streak).toEqual(expect.objectContaining({ trainingDays: 2, tolerant: true }));
+    expect(model.latestPrs[0]).toEqual(expect.objectContaining({ exerciseName: 'Bench Press', e1rm: 126 }));
+    expect(model.muscleGroupWeeklyVolume).toEqual([{ muscleGroup: 'Chest', volume: 1130 }]);
   });
 });

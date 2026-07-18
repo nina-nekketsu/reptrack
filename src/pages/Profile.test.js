@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import Profile from './Profile';
-import { DATA_EXPORT_SCHEMA_VERSION } from '../utils/dataTransfer';
+import { DATA_EXPORT_SCHEMA_VERSION } from '../lib/dataTransfer';
 
 jest.mock('../context/AuthContext', () => ({
   useAuth: () => ({ user: null, signOut: jest.fn(), syncing: false, syncError: null, syncData: jest.fn() }),

@@ -1,15 +1,11 @@
-function safeDate(value) {
-  const date = value instanceof Date ? value : new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
-}
+import {
+  buildTrainingAnalytics,
+  flattenLoggedSessions as flattenAnalyticsSessions,
+} from '../lib/trainingAnalytics';
 
-function dayKey(value) {
-  const date = safeDate(value);
-  if (!date) return 'unknown';
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+function safeDate(value) {
+  const date = value instanceof Date ? new Date(value.getTime()) : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 function numeric(value) {
@@ -21,37 +17,13 @@ function sessionSets(session = {}) {
   return Array.isArray(session.sets) ? session.sets : [];
 }
 
+function isWarmupSet(set = {}) {
+  const type = String(set.setType || set.type || '').toLowerCase();
+  return type === 'warmup' || type === 'warm-up';
+}
+
 export function flattenLoggedSessions(logs = {}, exercises = []) {
-  const exerciseMap = new Map(exercises.map((exercise) => [String(exercise.id), exercise]));
-  const sessions = [];
-
-  Object.entries(logs || {}).forEach(([exerciseId, exerciseSessions]) => {
-    if (!Array.isArray(exerciseSessions)) return;
-    const exercise = exerciseMap.get(String(exerciseId)) || { id: exerciseId, name: 'Unknown exercise' };
-    exerciseSessions.forEach((session, index) => {
-      const date = safeDate(session?.date);
-      if (!session || !date) return;
-      const sets = sessionSets(session);
-      sessions.push({
-        ...session,
-        exerciseId: exercise.id,
-        exerciseName: exercise.name || 'Unknown exercise',
-        muscleGroup: exercise.muscleGroup || '',
-        exerciseType: exercise.type || '',
-        date: date.toISOString(),
-        dayKey: dayKey(date),
-        setCount: sets.filter((set) => numeric(set.reps) > 0).length,
-        totalReps: numeric(session.totalReps) || sets.reduce((sum, set) => sum + numeric(set.reps), 0),
-        totalVolume: numeric(session.totalVolume) || sets.reduce(
-          (sum, set) => sum + (numeric(set.reps) * numeric(set.weight)),
-          0
-        ),
-        sessionKey: `${exercise.id}:${session.date || index}`,
-      });
-    });
-  });
-
-  return sessions.sort((left, right) => new Date(right.date) - new Date(left.date));
+  return flattenAnalyticsSessions(logs, exercises);
 }
 
 export function formatVolume(value) {
@@ -64,60 +36,44 @@ export function formatVolume(value) {
 }
 
 export function buildTodayModel({ logs = {}, exercises = [], activeSession = null, now = new Date() } = {}) {
+  const analytics = buildTrainingAnalytics({ logs, exercises, activeSession, now });
   const sessions = flattenLoggedSessions(logs, exercises);
   const current = safeDate(now) || new Date();
   const weekStart = new Date(current);
   weekStart.setHours(0, 0, 0, 0);
   weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7));
   const weekSessions = sessions.filter((session) => new Date(session.date) >= weekStart && new Date(session.date) <= current);
-  const trainingDays = new Set(weekSessions.map((session) => session.dayKey)).size;
-
-  const strengthPrs = exercises
-    .filter((exercise) => String(exercise.type || '').toLowerCase() !== 'cardio' && String(exercise.muscleGroup || '').toLowerCase() !== 'cardio')
-    .map((exercise) => {
-      const exerciseSessions = sessions.filter((session) => String(session.exerciseId) === String(exercise.id));
-      const best = exerciseSessions.flatMap((session) => sessionSets(session)).reduce((winner, set) => {
-        const candidate = { weight: numeric(set.weight), reps: numeric(set.reps) };
-        if (!candidate.weight || !candidate.reps) return winner;
-        if (!winner || candidate.weight > winner.weight || (candidate.weight === winner.weight && candidate.reps > winner.reps)) return candidate;
-        return winner;
-      }, null);
-      return best ? {
-        exerciseId: exercise.id,
-        exerciseName: exercise.name,
-        label: 'Heaviest set',
-        value: `${best.weight} kg × ${best.reps}`,
-      } : null;
-    })
-    .filter(Boolean);
-
-  const cardioSessions = sessions
-    .filter((session) => String(session.exerciseType).toLowerCase() === 'cardio' || String(session.muscleGroup).toLowerCase() === 'cardio')
-    .slice(0, 3)
-    .map((session) => ({
-      exerciseId: session.exerciseId,
-      exerciseName: session.exerciseName,
-      date: session.date,
-      value: [
-        session.distanceKm ? `${numeric(session.distanceKm)} km` : null,
-        session.durationMinutes ? `${numeric(session.durationMinutes)} min` : null,
-      ].filter(Boolean).join(' · ') || `${session.totalReps} logged`,
-    }));
 
   return {
+    ...analytics,
     activeSession,
     week: {
+      ...analytics.weekly,
       sessionCount: weekSessions.length,
-      trainingDays,
-      volume: weekSessions.reduce((sum, session) => sum + session.totalVolume, 0),
-      setCount: weekSessions.reduce((sum, session) => sum + session.setCount, 0),
     },
     lastWorkout: sessions[0] || null,
-    strengthPrs,
-    cardioSessions,
-    streak: null,
+    strengthPrs: exercises
+      .filter((exercise) => String(exercise.type || '').toLowerCase() !== 'cardio' && String(exercise.muscleGroup || '').toLowerCase() !== 'cardio')
+      .map((exercise) => {
+        const exerciseSessions = sessions.filter((session) => String(session.exerciseId) === String(exercise.id));
+        const best = exerciseSessions.flatMap((session) => sessionSets(session)).reduce((winner, set) => {
+          if (isWarmupSet(set)) return winner;
+          const candidate = { weight: numeric(set.weight), reps: numeric(set.reps) };
+          if (!candidate.weight || !candidate.reps) return winner;
+          if (!winner || candidate.weight > winner.weight || (candidate.weight === winner.weight && candidate.reps > winner.reps)) return candidate;
+          return winner;
+        }, null);
+        return best ? {
+          exerciseId: exercise.id,
+          exerciseName: exercise.name,
+          label: 'Heaviest set',
+          value: `${best.weight} kg × ${best.reps}`,
+        } : null;
+      })
+      .filter(Boolean),
+    cardioSessions: analytics.cardio.sessions,
     goal: null,
-    isEmpty: sessions.length === 0 && !activeSession,
+    isEmpty: analytics.isEmpty,
   };
 }
 
