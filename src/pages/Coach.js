@@ -36,7 +36,7 @@ export default function Coach() {
 
   return (
     <div className="page coach-page">
-      <h1 className="page-heading coach-heading">AI Coach</h1>
+      <h1 className="page-heading coach-heading">Coach</h1>
       <p className="page-sub coach-sub">Harder Than Last Time</p>
 
       {/* Current plan overview */}

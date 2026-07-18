@@ -12,14 +12,26 @@ function writeJson(targetPath, data) {
 }
 
 function writeEnvFile(targetPath, metadata) {
-  const lines = [];
-  if (metadata.buildId) lines.push(`REACT_APP_BUILD_ID=${metadata.buildId}`);
-  if (metadata.commit) lines.push(`REACT_APP_BUILD_COMMIT=${metadata.commit}`);
-  if (metadata.version) lines.push(`REACT_APP_BUILD_VERSION=${metadata.version}`);
-  if (metadata.builtAt) lines.push(`REACT_APP_BUILD_TIME=${metadata.builtAt}`);
-  if (lines.length === 0) return;
-  const payload = lines.join('\n') + '\n';
+  const generated = [];
+  if (metadata.buildId) generated.push(`REACT_APP_BUILD_ID=${metadata.buildId}`);
+  if (metadata.commit) generated.push(`REACT_APP_BUILD_COMMIT=${metadata.commit}`);
+  if (metadata.version) generated.push(`REACT_APP_BUILD_VERSION=${metadata.version}`);
+  if (metadata.builtAt) generated.push(`REACT_APP_BUILD_TIME=${metadata.builtAt}`);
+  if (generated.length === 0) return;
+
+  const generatedKeys = new Set(generated.map(line => line.slice(0, line.indexOf('='))));
+  const existing = fs.existsSync(targetPath)
+    ? fs.readFileSync(targetPath, 'utf8').split(/\r?\n/)
+    : [];
+  const preserved = existing.filter(line => {
+    const match = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=/);
+    return !match || !generatedKeys.has(match[1]);
+  });
+  while (preserved.length > 0 && preserved[preserved.length - 1] === '') preserved.pop();
+
+  const payload = [...preserved, ...generated].join('\n') + '\n';
   fs.writeFileSync(targetPath, payload, 'utf8');
+  fs.chmodSync(targetPath, 0o600);
 }
 
 function writeBuildInfo(options = {}) {
@@ -36,4 +48,4 @@ if (require.main === module) {
   );
 }
 
-module.exports = { writeBuildInfo, PUBLIC_BUILD_INFO };
+module.exports = { writeBuildInfo, writeEnvFile, PUBLIC_BUILD_INFO };

@@ -21,6 +21,7 @@ const active = (overrides = {}) => ({
   status: 'active',
   endedAt: null,
   deviceId: 'device-a',
+  completedExerciseIds: [],
   ...overrides,
 });
 
@@ -168,6 +169,28 @@ describe('active workout session local store', () => {
     expect(ended.status).toBe('ended');
     expect(ended.endedAt).toBe('2026-07-14T09:00:00.000Z');
     expect(getStoredVisibleActiveWorkoutSession()).toBeNull();
+  });
+
+  test('updates completion metadata through the single lifecycle writer', () => {
+    saveActiveWorkoutSession({
+      action: 'start',
+      planId: 'plan-a',
+      planName: 'Plan A',
+      now: '2026-07-14T08:00:00.000Z',
+      deviceId: 'device-a',
+    });
+
+    const updated = saveActiveWorkoutSession({
+      action: 'update',
+      patch: { completedExerciseIds: ['squat'] },
+      now: '2026-07-14T08:05:00.000Z',
+    });
+
+    expect(updated).toEqual(active({
+      updatedAt: '2026-07-14T08:05:00.000Z',
+      completedExerciseIds: ['squat'],
+    }));
+    expect(readStoredActiveWorkoutSession()).toEqual(updated);
   });
 
   test('ending a legacy session backfills its persistent browser device id', () => {

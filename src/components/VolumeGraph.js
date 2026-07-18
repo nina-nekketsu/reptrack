@@ -30,7 +30,7 @@ export default function VolumeGraph({ sessions }) {
   const yTicks = [minV, minV + range / 2, maxV];
   const formatKg = (v) => v >= 1000 ? `${(v / 1000).toFixed(1)}t` : `${Math.round(v)}`;
   const fmtDate = (iso) =>
-    new Date(iso).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
+    new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
 
   return (
     <div className="graph-wrap">

@@ -1,35 +1,79 @@
-/* Global theme tokens — Warm palette */
 :root {
-  --c-bg: #225D65;          /* Deep Teal */
-  --c-surface: #E3D8C6;     /* Warm Cream */
-  --c-surface-2: rgba(227, 216, 198, 0.72);
-  --c-text: #123033;        /* near-black teal */
-  --c-muted: rgba(18, 48, 51, 0.62);
-  --c-border: rgba(18, 48, 51, 0.18);
+  color-scheme: dark;
+  --gym-bg-0: #0F1216;
+  --gym-bg-1: #161B22;
+  --gym-bg-2: #1E252E;
+  --gym-bg-3: #273039;
+  --gym-line: #2C3540;
+  --gym-line-strong: #46525F;
+  --gym-ink-hi: #F3EFE6;
+  --gym-ink-mid: #BCC3CC;
+  --gym-ink-low: #8D97A3;
+  --gym-ink-on-accent: #0F1216;
+  --gym-go: #3BD07F;
+  --gym-go-dim: #1E4634;
+  --gym-rest: #E3A83B;
+  --gym-rest-dim: #4A3A1B;
+  --gym-danger: #E4633F;
+  --gym-danger-dim: #4A281E;
+  --gym-record: #E8C15A;
+  --gym-focus: #8FD8B2;
 
-  --c-primary: #225D65;     /* Deep Teal */
-  --c-secondary: #5C633E;   /* Olive */
-  --c-accent: #D39932;      /* Mustard */
-  --c-danger: #AE5238;      /* Terracotta */
+  /* Short semantic aliases used by the component layer. */
+  --bg-0: var(--gym-bg-0); --bg-1: var(--gym-bg-1); --bg-2: var(--gym-bg-2);
+  --bg-3: var(--gym-bg-3); --line: var(--gym-line); --line-strong: var(--gym-line-strong);
+  --ink-hi: var(--gym-ink-hi); --ink-mid: var(--gym-ink-mid); --ink-low: var(--gym-ink-low);
+  --ink-on-accent: var(--gym-ink-on-accent); --go: var(--gym-go); --go-dim: var(--gym-go-dim);
+  --rest: var(--gym-rest); --rest-dim: var(--gym-rest-dim); --danger: var(--gym-danger);
+  --danger-dim: var(--gym-danger-dim); --record: var(--gym-record); --focus: var(--gym-focus);
+  --c-bg:var(--bg-0);--c-surface:var(--bg-1);--c-surface-2:var(--bg-2);--c-text:var(--ink-hi);
+  --c-muted:var(--ink-mid);--c-border:var(--line);--c-primary:var(--go);--c-secondary:var(--bg-3);
+  --c-accent:var(--rest);--c-danger:var(--danger);--shadow-soft:var(--shadow-e1);
 
-  --shadow-soft: 0 10px 26px rgba(18, 48, 51, 0.18);
+  --space-0: 2px; --space-1: 4px; --space-2: 8px; --space-3: 12px;
+  --space-4: 16px; --space-5: 20px; --space-6: 24px; --space-7: 32px;
+  --space-8: 40px; --space-9: 56px;
+  --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-xl: 20px; --r-full: 999px;
+  --touch-target: 44px; --workout-touch-target: 48px;
+  --shadow-e1: 0 1px 2px rgba(0, 0, 0, .4);
+  --shadow-e2: 0 12px 32px rgba(0, 0, 0, .5);
+  --motion-fast: 120ms; --motion-reveal: 180ms; --motion-sheet: 240ms;
+  --ease-standard: cubic-bezier(.2, 0, 0, 1);
 }
 
-html, body {
-  height: 100%;
-}
-
+* { box-sizing: border-box; }
+html, body, #root { min-height: 100%; }
+html { background: var(--bg-0); }
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  min-width: 320px;
+  min-height: 100dvh;
+  background: var(--bg-0);
+  color: var(--ink-hi);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.4667;
+  font-weight: 500;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: var(--c-bg);
-  color: var(--c-text);
+  -webkit-tap-highlight-color: transparent;
 }
+button, input, select, textarea { font: inherit; }
+button, a, input, select, textarea { touch-action: manipulation; }
+button { min-height: var(--touch-target); }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible,
+[role="button"]:focus-visible, [tabindex]:focus-visible {
+  outline: 2px solid var(--gym-focus);
+  outline-offset: 2px;
+}
+::selection { background: var(--go-dim); color: var(--ink-hi); }
+code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
 }

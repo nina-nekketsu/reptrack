@@ -15,6 +15,21 @@
   overflow: hidden;
 }
 
+/* Gym Floor redesign */
+.plan-header { background:var(--bg-1); border:1px solid var(--line); color:var(--ink-hi); border-radius:var(--r-lg); padding:20px 16px; gap:8px; overflow:visible; }
+.plan-header::after { display:none; }.plan-header__label,.workouts-section-title{color:var(--ink-low);opacity:1;font-size:11px;line-height:16px;letter-spacing:.06em}.plan-header__name{font-size:20px;line-height:26px}.plan-header__meta{color:var(--ink-mid);opacity:1}
+.plan-start-btn { min-height:52px; background:var(--go); color:var(--ink-on-accent); border-radius:var(--r-md); padding:12px 20px; }.plan-start-btn:hover{background:var(--go)}.plan-start-btn.active{background:var(--go);color:var(--ink-on-accent)}
+.plan-edit-btn { min-height:48px; background:var(--bg-2); color:var(--ink-hi); border-color:var(--line-strong); }.plan-edit-btn:hover{background:var(--bg-3)}
+.active-session-banner { min-height:76px; background:var(--go-dim); border:1px solid var(--go); color:var(--ink-hi); border-radius:var(--r-lg); }.active-session-banner .active-dot{background:var(--go)}.active-session-banner .end-session-btn{min-width:52px;min-height:44px;background:transparent;border:1px solid var(--danger);color:var(--danger)}
+.plan-exercise-row { min-height:68px; background:var(--bg-1); border-color:var(--line); border-radius:var(--r-md); color:var(--ink-hi); }.plan-exercise-row:hover{background:var(--bg-3);box-shadow:none}
+.plan-exercise-thumb { background:var(--bg-3); color:var(--ink-mid); }.plan-exercise-name{color:var(--ink-hi);font-size:17px;line-height:24px}.plan-exercise-label{color:var(--ink-mid);font-size:13px;line-height:18px}.plan-exercise-prescription{color:var(--go);font-variant-numeric:tabular-nums}
+.plan-exercise-remove { width:44px;height:44px;background:var(--danger-dim);color:var(--danger) }.plan-drag-handle{color:var(--ink-low)}
+.plan-add-exercise-btn { min-height:48px;background:var(--bg-1);border-color:var(--line-strong);color:var(--go); }.plan-add-exercise-btn:hover{background:var(--bg-2)}
+.plan-picker-select,.plan-name-input,.prescription-input,.exercise-search-input { min-height:48px;background:var(--bg-2);border-color:var(--line-strong);color:var(--ink-hi);font-size:16px}.new-plan-btn{min-height:48px;background:var(--bg-2);border-color:var(--line-strong);color:var(--go)}
+.workout-modal-overlay{background:rgba(6,8,10,.72)}.workout-modal{background:var(--bg-2);border:1px solid var(--line);color:var(--ink-hi);max-height:min(92dvh,720px);box-shadow:var(--shadow-e2);padding-bottom:max(24px,env(safe-area-inset-bottom))}.workout-modal__title{color:var(--ink-hi)}.workout-modal__sub{color:var(--ink-mid)}
+.exercise-search-row{min-height:56px;color:var(--ink-hi);border-color:var(--line)}.exercise-search-meta{color:var(--ink-mid)}
+@media(max-width:359px){.plan-header__actions{display:grid;grid-template-columns:1fr 1fr}.plan-start-btn,.plan-edit-btn{justify-content:center;padding-inline:10px}.plan-exercise-row{gap:8px;padding-inline:10px}.plan-exercise-thumb{width:40px;height:40px}}
+
 .plan-header::after {
   content: '';
   position: absolute;
@@ -549,3 +564,13 @@
   background: var(--c-secondary) !important;
   color: var(--c-surface) !important;
 }
+
+/* Final Gym Floor cascade */
+.page{color:var(--ink-hi)}.plan-header{background:var(--bg-1);border:1px solid var(--line);color:var(--ink-hi)}.plan-header::after{display:none}.plan-header__meta{color:var(--ink-mid)}
+.plan-start-btn,.plan-start-btn:hover,.plan-start-btn.active{background:var(--go);color:var(--ink-on-accent)}.plan-edit-btn,.plan-edit-btn:hover{background:var(--bg-2);border-color:var(--line-strong);color:var(--ink-hi)}
+.active-session-banner{background:var(--go-dim);border:1px solid var(--go);color:var(--ink-hi)}.plan-exercise-row,.plan-exercise-row:hover{background:var(--bg-1);border-color:var(--line);box-shadow:none}.plan-exercise-row:hover{background:var(--bg-3)}.plan-exercise-thumb{background:var(--bg-3)}.plan-exercise-name{color:var(--ink-hi)}.plan-exercise-label{color:var(--ink-mid)}.plan-exercise-prescription{color:var(--go)}
+.plan-picker-select,.plan-name-input,.prescription-input,.exercise-search-input{background:var(--bg-2);border-color:var(--line-strong);color:var(--ink-hi)}.new-plan-btn,.plan-add-exercise-btn{background:var(--bg-2);border-color:var(--line-strong);color:var(--go)}.workout-modal{background:var(--bg-2);color:var(--ink-hi)}.workout-modal__title{color:var(--ink-hi)}.workout-modal__sub{color:var(--ink-mid)}
+.plan-reorder-controls { display: grid; grid-template-columns: repeat(2, 40px); gap: 4px; }
+.plan-reorder-controls button { min-width: 40px; min-height: 40px; border: 1px solid var(--line); border-radius: 10px; color: var(--ink-hi); background: var(--bg-3); }
+.exercise-create-new { display: grid; gap: 8px; padding: 10px 0; }
+.exercise-create-new select { min-height: 44px; border: 1px solid var(--line-strong); border-radius: 10px; color: var(--ink-hi); background: var(--bg-2); font-size: 16px; }

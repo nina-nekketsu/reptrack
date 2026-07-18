@@ -11,6 +11,161 @@ import {
   pullActiveWorkoutSession,
   pushActiveWorkoutSession as pushDedicatedActiveWorkoutSession,
 } from './activeWorkoutSessionSync';
+import { createMutationOutbox } from './mutationOutbox';
+import { clientDiagnostics } from './clientDiagnosticsRuntime';
+
+let _mutationOutbox = null;
+let _snapshotListeners = [];
+const LAST_SUCCESS_STORAGE_KEY = 'reptrackLastSuccessfulSyncAt';
+
+function readLastSuccessfulSyncAt() {
+  if (typeof localStorage === 'undefined') return null;
+  try {
+    return localStorage.getItem(LAST_SUCCESS_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+let _lastSuccessfulSyncAt = readLastSuccessfulSyncAt();
+
+function notifySyncSnapshot() {
+  const snapshot = getSyncSnapshot();
+  _snapshotListeners.forEach((listener) => {
+    try { listener(snapshot); } catch { /* one observer must not break sync */ }
+  });
+}
+
+function markSuccessfulSync() {
+  _lastSuccessfulSyncAt = new Date().toISOString();
+  if (typeof localStorage !== 'undefined') {
+    try {
+      localStorage.setItem(LAST_SUCCESS_STORAGE_KEY, _lastSuccessfulSyncAt);
+    } catch {
+      // Keep truthful in-memory status when persistent storage is unavailable.
+    }
+  }
+  notifySyncSnapshot();
+}
+
+function getMutationOutbox() {
+  if (!_mutationOutbox) {
+    _mutationOutbox = createMutationOutbox({
+      storage: typeof localStorage === 'undefined' ? null : localStorage,
+    });
+    _mutationOutbox.subscribe(notifySyncSnapshot);
+  }
+  return _mutationOutbox;
+}
+
+async function executePendingMutation(operation) {
+  if (operation.kind === 'exercise/update') {
+    const { error } = await supabase
+      .from('exercises')
+      .upsert(operation.payload, { onConflict: 'id,user_id' });
+    if (error) throw error;
+    return;
+  }
+
+  if (operation.kind === 'session/update') {
+    const {
+      remote_id: remoteId,
+      exercise_id: exerciseId,
+      user_id: userId,
+      ...updates
+    } = operation.payload;
+    const { error } = await supabase
+      .from('exercise_logs')
+      .update(updates)
+      .eq('id', remoteId)
+      .eq('user_id', userId)
+      .eq('exercise_id', exerciseId);
+    if (error) throw error;
+    return;
+  }
+
+  throw Object.assign(new Error('Unsupported mutation kind'), { code: 'UNSUPPORTED_KIND' });
+}
+
+export function listPendingMutations() {
+  return getMutationOutbox().listPending();
+}
+
+export function retryPendingMutation(operationId) {
+  return getMutationOutbox().retry(operationId);
+}
+
+export function getSyncSnapshot() {
+  const operations = getMutationOutbox().listPending();
+  return {
+    status: _syncStatus,
+    pendingCount: operations.filter((operation) => operation.status === 'pending').length,
+    failedCount: operations.filter((operation) => operation.status === 'failed').length,
+    syncingCount: operations.filter((operation) => operation.status === 'syncing').length,
+    lastSuccessfulSyncAt: _lastSuccessfulSyncAt,
+    operations,
+  };
+}
+
+export function onSyncSnapshotChange(listener) {
+  _snapshotListeners.push(listener);
+  return () => {
+    _snapshotListeners = _snapshotListeners.filter((candidate) => candidate !== listener);
+  };
+}
+
+function classifySyncFailure(error = {}) {
+  const code = String(error.code || '').toUpperCase();
+  const message = String(error.message || '').toLowerCase();
+  if (code === '401' || code === '403' || code.includes('AUTH') || code.includes('JWT')) {
+    return 'auth-expired';
+  }
+  if (code.includes('NETWORK')
+    || code.includes('FETCH')
+    || message.includes('failed to fetch')
+    || message.includes('network request failed')
+    || message.includes('networkerror')
+    || message === 'load failed'
+    || (typeof navigator !== 'undefined' && navigator.onLine === false)) {
+    return 'offline';
+  }
+  if (/^5\d\d$/.test(code) || code.includes('SERVER')) return 'server';
+  return 'unknown';
+}
+
+export async function flushPendingMutations() {
+  const outbox = getMutationOutbox();
+  if (!supabase) {
+    return {
+      processed: 0,
+      succeeded: 0,
+      failed: 0,
+      pending: outbox.pendingCount(),
+    };
+  }
+
+  const totals = { processed: 0, succeeded: 0, failed: 0, pending: outbox.pendingCount() };
+  do {
+    const attemptsBefore = new Map(
+      outbox.listPending().map((operation) => [operation.id, operation.attempts])
+    );
+    const result = await outbox.flush(executePendingMutation);
+    outbox.listPending()
+      .filter((operation) => (
+        operation.status === 'failed'
+        && operation.attempts > (attemptsBefore.get(operation.id) || 0)
+      ))
+      .forEach((operation) => {
+        clientDiagnostics.incrementSyncFailure(classifySyncFailure(operation.lastError));
+      });
+    totals.processed += result.processed;
+    totals.succeeded += result.succeeded;
+    totals.failed += result.failed;
+    totals.pending = outbox.pendingCount();
+  } while (outbox.listPending().some((operation) => operation.status === 'pending'));
+  if (totals.succeeded > 0 && outbox.pendingCount() === 0) markSuccessfulSync();
+  return totals;
+}
 
 // ─── Status tracking ────────────────────────────────────────────────────
 let _syncStatus = 'idle'; // 'idle' | 'syncing' | 'error' | 'offline'
@@ -26,6 +181,13 @@ export function onSyncStatusChange(fn) {
 function setStatus(s) {
   _syncStatus = s;
   _listeners.forEach(fn => fn(s));
+  notifySyncSnapshot();
+}
+
+function setSuccessfulStatus() {
+  _syncStatus = 'idle';
+  _listeners.forEach(fn => fn('idle'));
+  markSuccessfulSync();
 }
 
 // ─── Pull: Supabase → localStorage ─────────────────────────────────────
@@ -141,8 +303,9 @@ export async function pullAll(userId) {
 
     await pullActiveWorkoutSession(supabase, userId);
 
-    setStatus('idle');
+    setSuccessfulStatus();
   } catch (err) {
+    clientDiagnostics.incrementSyncFailure(classifySyncFailure(err));
     console.error('[sync] pullAll failed:', err);
     setStatus('error');
     throw err;
@@ -156,16 +319,27 @@ export async function pushExercises(userId) {
   const exercises = safeParseJSON(localStorage.getItem('exercises'), []);
   if (exercises.length === 0) return;
 
-  const rows = exercises.map(ex => ({
-    id: String(ex.id),
-    user_id: userId,
-    name: ex.name,
-    muscle_group: ex.muscleGroup,
-    type: ex.type || 'Strength',
-  }));
+  const queuedExerciseIds = new Set(
+    getMutationOutbox().listPending()
+      .filter((operation) => (
+        operation.kind === 'exercise/update'
+        && operation.payload?.user_id === userId
+      ))
+      .map((operation) => String(operation.entityId))
+  );
+  const rows = exercises
+    .filter((exercise) => !queuedExerciseIds.has(String(exercise.id)))
+    .map(ex => ({
+      id: String(ex.id),
+      user_id: userId,
+      name: ex.name,
+      muscle_group: ex.muscleGroup,
+      type: ex.type || 'Strength',
+    }));
 
+  if (rows.length === 0) return;
   const { error } = await supabase.from('exercises').upsert(rows, { onConflict: 'id,user_id' });
-  if (error) console.error('[sync] pushExercises:', error);
+  if (error) throw error;
 }
 
 export async function pushPlans(userId) {
@@ -181,7 +355,7 @@ export async function pushPlans(userId) {
   }));
 
   const { error } = await supabase.from('workout_plans').upsert(rows, { onConflict: 'id,user_id' });
-  if (error) console.error('[sync] pushPlans:', error);
+  if (error) throw error;
 }
 
 export async function pushLogs(userId) {
@@ -209,8 +383,7 @@ export async function pushLogs(userId) {
 
   const { data, error } = await supabase.from('exercise_logs').insert(rows).select();
   if (error) {
-    console.error('[sync] pushLogs:', error);
-    return;
+    throw error;
   }
 
   // Mark sessions with their remoteId so we don't push them again
@@ -253,7 +426,7 @@ export async function pushSettings(userId) {
     settings,
   }, { onConflict: 'user_id' });
 
-  if (error) console.error('[sync] pushSettings:', error);
+  if (error) throw error;
 }
 
 export async function pushActiveWorkoutSession(userId) {
@@ -277,8 +450,9 @@ export async function pushAll(userId) {
       pushSettings(userId),
       pushDedicatedActiveWorkoutSession(supabase, userId),
     ]);
-    setStatus('idle');
+    setSuccessfulStatus();
   } catch (err) {
+    clientDiagnostics.incrementSyncFailure(classifySyncFailure(err));
     console.error('[sync] pushAll failed:', err);
     setStatus('error');
   }
@@ -324,15 +498,21 @@ export async function deleteRemoteExercise(exerciseId, userId) {
 // ─── Single-entity push helpers (fire-and-forget after local write) ────
 
 export async function pushExercise(exercise, userId) {
-  if (!supabase || !userId) return;
-  const { error } = await supabase.from('exercises').upsert({
+  if (!exercise?.id || !userId) return undefined;
+  const payload = {
     id: String(exercise.id),
     user_id: userId,
     name: exercise.name,
     muscle_group: exercise.muscleGroup,
     type: exercise.type || 'Strength',
-  }, { onConflict: 'id,user_id' });
-  if (error) console.error('[sync] pushExercise:', error);
+  };
+  getMutationOutbox().enqueue({
+    kind: 'exercise/update',
+    entityId: String(exercise.id),
+    idempotencyKey: `${userId}:exercise:${exercise.id}`,
+    payload,
+  });
+  return flushPendingMutations();
 }
 
 export async function pushPlan(plan, userId) {
@@ -367,18 +547,21 @@ export async function pushSession(exerciseId, session, userId) {
 
 export async function updateRemoteSession(remoteId, exerciseId, session, userId) {
   if (!supabase || !userId || !remoteId) return null;
-  const { error } = await supabase.from('exercise_logs').update({
-    sets: session.sets,
-    best_set: session.bestSet || null,
-    total_reps: session.totalReps || 0,
-    total_volume: session.totalVolume || 0,
-  }).eq('id', remoteId).eq('user_id', userId).eq('exercise_id', String(exerciseId));
-
-  if (error) {
-    console.error('[sync] updateRemoteSession:', error);
-    return null;
-  }
-  return true;
+  getMutationOutbox().enqueue({
+    kind: 'session/update',
+    entityId: String(remoteId),
+    idempotencyKey: `${userId}:session:${remoteId}`,
+    payload: {
+      remote_id: String(remoteId),
+      exercise_id: String(exerciseId),
+      user_id: userId,
+      sets: session.sets,
+      best_set: session.bestSet || null,
+      total_reps: session.totalReps || 0,
+      total_volume: session.totalVolume || 0,
+    },
+  });
+  return flushPendingMutations();
 }
 
 // ─── Utilities ──────────────────────────────────────────────────────────

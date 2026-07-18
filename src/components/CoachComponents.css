@@ -472,3 +472,6 @@
   font-size: 13px;
   cursor: pointer;
 }
+
+.ws-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ws-share-btn { min-height: 48px; border: 1px solid var(--line-strong); border-radius: 12px; color: var(--ink-hi); background: var(--bg-2); font-weight: 800; }

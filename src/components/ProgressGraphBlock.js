@@ -33,7 +33,7 @@ export default function ProgressGraphBlock({ logs, exerciseId }) {
                 return (
                   <div className="last5-row" key={session.date}>
                     <span className="last5-date">
-                      {new Date(session.date).toLocaleDateString('nl-NL', {
+                      {new Date(session.date).toLocaleDateString(undefined, {
                         day: 'numeric',
                         month: 'short',
                       })}

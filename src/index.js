@@ -2,12 +2,19 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
+import ErrorBoundary from './components/ErrorBoundary';
+import { installGlobalDiagnostics } from './lib/clientDiagnostics';
+import { clientDiagnostics } from './lib/clientDiagnosticsRuntime';
 import reportWebVitals from './reportWebVitals';
+
+installGlobalDiagnostics(window, clientDiagnostics);
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    <ErrorBoundary onError={clientDiagnostics.recordError}>
+      <App />
+    </ErrorBoundary>
   </React.StrictMode>
 );
 

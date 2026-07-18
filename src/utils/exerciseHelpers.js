@@ -73,26 +73,33 @@ export function calcTotals(sets) {
   return { totalReps, totalVolume };
 }
 
+export function isWarmupSet(set = {}) {
+  return set.setType === 'warmup' || set.warmup === true;
+}
+
 export function bestSet(sets) {
-  if (!sets || sets.length === 0) return null;
-  return sets.reduce((best, s) => {
+  const workingSets = (sets || []).filter((set) => !isWarmupSet(set));
+  if (workingSets.length === 0) return null;
+  return workingSets.reduce((best, s) => {
     const score     = (Number(s.weight) || 0) * (1 + (Number(s.reps) || 0) / 30);
     const bestScore = (Number(best.weight) || 0) * (1 + (Number(best.reps) || 0) / 30);
     return score > bestScore ? s : best;
-  }, sets[0]);
+  }, workingSets[0]);
 }
 
 export function getRecords(sessions) {
   if (!sessions || sessions.length === 0) return { maxWeight: null, maxReps: null, maxVolume: null };
   let maxWeight = 0, maxReps = 0, maxVolume = 0;
   sessions.forEach(session => {
-    session.sets.forEach(s => {
+    const workingSets = session.sets.filter((set) => !isWarmupSet(set));
+    workingSets.forEach(s => {
       const w = Number(s.weight) || 0;
       const r = Number(s.reps)   || 0;
       if (w > maxWeight) maxWeight = w;
-      if (r > maxReps)   maxReps   = r;
+      if (r > maxReps)   maxReps = r;
     });
-    if ((session.totalVolume || 0) > maxVolume) maxVolume = session.totalVolume || 0;
+    const workingVolume = workingSets.reduce((sum, set) => sum + (Number(set.weight) || 0) * (Number(set.reps) || 0), 0);
+    if (workingVolume > maxVolume) maxVolume = workingVolume;
   });
   return { maxWeight, maxReps, maxVolume };
 }

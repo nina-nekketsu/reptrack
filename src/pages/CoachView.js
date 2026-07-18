@@ -35,7 +35,7 @@ function MiniVolumeGraph({ history }) {
 
   const yTicks = [minV, minV + range / 2, maxV];
   const fmt = (v) => v >= 1000 ? `${(v / 1000).toFixed(1)}t` : `${Math.round(v)}`;
-  const fmtDate = (iso) => new Date(iso).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
+  const fmtDate = (iso) => new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
 
   return (
     <div className="cv-graph-wrap">
@@ -140,10 +140,19 @@ export default function CoachView() {
 
   const fmtDateTime = (iso) => {
     if (!iso) return '—';
-    return new Date(iso).toLocaleString('nl-NL', {
+    return new Date(iso).toLocaleString(undefined, {
       day: 'numeric', month: 'short', year: 'numeric',
       hour: '2-digit', minute: '2-digit',
     });
+  };
+
+  const fmtFreshness = (iso) => {
+    if (!iso) return 'Freshness unavailable';
+    const minutes = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+    if (minutes < 2) return 'Updated just now';
+    if (minutes < 60) return `Updated ${minutes} minutes ago`;
+    const hours = Math.round(minutes / 60);
+    return `Updated ${hours} hour${hours === 1 ? '' : 's'} ago`;
   };
 
   return (
@@ -156,7 +165,7 @@ export default function CoachView() {
           <div>
             <h1 className="cv-title">RepTrack Coach View</h1>
             <p className="cv-muted cv-synced">
-              Last synced: <strong>{fmtDateTime(syncedAt)}</strong>
+              Last synced: <strong>{fmtDateTime(syncedAt)}</strong> · {fmtFreshness(syncedAt)}
             </p>
           </div>
         </div>

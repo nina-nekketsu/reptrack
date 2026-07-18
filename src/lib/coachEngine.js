@@ -110,10 +110,10 @@ export function getPreviousSets(exerciseId, beforeDate) {
   if (beforeDate) {
     const cutoff = new Date(beforeDate).getTime();
     const prev = sorted.find(s => new Date(s.date).getTime() < cutoff);
-    return prev ? prev.sets : [];
+    return prev ? prev.sets.filter((set) => set.setType !== 'warmup' && set.warmup !== true) : [];
   }
 
-  return sorted[0]?.sets || [];
+  return (sorted[0]?.sets || []).filter((set) => set.setType !== 'warmup' && set.warmup !== true);
 }
 
 // ── Coaching message generation ─────────────────────────────────────────

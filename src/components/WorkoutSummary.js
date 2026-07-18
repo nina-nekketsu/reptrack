@@ -1,5 +1,6 @@
 // src/components/WorkoutSummary.js — Post-workout summary modal
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { vibrate } from '../utils/timer';
 import { getPlanById } from '../data/trainingPlans';
 
 // Motivational closing messages — PRD Section 6.2 key phrases
@@ -11,7 +12,22 @@ const CLOSING_MESSAGES = [
   'Effort overrides variety. You did the work today.',
 ];
 
+export function buildWorkoutSummaryText(summary, cardioMinutes = 0) {
+  const durationMin = summary?.duration ? Math.floor(summary.duration / 60000) : null;
+  return [
+    'RepTrack workout complete',
+    `${summary?.exerciseCount || 0} exercises · ${summary?.totalSets || 0} sets`,
+    `${Math.round(summary?.totalVolume || 0).toLocaleString()} kg volume`,
+    durationMin != null ? `${durationMin} min` : null,
+    cardioMinutes ? `${cardioMinutes} min cardio` : null,
+  ].filter(Boolean).join('\n');
+}
+
 export default function WorkoutSummary({ summary, planId, cardioMinutes, onClose }) {
+  const [shareLabel, setShareLabel] = useState('Share as text');
+  useEffect(() => {
+    if (summary?.improvements?.length > 0) vibrate([30, 60, 30]);
+  }, [summary]);
   if (!summary) return null;
 
   const plan = planId ? getPlanById(planId) : null;
@@ -27,6 +43,18 @@ export default function WorkoutSummary({ summary, planId, cardioMinutes, onClose
     : null;
 
   const closingMsg = CLOSING_MESSAGES[Math.floor(Math.random() * CLOSING_MESSAGES.length)];
+
+  async function handleShare() {
+    const text = buildWorkoutSummaryText(summary, cardioMinutes);
+    try {
+      if (navigator.share) await navigator.share({ title: 'RepTrack workout', text });
+      else if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(text);
+      else throw new Error('Sharing unavailable');
+      setShareLabel(navigator.share ? 'Shared' : 'Copied');
+    } catch (error) {
+      if (error?.name !== 'AbortError') setShareLabel('Could not share');
+    }
+  }
 
   return (
     <div className="workout-summary-overlay" onClick={onClose}>
@@ -64,7 +92,7 @@ export default function WorkoutSummary({ summary, planId, cardioMinutes, onClose
                   <span>{item.exercise}</span>
                   {item.levers.map((l, j) => (
                     <span key={j} className="coach-fb-lever coach-fb-lever--up">
-                      {l.lever}: {l.from}>{l.to}
+                      {l.lever}: {l.from}{' → '}{l.to}
                     </span>
                   ))}
                 </div>
@@ -121,7 +149,10 @@ export default function WorkoutSummary({ summary, planId, cardioMinutes, onClose
         {/* Motivational closing */}
         <p className="ws-closing">{closingMsg}</p>
 
-        <button className="ws-close-btn" onClick={onClose}>Done</button>
+        <div className="ws-actions">
+          <button type="button" className="ws-share-btn" onClick={handleShare}>{shareLabel}</button>
+          <button className="ws-close-btn" onClick={onClose}>Done</button>
+        </div>
       </div>
     </div>
   );

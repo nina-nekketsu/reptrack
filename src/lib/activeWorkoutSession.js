@@ -36,6 +36,7 @@ export function createActiveWorkoutSession({ planId, planName, now, deviceId }) 
     status: ACTIVE_STATUS,
     endedAt: null,
     deviceId,
+    completedExerciseIds: [],
   });
 }
 
@@ -165,6 +166,22 @@ export function saveActiveWorkoutSession(command, storage = defaultStorage()) {
       endActiveWorkoutSession(sessionWithDeviceId, now),
       storage
     );
+  }
+
+  if (command?.action === 'update') {
+    const current = readStoredActiveWorkoutSession(storage);
+    if (!current || current.status !== ACTIVE_STATUS) return null;
+    const patch = command.patch && typeof command.patch === 'object' ? command.patch : {};
+    return writeStoredActiveWorkoutSession({
+      ...current,
+      ...patch,
+      planId: current.planId,
+      startedAt: current.startedAt,
+      status: ACTIVE_STATUS,
+      endedAt: null,
+      updatedAt: now,
+      deviceId: current.deviceId || getOrCreateDeviceId(storage),
+    }, storage);
   }
 
   throw new Error(`Unsupported active-workout action: ${command?.action || 'missing'}`);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ExerciseLogModal from '../components/ExerciseLogModal';
 import WorkoutSummary from '../components/WorkoutSummary';
@@ -17,6 +17,13 @@ import {
   saveActiveWorkoutSession,
 } from '../lib/activeWorkoutSession';
 import { pushActiveWorkoutSession } from '../lib/sync';
+import { beginCoachWorkout, endCoachWorkout } from '../lib/coachCloud';
+import {
+  countCompletedSets,
+  getExerciseProgressState,
+  getNextIncompleteIndex,
+  getRestRecommendation,
+} from '../utils/workoutProgress';
 import './Page.css';
 import './Exercises.css';
 import './Workouts.css';
@@ -79,17 +86,31 @@ export default function ActiveWorkout() {
   const [activeSession, setActiveSession] = useState(getStoredVisibleActiveWorkoutSession);
   const [elapsed, setElapsed] = useState('0:00');
   const [selectedExercise, setSelectedExercise] = useState(null);
+  const [selectedPlanExercise, setSelectedPlanExercise] = useState(null);
+  const [completedExerciseIds, setCompletedExerciseIds] = useState(
+    () => getStoredVisibleActiveWorkoutSession()?.completedExerciseIds || []
+  );
   const [showSummary, setShowSummary] = useState(false);
   const [summaryData, setSummaryData] = useState(null);
   const [warmupDismissed, setWarmupDismissed] = useState(false);
+  const [showWorkoutMenu, setShowWorkoutMenu] = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const startedCoachSessionRef = useRef(null);
 
   const plan = plans.find((p) => p.id === planId);
 
   // Activate coach when workout starts
   useEffect(() => {
-    if (coach.isOnboarded && activeSession) {
+    if (
+      coach.isOnboarded
+      && activeSession
+      && startedCoachSessionRef.current !== activeSession.startedAt
+    ) {
+      startedCoachSessionRef.current = activeSession.startedAt;
       coach.activateCoach();
+      beginCoachWorkout(activeSession).catch((error) => {
+        console.warn('[coach] cloud workout start failed:', error);
+      });
     }
     return () => {
       // Don't deactivate here — let handleEndWorkout do it
@@ -115,6 +136,7 @@ export default function ActiveWorkout() {
       });
       pushActiveWorkoutSession(user?.id);
       setActiveSession(session);
+      setCompletedExerciseIds(session.completedExerciseIds || []);
     }
   }, [plan, planId, activeSession, navigate, user?.id]);
 
@@ -141,8 +163,8 @@ export default function ActiveWorkout() {
     const sessionStart = new Date(activeSession.startedAt).getTime();
     let total = 0;
     for (const s of sessions) {
-      if (new Date(s.date).getTime() >= sessionStart) {
-        total += (s.sets ? s.sets.length : 0);
+      if (new Date(s.workoutSessionStartedAt || s.date).getTime() >= sessionStart) {
+        total += countCompletedSets(s.sets || []);
       }
     }
     return total;
@@ -150,17 +172,43 @@ export default function ActiveWorkout() {
 
   // Check if ALL prescribed sets are logged
   function isFullyLogged(exerciseId, prescribedSets) {
-    return getSetsLoggedThisSession(exerciseId) >= (prescribedSets || 1);
+    return completedExerciseIds.includes(exerciseId)
+      || getSetsLoggedThisSession(exerciseId) >= (prescribedSets || 1);
   }
 
-  // Count how many exercises are fully completed
-  const completedCount = plan
-    ? plan.exercises.filter((pe) => isFullyLogged(pe.exerciseId, pe.prescribedSets)).length
-    : 0;
-  const totalExercises = plan ? plan.exercises.length : 0;
+  const exerciseProgress = plan
+    ? plan.exercises.map((planExercise, index) => {
+        const exercise = getExercise(planExercise.exerciseId);
+        const setsLogged = getSetsLoggedThisSession(planExercise.exerciseId);
+        const targetSets = planExercise.prescribedSets || 1;
+        const done = isFullyLogged(planExercise.exerciseId, targetSets);
+        return {
+          done,
+          exercise,
+          index,
+          planExercise,
+          progressState: getExerciseProgressState(setsLogged, targetSets, done),
+          setsLogged,
+          targetSets,
+        };
+      })
+    : [];
+  const completedCount = exerciseProgress.filter(({ done }) => done).length;
+  const totalExercises = exerciseProgress.length;
+  const nextExerciseIndex = getNextIncompleteIndex(
+    exerciseProgress.map(({ done, exercise }) => done || !exercise)
+  );
+  const nextExercise = nextExerciseIndex >= 0 ? exerciseProgress[nextExerciseIndex] : null;
+  const restRecommendation = getRestRecommendation(nextExercise?.planExercise);
 
   function handleEndWorkout() {
     timer.stopAll();
+    endCoachWorkout(activeSession, {
+      status: 'ended',
+      completedExerciseIds,
+    }).catch((error) => {
+      console.warn('[coach] cloud workout end failed:', error);
+    });
 
     // Generate workout summary if coach is active
     if (coach.isOnboarded && plan && activeSession) {
@@ -227,12 +275,28 @@ export default function ActiveWorkout() {
     setLogs(updatedLogs);
   }
 
-  function openExerciseLog(exercise) {
+  function openExerciseLog(exercise, planExercise) {
     setSelectedExercise(exercise);
+    setSelectedPlanExercise(planExercise);
   }
 
   function closeExerciseLog() {
     setSelectedExercise(null);
+    setSelectedPlanExercise(null);
+  }
+
+  function handleExerciseCompletion(exerciseId, done) {
+    const next = done
+      ? [...new Set([...completedExerciseIds, exerciseId])]
+      : completedExerciseIds.filter((id) => id !== exerciseId);
+    setCompletedExerciseIds(next);
+    const updatedSession = saveActiveWorkoutSession({
+      action: 'update',
+      patch: { completedExerciseIds: next },
+      now: new Date().toISOString(),
+    });
+    if (updatedSession) setActiveSession(updatedSession);
+    pushActiveWorkoutSession(user?.id);
   }
 
   if (!plan) return null;
@@ -246,9 +310,7 @@ export default function ActiveWorkout() {
             <div className="aw-header__label">Active Workout</div>
             <div className="aw-header__name">{plan.name}</div>
           </div>
-          <button className="aw-end-btn" onClick={() => setShowEndConfirm(true)}>
-            End Workout
-          </button>
+          <div className="aw-header__elapsed" aria-label={`${elapsed} elapsed`}>{elapsed}</div>
         </div>
 
         <div className="aw-header__stats">
@@ -302,22 +364,55 @@ export default function ActiveWorkout() {
 
       {/* Exercise list */}
       <div className="aw-exercise-list">
-        {plan.exercises.map((planEx, i) => {
-          const ex = getExercise(planEx.exerciseId);
-          if (!ex) return null;
-          const setsLogged = getSetsLoggedThisSession(planEx.exerciseId);
-          const targetSets = planEx.prescribedSets || 1;
-          const done = setsLogged >= targetSets;
-          const partial = setsLogged > 0 && !done;
+        {exerciseProgress.map((progress) => {
+          const {
+            done,
+            exercise: ex,
+            index: i,
+            planExercise: planEx,
+            progressState,
+            setsLogged,
+            targetSets,
+          } = progress;
+
+          if (!ex) {
+            return (
+              <div
+                key={`${planEx.exerciseId}-${i}`}
+                className="aw-exercise-row aw-exercise-row--missing"
+              >
+                <div className="aw-exercise-status" aria-hidden="true">
+                  <span className="aw-number">{i + 1}</span>
+                </div>
+                <div className="aw-exercise-info">
+                  <div className="aw-exercise-name">Unknown exercise (removed?)</div>
+                  <div className="aw-exercise-meta">This plan entry can no longer be logged.</div>
+                </div>
+                <button
+                  className="aw-edit-plan-btn"
+                  onClick={() => navigate('/workouts')}
+                >
+                  Edit plan
+                </button>
+              </div>
+            );
+          }
+
+          const partial = progressState === 'partial' || progressState === 'almost';
+          const isNext = i === nextExerciseIndex;
 
           return (
             <div
               key={`${planEx.exerciseId}-${i}`}
-              className={`aw-exercise-row ${done ? 'aw-exercise-row--done' : partial ? 'aw-exercise-row--partial' : ''}`}
-              onClick={() => openExerciseLog(ex)}
+              className={`aw-exercise-row aw-exercise-row--${progressState} ${planEx.superset ? 'aw-exercise-row--superset' : ''} ${isNext ? 'aw-exercise-row--next' : ''}`}
+              onClick={() => openExerciseLog(ex, planEx)}
             >
               <div className="aw-exercise-status">
-                <span className="aw-number">{i + 1}</span>
+                {done ? (
+                  <span className="aw-check" aria-label={`${ex.name} completed`}>✓</span>
+                ) : (
+                  <span className="aw-number">{i + 1}</span>
+                )}
               </div>
 
               <div className="aw-exercise-thumb">
@@ -325,11 +420,13 @@ export default function ActiveWorkout() {
               </div>
 
               <div className="aw-exercise-info">
+                {isNext && <div className="aw-exercise-next-label">Next</div>}
                 <div className={`aw-exercise-name ${done ? 'aw-exercise-name--done' : ''}`}>
                   {ex.name}
                 </div>
                 <div className="aw-exercise-meta">
                   {ex.muscleGroup} · {planEx.prescribedSets}×{planEx.prescribedReps}
+                  {planEx.superset ? ` · Superset ${planEx.superset} · ${getRestRecommendation(planEx).rangeLabel}` : ''}
                 </div>
               </div>
 
@@ -358,6 +455,33 @@ export default function ActiveWorkout() {
         </div>
       )}
 
+      <div className="aw-bottom-bar">
+        <button
+          className="aw-bottom-bar__next"
+          disabled={!nextExercise}
+          onClick={() => nextExercise && openExerciseLog(nextExercise.exercise, nextExercise.planExercise)}
+        >
+          {nextExercise ? `Log next: ${nextExercise.exercise.name}` : 'All exercises logged'}
+        </button>
+        <div className="aw-bottom-bar__secondary">
+          <button
+            className="aw-bottom-bar__rest"
+            disabled={timer.isResting}
+            onClick={() => timer.startRest(restRecommendation.milliseconds)}
+          >
+            {timer.isResting ? `Rest ${timer.restDisplay}` : `Rest ${restRecommendation.label}`}
+          </button>
+          <button
+            className="aw-bottom-bar__menu"
+            aria-label="Workout menu"
+            aria-haspopup="dialog"
+            onClick={() => setShowWorkoutMenu(true)}
+          >
+            ⋯
+          </button>
+        </div>
+      </div>
+
       {/* Exercise log modal */}
       {selectedExercise && (
         <ExerciseLogModal
@@ -366,6 +490,10 @@ export default function ActiveWorkout() {
           onClose={closeExerciseLog}
           onSaved={handleLogSaved}
           stayOpenOnSave
+          prescribedSets={selectedPlanExercise?.prescribedSets || 1}
+          prescribedReps={selectedPlanExercise?.prescribedReps || null}
+          isExerciseDone={completedExerciseIds.includes(selectedExercise.id)}
+          onCompletionChange={(done) => handleExerciseCompletion(selectedExercise.id, done)}
         />
       )}
 
@@ -379,6 +507,35 @@ export default function ActiveWorkout() {
         />
       )}
 
+      {showWorkoutMenu && (
+        <div className="aw-menu-overlay" onClick={() => setShowWorkoutMenu(false)}>
+          <div
+            className="aw-workout-menu"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="aw-workout-menu-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h3 id="aw-workout-menu-title">Workout menu</h3>
+            <button
+              className="aw-workout-menu__end"
+              onClick={() => {
+                setShowWorkoutMenu(false);
+                setShowEndConfirm(true);
+              }}
+            >
+              End workout
+            </button>
+            <button
+              className="aw-workout-menu__cancel"
+              onClick={() => setShowWorkoutMenu(false)}
+            >
+              Keep going
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* End workout confirmation overlay */}
       {showEndConfirm && (
         <div className="aw-end-overlay" onClick={() => setShowEndConfirm(false)}>
@@ -388,6 +545,11 @@ export default function ActiveWorkout() {
             <p className="aw-end-confirm__subtitle">
               {completedCount}/{totalExercises} exercises logged · {elapsed}
             </p>
+            {completedCount < totalExercises && (
+              <p className="aw-end-confirm__note">
+                {totalExercises - completedCount} exercises not logged — they'll stay in the plan.
+              </p>
+            )}
             <div className="aw-end-confirm__actions">
               <button
                 className="aw-end-confirm__btn aw-end-confirm__btn--cancel"
