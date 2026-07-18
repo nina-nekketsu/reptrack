@@ -175,4 +175,66 @@ describe('exercise mutation outbox integration', () => {
 
     expect(mockUpsert).toHaveBeenCalledTimes(1);
   });
+
+  test('retains and retries a failed update to an already-synced workout session', async () => {
+    let updateError = Object.assign(new Error('TypeError: Failed to fetch'), { code: '' });
+    const eqExercise = jest.fn(async () => ({ error: updateError }));
+    const eqUser = jest.fn(() => ({ eq: eqExercise }));
+    const eqId = jest.fn(() => ({ eq: eqUser }));
+    const update = jest.fn(() => ({ eq: eqId }));
+    mockFrom.mockImplementation(() => ({ update }));
+    const {
+      flushPendingMutations,
+      listPendingMutations,
+      retryPendingMutation,
+      updateRemoteSession,
+    } = loadSyncModule();
+
+    const editedSession = {
+      sets: [{ reps: 8, weight: 80, done: true }],
+      bestSet: { reps: 8, weight: 80 },
+      totalReps: 8,
+      totalVolume: 640,
+    };
+
+    await expect(updateRemoteSession(
+      'remote-log-1',
+      'bench-1',
+      editedSession,
+      'user-1'
+    )).resolves.toEqual({
+      processed: 1,
+      succeeded: 0,
+      failed: 1,
+      pending: 1,
+    });
+
+    const [failed] = listPendingMutations();
+    expect(failed).toEqual(expect.objectContaining({
+      kind: 'session/update',
+      entityId: 'remote-log-1',
+      status: 'failed',
+      attempts: 1,
+    }));
+    expect(update).toHaveBeenCalledWith({
+      sets: editedSession.sets,
+      best_set: editedSession.bestSet,
+      total_reps: 8,
+      total_volume: 640,
+    });
+    expect(eqId).toHaveBeenCalledWith('id', 'remote-log-1');
+    expect(eqUser).toHaveBeenCalledWith('user_id', 'user-1');
+    expect(eqExercise).toHaveBeenCalledWith('exercise_id', 'bench-1');
+
+    updateError = null;
+    retryPendingMutation(failed.id);
+    await expect(flushPendingMutations()).resolves.toEqual({
+      processed: 1,
+      succeeded: 1,
+      failed: 0,
+      pending: 0,
+    });
+    expect(listPendingMutations()).toEqual([]);
+    expect(update).toHaveBeenCalledTimes(2);
+  });
 });

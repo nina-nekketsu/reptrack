@@ -44,11 +44,10 @@ export async function beginCoachWorkout(activeWorkoutSession) {
     .from('coach_workout_sessions')
     .upsert({
       user_id: userId,
-      plan_id: activeWorkoutSession.planId || null,
       local_started_at: localStartedAt,
-      started_at: localStartedAt,
       status: 'active',
       metadata: {
+        planId: activeWorkoutSession.planId || null,
         planName: activeWorkoutSession.planName || null,
         deviceId: activeWorkoutSession.deviceId || null,
       },
@@ -69,9 +68,14 @@ export async function endCoachWorkout(activeWorkoutSession, summary = {}) {
   const { data, error } = await supabase
     .from('coach_workout_sessions')
     .update({
-      status: 'ended',
-      ended_at: new Date().toISOString(),
-      summary,
+      status: 'completed',
+      local_ended_at: new Date().toISOString(),
+      metadata: {
+        planId: activeWorkoutSession.planId || null,
+        planName: activeWorkoutSession.planName || null,
+        deviceId: activeWorkoutSession.deviceId || null,
+        summary,
+      },
     })
     .eq('user_id', session.user.id)
     .eq('local_started_at', localStartedAt)

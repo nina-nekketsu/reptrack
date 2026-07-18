@@ -50,12 +50,16 @@ describe('cloud coaching lifecycle', () => {
     })).resolves.toBe('coach-session-1');
 
     expect(mockFrom).toHaveBeenCalledWith('coach_workout_sessions');
-    expect(upsert).toHaveBeenCalledWith(expect.objectContaining({
+    expect(upsert).toHaveBeenCalledWith({
       user_id: 'user-1',
-      plan_id: 'plan-a',
       local_started_at: '2026-07-15T08:00:00.000Z',
       status: 'active',
-    }), { onConflict: 'user_id,local_started_at' });
+      metadata: {
+        planId: 'plan-a',
+        planName: 'Plan A',
+        deviceId: 'device-a',
+      },
+    }, { onConflict: 'user_id,local_started_at' });
   });
 
   test('ends only the matching authenticated cloud workout', async () => {
@@ -67,16 +71,27 @@ describe('cloud coaching lifecycle', () => {
     mockFrom.mockReturnValue({ update });
 
     await expect(endCoachWorkout(
-      { startedAt: '2026-07-15T08:00:00.000Z' },
+      {
+        planId: 'plan-a',
+        planName: 'Plan A',
+        startedAt: '2026-07-15T08:00:00.000Z',
+        deviceId: 'device-a',
+      },
       { completedExerciseIds: ['squat'] }
     )).resolves.toBe('coach-session-1');
 
     expect(eqUser).toHaveBeenCalledWith('user_id', 'user-1');
     expect(eqStarted).toHaveBeenCalledWith('local_started_at', '2026-07-15T08:00:00.000Z');
-    expect(update).toHaveBeenCalledWith(expect.objectContaining({
-      status: 'ended',
-      summary: { completedExerciseIds: ['squat'] },
-    }));
+    expect(update).toHaveBeenCalledWith({
+      status: 'completed',
+      local_ended_at: expect.any(String),
+      metadata: {
+        planId: 'plan-a',
+        planName: 'Plan A',
+        deviceId: 'device-a',
+        summary: { completedExerciseIds: ['squat'] },
+      },
+    });
   });
 
   test('requests feedback for the exact remote log and stable set identity', async () => {

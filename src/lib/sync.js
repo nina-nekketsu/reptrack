@@ -59,13 +59,32 @@ function getMutationOutbox() {
 }
 
 async function executePendingMutation(operation) {
-  if (operation.kind !== 'exercise/update') {
-    throw Object.assign(new Error('Unsupported mutation kind'), { code: 'UNSUPPORTED_KIND' });
+  if (operation.kind === 'exercise/update') {
+    const { error } = await supabase
+      .from('exercises')
+      .upsert(operation.payload, { onConflict: 'id,user_id' });
+    if (error) throw error;
+    return;
   }
-  const { error } = await supabase
-    .from('exercises')
-    .upsert(operation.payload, { onConflict: 'id,user_id' });
-  if (error) throw error;
+
+  if (operation.kind === 'session/update') {
+    const {
+      remote_id: remoteId,
+      exercise_id: exerciseId,
+      user_id: userId,
+      ...updates
+    } = operation.payload;
+    const { error } = await supabase
+      .from('exercise_logs')
+      .update(updates)
+      .eq('id', remoteId)
+      .eq('user_id', userId)
+      .eq('exercise_id', exerciseId);
+    if (error) throw error;
+    return;
+  }
+
+  throw Object.assign(new Error('Unsupported mutation kind'), { code: 'UNSUPPORTED_KIND' });
 }
 
 export function listPendingMutations() {
@@ -528,18 +547,21 @@ export async function pushSession(exerciseId, session, userId) {
 
 export async function updateRemoteSession(remoteId, exerciseId, session, userId) {
   if (!supabase || !userId || !remoteId) return null;
-  const { error } = await supabase.from('exercise_logs').update({
-    sets: session.sets,
-    best_set: session.bestSet || null,
-    total_reps: session.totalReps || 0,
-    total_volume: session.totalVolume || 0,
-  }).eq('id', remoteId).eq('user_id', userId).eq('exercise_id', String(exerciseId));
-
-  if (error) {
-    console.error('[sync] updateRemoteSession:', error);
-    return null;
-  }
-  return true;
+  getMutationOutbox().enqueue({
+    kind: 'session/update',
+    entityId: String(remoteId),
+    idempotencyKey: `${userId}:session:${remoteId}`,
+    payload: {
+      remote_id: String(remoteId),
+      exercise_id: String(exerciseId),
+      user_id: userId,
+      sets: session.sets,
+      best_set: session.bestSet || null,
+      total_reps: session.totalReps || 0,
+      total_volume: session.totalVolume || 0,
+    },
+  });
+  return flushPendingMutations();
 }
 
 // ─── Utilities ──────────────────────────────────────────────────────────
