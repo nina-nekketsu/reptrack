@@ -19,6 +19,7 @@ import {
 } from '../utils/timer'
 import { applyDataImport, createDataExport, previewDataImport } from '../utils/dataTransfer'
 import DiagnosticsPanel from '../components/DiagnosticsPanel'
+import Dialog from '../components/ui/Dialog'
 
 const BASE_URL = 'https://nina-nekketsu.github.io/reptrack/#/coach/';
 
@@ -41,6 +42,7 @@ export default function Profile() {
   const [importPreview, setImportPreview] = useState(null);
   const [transferMessage, setTransferMessage] = useState('');
   const [transferError, setTransferError] = useState('');
+  const [rotateConfirmOpen, setRotateConfirmOpen] = useState(false);
 
   const loadShare = useCallback(async () => {
     if (!user || !isConfigured) return;
@@ -136,7 +138,7 @@ export default function Profile() {
 
   async function handleRotate() {
     if (!user) return;
-    if (!window.confirm('Rotating the token will invalidate the current link. Continue?')) return;
+    setRotateConfirmOpen(false);
     setShareLoading(true);
     setShareError(null);
     try {
@@ -298,13 +300,38 @@ export default function Profile() {
 
                   <button
                     className="coach-rotate-btn"
-                    onClick={handleRotate}
+                    onClick={() => setRotateConfirmOpen(true)}
                     disabled={shareLoading}
                   >
                     🔄 Rotate link (revokes old link)
                   </button>
                 </div>
               )}
+              <Dialog
+                open={rotateConfirmOpen}
+                onClose={() => setRotateConfirmOpen(false)}
+                title="Rotate coach link"
+                description="Rotating the token will invalidate the current link immediately."
+                panelClassName="profile-confirm-dialog"
+              >
+                <div className="profile-confirm-actions">
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => setRotateConfirmOpen(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-danger"
+                    onClick={handleRotate}
+                    disabled={shareLoading}
+                  >
+                    Rotate link
+                  </button>
+                </div>
+              </Dialog>
             </div>
           )}
           {/* ── /Coach sharing ──────────────────────────────────────────── */}

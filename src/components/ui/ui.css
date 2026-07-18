@@ -1,0 +1,141 @@
+.ui-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: var(--scrim);
+}
+
+.ui-dialog-panel {
+  width: min(100%, 520px);
+  max-height: min(92dvh, 720px);
+  overflow: auto;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-lg);
+  background: var(--bg-2);
+  color: var(--ink-hi);
+  box-shadow: var(--shadow-e2);
+}
+
+.ui-dialog-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 18px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-2);
+}
+
+.ui-dialog-title {
+  margin: 0;
+  color: var(--ink-hi);
+  font-size: 20px;
+  line-height: 26px;
+}
+
+.ui-dialog-description {
+  margin: 6px 0 0;
+  color: var(--ink-mid);
+  font-size: 15px;
+  line-height: 22px;
+}
+
+.ui-icon-button,
+.ui-button {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  font: inherit;
+}
+
+.ui-icon-button {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  background: var(--bg-3);
+  color: var(--ink-hi);
+  font-size: 24px;
+}
+
+.ui-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+  font-weight: 700;
+}
+
+.ui-button--primary {
+  border-color: var(--go);
+  background: var(--go);
+  color: var(--on-go);
+}
+
+.ui-button--danger {
+  border-color: var(--danger);
+  background: var(--danger);
+  color: var(--on-danger);
+}
+
+.ui-button--secondary {
+  background: var(--bg-3);
+  color: var(--ink-hi);
+}
+
+.ui-input {
+  min-height: 44px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--bg-2);
+  color: var(--ink-hi);
+  font: inherit;
+  font-size: 16px;
+}
+
+.ui-chip,
+.ui-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 0 10px;
+  color: var(--ink-hi);
+}
+
+.ui-chip {
+  background: var(--bg-3);
+}
+
+.ui-badge {
+  background: var(--bg-2);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ui-badge--success {
+  border-color: var(--go);
+  color: var(--go);
+}
+
+.ui-badge--danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.ui-row {
+  min-height: 44px;
+}
+
+.ui-row--interactive {
+  cursor: pointer;
+}

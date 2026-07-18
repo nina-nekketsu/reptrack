@@ -84,9 +84,25 @@ function buildInitialState() {
     // Check if rest countdown expired while we were away
     if ((saved.phase === PHASE_RESTING || saved.phase === PHASE_ALERT) && saved.restEndAt) {
       if (Date.now() >= saved.restEndAt) {
-        // Rest ended while away — go idle
+        // Rest ended while away — complete the same transition tick would have made.
         clearPersistedState();
-        return defaultState();
+        if (loadAutoStart()) {
+          const exerciseStartedAt = saved.restEndAt;
+          if (Date.now() - exerciseStartedAt > THIRTY_MIN_MS) return defaultState();
+          return {
+            ...saved,
+            phase: PHASE_EXERCISING,
+            exerciseStartedAt,
+            pausedDuration: 0,
+            exerciseElapsedFrozen: 0,
+            restEndAt: null,
+          };
+        }
+        return {
+          ...defaultState(),
+          exerciseId: saved.exerciseId,
+          restDurationMs: saved.restDurationMs || 0,
+        };
       }
     }
     return saved;

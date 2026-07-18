@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ExerciseLogModal from '../components/ExerciseLogModal';
 import WorkoutSummary from '../components/WorkoutSummary';
+import Dialog from '../components/ui/Dialog';
 import { useTimer } from '../context/TimerContext';
 import { useCoach } from '../context/CoachContext';
 import { useAuth } from '../context/AuthContext';
@@ -507,15 +508,15 @@ export default function ActiveWorkout() {
         />
       )}
 
-      {showWorkoutMenu && (
-        <div className="aw-menu-overlay" onClick={() => setShowWorkoutMenu(false)}>
-          <div
-            className="aw-workout-menu"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="aw-workout-menu-title"
-            onClick={(event) => event.stopPropagation()}
-          >
+      <Dialog
+        open={showWorkoutMenu}
+        onClose={() => setShowWorkoutMenu(false)}
+        title="Workout menu"
+        className="aw-menu-overlay"
+        panelClassName="aw-workout-menu"
+        labelledBy="aw-workout-menu-title"
+        renderHeader={false}
+      >
             <h3 id="aw-workout-menu-title">Workout menu</h3>
             <button
               className="aw-workout-menu__end"
@@ -532,16 +533,20 @@ export default function ActiveWorkout() {
             >
               Keep going
             </button>
-          </div>
-        </div>
-      )}
+      </Dialog>
 
       {/* End workout confirmation overlay */}
-      {showEndConfirm && (
-        <div className="aw-end-overlay" onClick={() => setShowEndConfirm(false)}>
-          <div className="aw-end-confirm" onClick={(e) => e.stopPropagation()}>
+      <Dialog
+        open={showEndConfirm}
+        onClose={() => setShowEndConfirm(false)}
+        title="End Workout?"
+        className="aw-end-overlay"
+        panelClassName="aw-end-confirm"
+        labelledBy="aw-end-confirm-title"
+        renderHeader={false}
+      >
             <div className="aw-end-confirm__check">✓</div>
-            <h3 className="aw-end-confirm__title">End Workout?</h3>
+            <h3 id="aw-end-confirm-title" className="aw-end-confirm__title">End Workout?</h3>
             <p className="aw-end-confirm__subtitle">
               {completedCount}/{totalExercises} exercises logged · {elapsed}
             </p>
@@ -567,9 +572,7 @@ export default function ActiveWorkout() {
                 End & Save
               </button>
             </div>
-          </div>
-        </div>
-      )}
+      </Dialog>
     </div>
   );
 }

@@ -26,6 +26,8 @@
   --ink-on-accent: var(--gym-ink-on-accent); --go: var(--gym-go); --go-dim: var(--gym-go-dim);
   --rest: var(--gym-rest); --rest-dim: var(--gym-rest-dim); --danger: var(--gym-danger);
   --danger-dim: var(--gym-danger-dim); --record: var(--gym-record); --focus: var(--gym-focus);
+  --on-go: var(--gym-ink-on-accent); --on-danger: var(--gym-ink-hi);
+  --scrim: rgba(4, 4, 12, 0.78);
   --c-bg:var(--bg-0);--c-surface:var(--bg-1);--c-surface-2:var(--bg-2);--c-text:var(--ink-hi);
   --c-muted:var(--ink-mid);--c-border:var(--line);--c-primary:var(--go);--c-secondary:var(--bg-3);
   --c-accent:var(--rest);--c-danger:var(--danger);--shadow-soft:var(--shadow-e1);
@@ -59,6 +61,7 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 button, input, select, textarea { font: inherit; }
+input, select, textarea { font-size: 16px; }
 button, a, input, select, textarea { touch-action: manipulation; }
 button { min-height: var(--touch-target); }
 button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible,

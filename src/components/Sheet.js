@@ -1,62 +1,27 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
+import Dialog from './ui/Dialog';
 import './Sheet.css';
-
-const FOCUSABLE = 'button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
 export default function Sheet({ open, onClose, title, children, className = '', swipeToDismiss = true }) {
   const panelRef = useRef(null);
-  const returnFocusRef = useRef(null);
   const touchRef = useRef(null);
-
-  useEffect(() => {
-    if (!open) return undefined;
-    returnFocusRef.current = document.activeElement;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    requestAnimationFrame(() => {
-      const first = panelRef.current?.querySelector(FOCUSABLE);
-      (first || panelRef.current)?.focus();
-    });
-
-    const onKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        onClose();
-        return;
-      }
-      if (event.key !== 'Tab') return;
-      const items = [...(panelRef.current?.querySelectorAll(FOCUSABLE) || [])];
-      if (!items.length) return;
-      const first = items[0];
-      const last = items[items.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('keydown', onKeyDown);
-      document.body.style.overflow = previousOverflow;
-      returnFocusRef.current?.focus?.();
-    };
-  }, [open, onClose]);
 
   if (!open) return null;
   const titleId = `sheet-title-${String(title).toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
 
   return (
-    <div className="sheet-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      title={title}
+      className="sheet-backdrop"
+      panelClassName={`sheet-panel edge-fade-scroll ${className}`}
+      labelledBy={titleId}
+      renderHeader={false}
+    >
       <section
         ref={panelRef}
-        className={`sheet-panel edge-fade-scroll ${className}`}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        tabIndex={-1}
+        className="sheet-panel__content"
         onTouchStart={(event) => {
           if (!swipeToDismiss || panelRef.current?.scrollTop > 0) return;
           const touch = event.touches[0];
@@ -77,6 +42,6 @@ export default function Sheet({ open, onClose, title, children, className = '', 
         </header>
         {children}
       </section>
-    </div>
+    </Dialog>
   );
 }
