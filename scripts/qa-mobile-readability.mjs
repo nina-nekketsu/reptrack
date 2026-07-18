@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const fixture = path.join(root, 'docs/design-qa/mobile-readability/fixture.html');
 const outputDir = path.join(root, 'docs/design-qa/mobile-readability');
+const blockedPath = path.join(outputDir, 'mobile-readability-browser-qa-blocked.json');
 const profileDir = `/tmp/reptrack-mobile-readability-chrome-${process.pid}`;
 
 function resolveChromeExecutable() {
@@ -264,7 +265,6 @@ try {
     }
   }
 } catch (error) {
-  const blockedPath = path.join(outputDir, 'mobile-readability-browser-qa-blocked.json');
   await writeFile(blockedPath, `${JSON.stringify({
     generatedAt: new Date().toISOString(),
     command: 'npm run qa:mobile-readability',
@@ -287,6 +287,7 @@ try {
 
 if (!process.exitCode) {
   const reportPath = path.join(outputDir, 'mobile-readability-qa-results.json');
+  await rm(blockedPath, { force: true });
   await writeFile(reportPath, `${JSON.stringify(results, null, 2)}\n`);
 
   const failed = results.flatMap((result) =>
