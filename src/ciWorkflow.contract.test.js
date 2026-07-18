@@ -9,7 +9,7 @@ function readWorkflow() {
 }
 
 describe('GitHub Actions CI workflow contract', () => {
-  test('runs a least-privilege bounded test and build pipeline without deployment or secrets', () => {
+  test('runs a bounded test/build pipeline and deploys only verified main artifacts through the protected Pages environment', () => {
     const workflow = readWorkflow();
 
     expect(workflow).toMatch(/^on:\n  pull_request:\n  push:\n    branches:\n      - main$/m);
@@ -25,8 +25,15 @@ describe('GitHub Actions CI workflow contract', () => {
     expect(workflow).toContain('run: npm run lint');
     expect(workflow).toContain('run: CI=true npm test -- --runInBand');
     expect(workflow).toContain('run: npm run build');
+    expect(workflow).toContain('REACT_APP_SUPABASE_URL: ${{ secrets.REACT_APP_SUPABASE_URL }}');
+    expect(workflow).toContain('REACT_APP_SUPABASE_ANON_KEY: ${{ secrets.REACT_APP_SUPABASE_ANON_KEY }}');
+    expect(workflow).toContain("if: github.event_name == 'push' && github.ref == 'refs/heads/main'");
+    expect(workflow).toContain('uses: actions/upload-pages-artifact@v3');
+    expect(workflow).toContain('needs: test-and-build');
+    expect(workflow).toMatch(/permissions:\n      pages: write\n      id-token: write/);
+    expect(workflow).toMatch(/environment:\n      name: github-pages/);
+    expect(workflow).toContain('uses: actions/deploy-pages@v4');
 
-    expect(workflow).not.toMatch(/\b(npm\s+run\s+deploy|npm\s+publish|gh-pages|git\s+push|gh\s+release|firebase\s+deploy|netlify\s+deploy|vercel\s+(?:--prod|deploy)|surge)\b/i);
-    expect(workflow).not.toMatch(/\bsecrets\s*\./i);
+    expect(workflow).not.toMatch(/\b(npm\s+run\s+deploy|npm\s+publish|gh-pages\s+-d|git\s+push|gh\s+release|firebase\s+deploy|netlify\s+deploy|vercel\s+(?:--prod|deploy)|surge)\b/i);
   });
 });
