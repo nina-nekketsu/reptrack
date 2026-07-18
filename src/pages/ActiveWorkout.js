@@ -3,6 +3,15 @@ import { useParams, useNavigate } from 'react-router-dom';
 import ExerciseLogModal from '../components/ExerciseLogModal';
 import WorkoutSummary from '../components/WorkoutSummary';
 import Dialog from '../components/ui/Dialog';
+import {
+  BoltIcon,
+  CheckIcon,
+  DumbbellIcon,
+  RepeatIcon,
+  TimerIcon,
+  TrophyIcon,
+  TrendIcon,
+} from '../components/icons';
 import { useTimer } from '../context/TimerContext';
 import { useCoach } from '../context/CoachContext';
 import { useAuth } from '../context/AuthContext';
@@ -31,19 +40,19 @@ import './Workouts.css';
 import './ActiveWorkout.css';
 import '../components/CoachComponents.css';
 
-// Muscle-group emoji map (same as Workouts.js)
-const GROUP_EMOJI = {
-  Chest: '🏋️',
-  Back: '🔙',
-  Legs: '🦵',
-  Shoulders: '🙆',
-  Arms: '💪',
-  Core: '🧘',
-  default: '⚡',
+const GROUP_ICONS = {
+  Chest: DumbbellIcon,
+  Back: RepeatIcon,
+  Legs: TrendIcon,
+  Shoulders: TrophyIcon,
+  Arms: DumbbellIcon,
+  Core: TimerIcon,
+  default: BoltIcon,
 };
 
-function thumbEmoji(muscleGroup) {
-  return GROUP_EMOJI[muscleGroup] || GROUP_EMOJI.default;
+function MuscleGroupIcon({ muscleGroup }) {
+  const Icon = GROUP_ICONS[muscleGroup] || GROUP_ICONS.default;
+  return <Icon />;
 }
 
 function formatElapsed(startIso) {
@@ -316,24 +325,24 @@ export default function ActiveWorkout() {
 
         <div className="aw-header__stats">
           <div className="aw-stat">
-            <span className="aw-stat__icon">⏱</span>
+            <span className="aw-stat__icon"><TimerIcon /></span>
             <span className="aw-stat__value">{elapsed}</span>
             <span className="aw-stat__label">Elapsed</span>
           </div>
           <div className="aw-stat">
-            <span className="aw-stat__icon">✅</span>
+            <span className="aw-stat__icon"><CheckIcon /></span>
             <span className="aw-stat__value">{completedCount}/{totalExercises}</span>
             <span className="aw-stat__label">Exercises</span>
           </div>
         </div>
 
         {/* Progress bar */}
-        <div className="aw-progress-bar">
-          <div
-            className="aw-progress-bar__fill"
-            style={{ width: totalExercises > 0 ? `${(completedCount / totalExercises) * 100}%` : '0%' }}
-          />
-        </div>
+        <progress
+          className="aw-progress-bar"
+          value={completedCount}
+          max={totalExercises || 1}
+          aria-label="Workout completion"
+        />
       </div>
 
       {/* Warm-up prompt — PRD Section 5.4.3 */}
@@ -410,14 +419,14 @@ export default function ActiveWorkout() {
             >
               <div className="aw-exercise-status">
                 {done ? (
-                  <span className="aw-check" aria-label={`${ex.name} completed`}>✓</span>
+                  <span className="aw-check" aria-label={`${ex.name} completed`}><CheckIcon /></span>
                 ) : (
                   <span className="aw-number">{i + 1}</span>
                 )}
               </div>
 
               <div className="aw-exercise-thumb">
-                {thumbEmoji(ex.muscleGroup)}
+                <MuscleGroupIcon muscleGroup={ex.muscleGroup} />
               </div>
 
               <div className="aw-exercise-info">
@@ -448,7 +457,7 @@ export default function ActiveWorkout() {
       {/* Completion message */}
       {completedCount === totalExercises && totalExercises > 0 && (
         <div className="aw-complete-banner">
-          <span className="aw-complete-icon">🎉</span>
+          <span className="aw-complete-icon"><TrophyIcon /></span>
           <div className="aw-complete-text">
             <strong>All exercises completed!</strong>
             <span>Great workout. End session when ready.</span>
@@ -545,7 +554,7 @@ export default function ActiveWorkout() {
         labelledBy="aw-end-confirm-title"
         renderHeader={false}
       >
-            <div className="aw-end-confirm__check">✓</div>
+            <div className="aw-end-confirm__check"><CheckIcon /></div>
             <h3 id="aw-end-confirm-title" className="aw-end-confirm__title">End Workout?</h3>
             <p className="aw-end-confirm__subtitle">
               {completedCount}/{totalExercises} exercises logged · {elapsed}

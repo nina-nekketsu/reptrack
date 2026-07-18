@@ -87,9 +87,7 @@ export default function CoachOnboarding({ onComplete }) {
 
   return (
     <div className="coach-onboarding">
-      <div className="co-progress">
-        <div className="co-progress-fill" style={{ width: `${((step + 1) / STEPS.length) * 100}%` }} />
-      </div>
+      <progress className="co-progress" value={step + 1} max={STEPS.length} aria-label="Coach onboarding progress" />
 
       <div className="co-content">
         {/* Step 1: Experience */}

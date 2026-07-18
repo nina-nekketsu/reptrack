@@ -6,6 +6,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { getCoachData } from '../lib/coachShare';
 import { isConfigured } from '../lib/supabase';
+import { DumbbellIcon, EyeIcon, LockIcon, PackageIcon, RepeatIcon } from '../components/icons';
 import './CoachView.css';
 
 // ── Tiny inline volume graph (SVG, no extra deps) ────────────────────────────
@@ -42,33 +43,33 @@ function MiniVolumeGraph({ history }) {
       <svg viewBox={`0 0 ${W} ${H}`} className="cv-volume-svg">
         <defs>
           <linearGradient id="cvGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"   stopColor="#7c6af7" stopOpacity="0.28" />
-            <stop offset="100%" stopColor="#7c6af7" stopOpacity="0.02" />
+            <stop offset="0%"   stopColor="var(--go)" stopOpacity="0.28" />
+            <stop offset="100%" stopColor="var(--go)" stopOpacity="0.02" />
           </linearGradient>
         </defs>
         {yTicks.map((v, i) => (
           <line key={i} x1={PAD.left} y1={toY(v)} x2={PAD.left + iW} y2={toY(v)}
-            stroke="#2a2a4a" strokeWidth="1" strokeDasharray="3 3" />
+            stroke="var(--line)" strokeWidth="1" strokeDasharray="3 3" />
         ))}
         <path d={area} fill="url(#cvGrad)" />
-        <path d={line} fill="none" stroke="#7c6af7" strokeWidth="2.2"
+        <path d={line} fill="none" stroke="var(--go)" strokeWidth="2.2"
           strokeLinecap="round" strokeLinejoin="round" />
         {pts.map((p, i) => (
-          <circle key={i} cx={p.x} cy={p.y} r="3.5" fill="#7c6af7" stroke="#16162a" strokeWidth="1.5" />
+          <circle key={i} cx={p.x} cy={p.y} r="3.5" fill="var(--go)" stroke="var(--bg-1)" strokeWidth="1.5" />
         ))}
         {yTicks.map((v, i) => (
-          <text key={i} x={PAD.left - 5} y={toY(v) + 4} textAnchor="end" fontSize="9" fill="#9999b3">
+          <text key={i} x={PAD.left - 5} y={toY(v) + 4} textAnchor="end" fontSize="9" fill="var(--ink-low)">
             {fmt(v)}
           </text>
         ))}
-        <text x={PAD.left} y={H - 4} textAnchor="middle" fontSize="9" fill="#9999b3">
+        <text x={PAD.left} y={H - 4} textAnchor="middle" fontSize="9" fill="var(--ink-low)">
           {fmtDate(history[0].date)}
         </text>
-        <text x={PAD.left + iW} y={H - 4} textAnchor="middle" fontSize="9" fill="#9999b3">
+        <text x={PAD.left + iW} y={H - 4} textAnchor="middle" fontSize="9" fill="var(--ink-low)">
           {fmtDate(history[history.length - 1].date)}
         </text>
         <line x1={PAD.left} y1={PAD.top + iH} x2={PAD.left + iW} y2={PAD.top + iH}
-          stroke="#2a2a4a" strokeWidth="1" />
+          stroke="var(--line)" strokeWidth="1" />
       </svg>
     </div>
   );
@@ -110,8 +111,8 @@ export default function CoachView() {
   if (loading) {
     return (
       <div className="cv-screen">
-        <div className="cv-card" style={{ textAlign: 'center' }}>
-          <div className="cv-logo">💪</div>
+        <div className="cv-card cv-card--centered">
+          <div className="cv-logo" aria-hidden="true"><DumbbellIcon /></div>
           <p className="cv-muted">Loading athlete data…</p>
         </div>
       </div>
@@ -122,8 +123,8 @@ export default function CoachView() {
   if (error) {
     return (
       <div className="cv-screen">
-        <div className="cv-card" style={{ textAlign: 'center' }}>
-          <div className="cv-logo">🔒</div>
+        <div className="cv-card cv-card--centered">
+          <div className="cv-logo" aria-hidden="true"><LockIcon /></div>
           <h2 className="cv-title">Access Denied</h2>
           <p className="cv-muted">{error}</p>
         </div>
@@ -161,7 +162,7 @@ export default function CoachView() {
 
         {/* ── Header ── */}
         <div className="cv-header">
-          <span className="cv-logo-inline">💪</span>
+          <span className="cv-logo-inline" aria-hidden="true"><DumbbellIcon /></span>
           <div>
             <h1 className="cv-title">RepTrack Coach View</h1>
             <p className="cv-muted cv-synced">
@@ -170,7 +171,7 @@ export default function CoachView() {
           </div>
         </div>
 
-        <p className="cv-readonly-badge">👁 Read-only — no login required</p>
+        <p className="cv-readonly-badge"><EyeIcon /> Read-only - no login required</p>
 
         {/* ── Exercises ── */}
         <section className="cv-section">
@@ -245,9 +246,9 @@ export default function CoachView() {
                 <div className="cv-pr-card" key={i}>
                   <span className="cv-pr-name">{pr.exercise_name}</span>
                   <div className="cv-pr-stats">
-                    <span>🏋️ {pr.max_weight_kg ?? '—'} kg</span>
-                    <span>🔁 {pr.max_reps ?? '—'} reps</span>
-                    <span>📦 {pr.max_volume_kg != null ? `${pr.max_volume_kg} kg vol` : '—'}</span>
+                    <span><DumbbellIcon /> {pr.max_weight_kg ?? '—'} kg</span>
+                    <span><RepeatIcon /> {pr.max_reps ?? '—'} reps</span>
+                    <span><PackageIcon /> {pr.max_volume_kg != null ? `${pr.max_volume_kg} kg vol` : '—'}</span>
                   </div>
                 </div>
               ))}

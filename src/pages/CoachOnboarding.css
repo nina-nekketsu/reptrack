@@ -222,7 +222,7 @@
 
 .co-nav-btn--next {
   background: var(--c-accent);
-  color: #123033;
+  color: var(--ink-on-accent);
 }
 
 .co-nav-btn:disabled {

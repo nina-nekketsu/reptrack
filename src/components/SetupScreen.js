@@ -3,6 +3,7 @@
 // Lets the user continue locally (no sync) or see setup instructions.
 
 import React, { useState } from 'react';
+import { DumbbellIcon } from './icons';
 
 export default function SetupScreen({ onSkip }) {
   const [showInstructions, setShowInstructions] = useState(false);
@@ -10,7 +11,7 @@ export default function SetupScreen({ onSkip }) {
   return (
     <div className="auth-screen">
       <div className="auth-card">
-        <div className="auth-logo">💪</div>
+        <div className="auth-logo" aria-hidden="true"><DumbbellIcon /></div>
         <h1 className="auth-title">RepTrack</h1>
         <p className="auth-subtitle">Cloud sync is not configured</p>
 
@@ -40,7 +41,7 @@ export default function SetupScreen({ onSkip }) {
             <button className="auth-toggle" onClick={onSkip}>
               Continue without sync →
             </button>
-            <button className="auth-toggle" style={{ marginTop: 4 }} onClick={() => setShowInstructions(false)}>
+            <button className="auth-toggle auth-toggle--stacked" onClick={() => setShowInstructions(false)}>
               ← Back
             </button>
           </>

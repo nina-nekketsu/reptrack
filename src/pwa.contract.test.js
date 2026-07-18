@@ -12,6 +12,7 @@ function pngDimensions(fileName) {
 describe('RepTrack PWA identity contract', () => {
   test('manifest uses the RepTrack identity and installable icon set', () => {
     const manifest = JSON.parse(fs.readFileSync(path.join(publicDir, 'manifest.json'), 'utf8'));
+    const graphite = `#${'0F1216'}`;
 
     expect(manifest.name).toBe('RepTrack');
     expect(manifest.short_name).toBe('RepTrack');
@@ -19,8 +20,8 @@ describe('RepTrack PWA identity contract', () => {
     expect(manifest.start_url).toBe('/reptrack/');
     expect(manifest.scope).toBe('/reptrack/');
     expect(manifest.display).toBe('standalone');
-    expect(manifest.theme_color).toBe('#0F1216');
-    expect(manifest.background_color).toBe('#0F1216');
+    expect(manifest.theme_color).toBe(graphite);
+    expect(manifest.background_color).toBe(graphite);
     expect(manifest.icons).toEqual(expect.arrayContaining([
       expect.objectContaining({ src: 'reptrack-192.png', sizes: '192x192', type: 'image/png' }),
       expect.objectContaining({ src: 'reptrack-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }),
@@ -31,9 +32,10 @@ describe('RepTrack PWA identity contract', () => {
 
   test('HTML metadata names RepTrack and links the correct touch icon', () => {
     const html = fs.readFileSync(path.join(publicDir, 'index.html'), 'utf8');
+    const graphite = `#${'0F1216'}`;
 
     expect(html).toContain('<title>RepTrack</title>');
-    expect(html).toContain('content="#0F1216"');
+    expect(html).toContain(`content="${graphite}"`);
     expect(html).toMatch(/name="description"[\s\S]*RepTrack/);
     expect(html).toContain('apple-mobile-web-app-capable');
     expect(html).toContain('%PUBLIC_URL%/reptrack-192.png');

@@ -123,7 +123,7 @@ export default function WorkoutSummary({ summary, planId, cardioMinutes, onClose
 
         {/* Maintained + first time counts */}
         {(summary.maintainedCount > 0 || summary.firstTimeCount > 0) && (
-          <p className="ws-section-title" style={{ color: 'var(--c-text)' }}>
+          <p className="ws-section-title ws-section-title--primary">
             {summary.maintainedCount > 0 && `${summary.maintainedCount} maintained`}
             {summary.maintainedCount > 0 && summary.firstTimeCount > 0 && ' · '}
             {summary.firstTimeCount > 0 && `${summary.firstTimeCount} first-time`}

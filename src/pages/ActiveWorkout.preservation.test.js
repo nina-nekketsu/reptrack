@@ -8,7 +8,7 @@ describe('active workout preserved completion affordances', () => {
 
   test('completed exercises render the established green check indicator', () => {
     const source = readActiveWorkoutSource();
-    expect(source).toMatch(/done\s*\?\s*\(\s*<span className="aw-check"[^>]*>✓<\/span>/s);
+    expect(source).toMatch(/done\s*\?\s*\(\s*<span className="aw-check"[^>]*><CheckIcon \/><\/span>/s);
   });
 
   test('uses the approved thumb-zone next action and three-step end flow', () => {

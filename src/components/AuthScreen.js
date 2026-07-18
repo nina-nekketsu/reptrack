@@ -3,6 +3,7 @@
 
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { DumbbellIcon } from './icons';
 
 export default function AuthScreen() {
   const [mode, setMode]       = useState('signin'); // 'signin' | 'signup'
@@ -60,7 +61,7 @@ export default function AuthScreen() {
   return (
     <div className="auth-screen">
       <div className="auth-card">
-        <div className="auth-logo">💪</div>
+        <div className="auth-logo" aria-hidden="true"><DumbbellIcon /></div>
         <h1 className="auth-title">RepTrack</h1>
         <p className="auth-subtitle">
           {mode === 'signin' ? 'Sign in to sync your training data' : 'Create an account'}

@@ -20,6 +20,7 @@ import {
 import { applyDataImport, createDataExport, previewDataImport } from '../utils/dataTransfer'
 import DiagnosticsPanel from '../components/DiagnosticsPanel'
 import Dialog from '../components/ui/Dialog'
+import { CheckIcon, DumbbellIcon, LinkIcon, RepeatIcon, TimerIcon, WarningIcon } from '../components/icons'
 
 const BASE_URL = 'https://nina-nekketsu.github.io/reptrack/#/coach/';
 
@@ -169,13 +170,13 @@ export default function Profile() {
       <h2 className="page-heading">Profile</h2>
       <p className="page-sub">Your settings and account</p>
 
-      <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-        <div className="profile-avatar">💪</div>
+      <div className="profile-avatar-wrap">
+        <div className="profile-avatar" aria-hidden="true"><DumbbellIcon /></div>
       </div>
 
       {/* Timer Defaults */}
       <div className="profile-auth-section">
-        <h3>⏱ Timer Defaults</h3>
+        <h3><TimerIcon /> Timer Defaults</h3>
         <div className="profile-rest-setting">
           <label className="profile-rest-label" htmlFor="global-rest">
             Default rest duration (seconds)
@@ -222,40 +223,31 @@ export default function Profile() {
           <p className="profile-user-email">Signed in as <strong>{user.email}</strong></p>
 
           <div className="profile-sync-status">
-            {syncing && '⟳ Syncing…'}
-            {!syncing && syncError && <span className="error">⚠ Last sync failed: {syncError}</span>}
-            {!syncing && !syncError && isConfigured && '✓ Cloud sync active'}
+            {syncing && <><RepeatIcon /> Syncing...</>}
+            {!syncing && syncError && <span className="error"><WarningIcon /> Last sync failed: {syncError}</span>}
+            {!syncing && !syncError && isConfigured && <><CheckIcon /> Cloud sync active</>}
           </div>
 
           {isConfigured && (
             <button
-              style={{
-                background: 'rgba(124,106,247,0.12)',
-                border: '1.5px solid rgba(124,106,247,0.35)',
-                color: '#a78bfa',
-                borderRadius: 12,
-                padding: '0.7rem',
-                fontSize: '0.9rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
+              className="profile-sync-now-btn"
               onClick={handleSyncNow}
               disabled={syncing}
             >
-              {syncing ? 'Syncing…' : '⟳ Sync now'}
+              {syncing ? 'Syncing...' : <><RepeatIcon /> Sync now</>}
             </button>
           )}
 
           {/* ── Coach sharing ─────────────────────────────────────────── */}
           {isConfigured && (
             <div className="coach-share-section">
-              <h3 className="coach-share-heading">🔗 Coach sharing</h3>
+              <h3 className="coach-share-heading"><LinkIcon /> Coach sharing</h3>
               <p className="coach-share-desc">
                 Generate a private link so your coach can view your logs — no account needed on their end.
               </p>
 
               {shareError && (
-                <div className="coach-share-error">⚠ {shareError}</div>
+                <div className="coach-share-error"><WarningIcon /> {shareError}</div>
               )}
 
               {/* Toggle */}
@@ -278,7 +270,7 @@ export default function Profile() {
                 <div className="coach-link-block">
                   {/* Warning */}
                   <div className="coach-share-warning">
-                    ⚠ Anyone with this link can view your training logs.
+                    <WarningIcon /> Anyone with this link can view your training logs.
                   </div>
 
                   <label className="coach-link-label">Coach link</label>
@@ -294,7 +286,7 @@ export default function Profile() {
                       onClick={handleCopy}
                       disabled={shareLoading}
                     >
-                      {copied ? '✓ Copied' : 'Copy'}
+                      {copied ? <><CheckIcon /> Copied</> : 'Copy'}
                     </button>
                   </div>
 
@@ -303,7 +295,7 @@ export default function Profile() {
                     onClick={() => setRotateConfirmOpen(true)}
                     disabled={shareLoading}
                   >
-                    🔄 Rotate link (revokes old link)
+                    <RepeatIcon /> Rotate link (revokes old link)
                   </button>
                 </div>
               )}

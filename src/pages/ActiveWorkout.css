@@ -11,7 +11,7 @@
 .active-workout-page{gap:12px}.aw-header{position:sticky;top:0;z-index:20;margin:-24px -16px 4px;padding:max(16px,env(safe-area-inset-top)) 16px 14px;background:var(--bg-2);border:0;border-bottom:1px solid var(--line);border-radius:0;color:var(--ink-hi);box-shadow:var(--shadow-e1);overflow:visible}.aw-header::after{display:none}
 .aw-header__label{color:var(--go);opacity:1;font-size:11px;line-height:16px;letter-spacing:.06em}.aw-header__name{font-size:20px;line-height:26px}.aw-end-btn{min-height:44px;background:transparent;border-color:var(--danger);color:var(--danger);padding:8px 12px}
 .aw-header__stats{gap:8px}.aw-stat{background:var(--bg-3);padding:8px 12px;border:1px solid var(--line)}.aw-stat__icon{color:var(--ink-mid)}.aw-stat__value{color:var(--ink-hi);font-family:inherit;font-variant-numeric:tabular-nums;font-feature-settings:"tnum";letter-spacing:0}.aw-stat__label{color:var(--ink-mid);opacity:1}
-.aw-progress-bar{background:var(--bg-3)}.aw-progress-bar__fill{background:var(--go);transition:width var(--motion-reveal) var(--ease-standard)}
+.aw-progress-bar{width:100%;height:8px;appearance:none;border:0;border-radius:var(--r-full);background:var(--bg-3);overflow:hidden}.aw-progress-bar::-webkit-progress-bar{background:var(--bg-3)}.aw-progress-bar::-webkit-progress-value{background:var(--go);transition:width var(--motion-reveal) var(--ease-standard)}.aw-progress-bar::-moz-progress-bar{background:var(--go)}
 .aw-exercise-row{min-height:72px;background:var(--bg-1);border-color:var(--line);border-width:1px;color:var(--ink-hi);border-radius:var(--r-md);padding:12px;}.aw-exercise-row:hover{background:var(--bg-3);box-shadow:none}.aw-exercise-row--done{background:var(--go-dim);border-color:var(--go)}.aw-exercise-row--almost,.aw-exercise-row--ready{background:var(--rest-dim);border-color:var(--rest)}.aw-exercise-row--partial{background:var(--bg-2);border-color:var(--line-strong)}
 .aw-number{background:var(--bg-3);color:var(--ink-mid)}.aw-check{background:var(--go);color:var(--ink-on-accent)}.aw-exercise-thumb,.aw-exercise-row--done .aw-exercise-thumb{background:var(--bg-3)}.aw-exercise-name{color:var(--ink-hi);font-size:17px;line-height:24px}.aw-exercise-name--done{color:var(--go)}.aw-exercise-meta{color:var(--ink-mid)}.aw-log-btn{min-height:44px;display:inline-flex;align-items:center;background:var(--go);color:var(--ink-on-accent);padding:8px 14px}.aw-logged-badge{background:var(--go-dim);color:var(--go)}
 .aw-end-overlay{background:rgba(6,8,10,.72)}.aw-end-confirm{background:var(--bg-2);color:var(--ink-hi);border:1px solid var(--line);box-shadow:var(--shadow-e2)}.aw-end-confirm__title{color:var(--ink-hi)}.aw-end-confirm__subtitle{color:var(--ink-mid)}
@@ -19,10 +19,10 @@
 
 /* ── Session header ── */
 .aw-header {
-  background: linear-gradient(135deg, #00aa44 0%, #00cc55 50%, #22dd66 100%);
+  background: var(--bg-1);
   border-radius: 16px;
   padding: 20px 18px 16px;
-  color: #fff;
+  color: var(--ink-hi);
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -72,7 +72,7 @@
   border: 1.5px solid rgba(255, 255, 255, 0.3);
   border-radius: 10px;
   padding: 10px 16px;
-  color: #fff;
+  color: var(--ink-hi);
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -132,7 +132,7 @@
 
 .aw-progress-bar__fill {
   height: 100%;
-  background: #fff;
+  background: var(--ink-hi);
   border-radius: 3px;
   transition: width 0.4s ease;
   min-width: 0;
@@ -146,8 +146,8 @@
 }
 
 .aw-exercise-row {
-  background: #f8f8fd;
-  border: 1.5px solid #e8e8ef;
+  background: var(--bg-1);
+  border: 1.5px solid var(--line);
   border-radius: 14px;
   padding: 14px 14px;
   display: flex;
@@ -158,39 +158,39 @@
 }
 
 .aw-exercise-row:hover {
-  background: #f0f0ff;
+  background: var(--bg-2);
   box-shadow: 0 2px 10px rgba(76, 76, 255, 0.08);
 }
 
 .aw-exercise-row--done {
-  background: #f0faf4;
-  border-color: #b8e8cc;
+  background: var(--go-dim);
+  border-color: var(--go);
 }
 
 .aw-exercise-row--done:hover {
-  background: #e6f7ec;
+  background: var(--go-dim);
   box-shadow: 0 2px 10px rgba(0, 204, 85, 0.08);
 }
 
 .aw-exercise-row--almost,
 .aw-exercise-row--ready {
-  background: #fef9ee;
-  border-color: #f0d68a;
+  background: var(--rest-dim);
+  border-color: var(--rest);
 }
 
 .aw-exercise-row--almost:hover,
 .aw-exercise-row--ready:hover {
-  background: #fdf3dc;
+  background: var(--rest-dim);
   box-shadow: 0 2px 10px rgba(211, 153, 50, 0.08);
 }
 
 .aw-exercise-row--partial {
-  background: #f5f7ff;
-  border-color: #d7ddff;
+  background: var(--bg-2);
+  border-color: var(--line-strong);
 }
 
 .aw-exercise-row--partial:hover {
-  background: #eef2ff;
+  background: var(--bg-3);
   box-shadow: 0 2px 10px rgba(76, 76, 255, 0.08);
 }
 
@@ -209,8 +209,8 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #00cc55;
-  color: #fff;
+  background: var(--go);
+  color: var(--ink-hi);
   font-size: 16px;
   font-weight: 800;
   display: flex;
@@ -222,8 +222,8 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #e8e8ef;
-  color: #7777a0;
+  background: var(--line);
+  color: var(--ink-mid);
   font-size: 14px;
   font-weight: 700;
   display: flex;
@@ -236,7 +236,7 @@
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #e8e8ff 0%, #d8d8f8 100%);
+  background: var(--bg-1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -245,7 +245,7 @@
 }
 
 .aw-exercise-row--done .aw-exercise-thumb {
-  background: linear-gradient(135deg, #d8f0e0 0%, #c8e8d0 100%);
+  background: var(--bg-1);
 }
 
 /* ── Exercise info ── */
@@ -257,19 +257,19 @@
 .aw-exercise-name {
   font-size: 15px;
   font-weight: 700;
-  color: #1a1a2e;
+  color: var(--ink-hi);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .aw-exercise-name--done {
-  color: #1a9e5c;
+  color: var(--go);
 }
 
 .aw-exercise-meta {
   font-size: 12px;
-  color: #7777a0;
+  color: var(--ink-mid);
   margin-top: 1px;
 }
 
@@ -279,8 +279,8 @@
 }
 
 .aw-log-btn {
-  background: #4c4cff;
-  color: #fff;
+  background: var(--go);
+  color: var(--ink-hi);
   border-radius: 8px;
   padding: 6px 14px;
   font-size: 13px;
@@ -289,8 +289,8 @@
 }
 
 .aw-logged-badge {
-  background: #e6faf0;
-  color: #1a9e5c;
+  background: var(--go-dim);
+  color: var(--go);
   border-radius: 8px;
   padding: 6px 12px;
   font-size: 12px;
@@ -299,8 +299,8 @@
 }
 
 .aw-partial-badge {
-  background: #fef3d6;
-  color: #b8860b;
+  background: var(--rest-dim);
+  color: var(--rest);
   border-radius: 8px;
   padding: 6px 12px;
   font-size: 12px;
@@ -328,12 +328,12 @@
 .aw-warmup-text strong {
   font-size: 15px;
   font-weight: 800;
-  color: var(--c-text, #1a1a2e);
+  color: var(--c-text, var(--ink-hi));
 }
 
 .aw-warmup-text span {
   font-size: 12px;
-  color: var(--c-muted, #7777a0);
+  color: var(--c-muted, var(--ink-mid));
   line-height: 1.4;
 }
 
@@ -354,13 +354,13 @@
 }
 
 .aw-warmup-btn--yes {
-  background: #00cc55;
-  color: #fff;
+  background: var(--go);
+  color: var(--ink-hi);
 }
 
 .aw-warmup-btn--skip {
   background: rgba(0, 0, 0, 0.08);
-  color: var(--c-muted, #7777a0);
+  color: var(--c-muted, var(--ink-mid));
 }
 
 .aw-warmup-btn:hover {
@@ -369,8 +369,8 @@
 
 /* ── Completion banner ── */
 .aw-complete-banner {
-  background: linear-gradient(135deg, #fff9e6 0%, #fff3cc 100%);
-  border: 1.5px solid #ffe680;
+  background: var(--bg-1);
+  border: 1.5px solid var(--rest);
   border-radius: 14px;
   padding: 16px 18px;
   display: flex;
@@ -392,12 +392,12 @@
 .aw-complete-text strong {
   font-size: 15px;
   font-weight: 800;
-  color: #1a1a2e;
+  color: var(--ink-hi);
 }
 
 .aw-complete-text span {
   font-size: 13px;
-  color: #7777a0;
+  color: var(--ink-mid);
 }
 
 /* ── End workout confirmation overlay ── */
@@ -425,7 +425,7 @@
 }
 
 .aw-end-confirm {
-  background: #fff;
+  background: var(--ink-hi);
   border-radius: 20px;
   padding: 32px 28px 24px;
   text-align: center;
@@ -438,8 +438,8 @@
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #00cc55 0%, #00aa44 100%);
-  color: #fff;
+  background: var(--bg-1);
+  color: var(--ink-hi);
   font-size: 36px;
   font-weight: 800;
   display: flex;
@@ -453,13 +453,13 @@
 .aw-end-confirm__title {
   font-size: 20px;
   font-weight: 800;
-  color: #1a1a2e;
+  color: var(--ink-hi);
   margin: 0 0 6px;
 }
 
 .aw-end-confirm__subtitle {
   font-size: 14px;
-  color: #7777a0;
+  color: var(--ink-mid);
   margin: 0 0 24px;
 }
 
@@ -484,13 +484,13 @@
 }
 
 .aw-end-confirm__btn--cancel {
-  background: #f0f0f5;
-  color: #555577;
+  background: var(--bg-2);
+  color: var(--ink-mid);
 }
 
 .aw-end-confirm__btn--confirm {
-  background: linear-gradient(135deg, #00cc55 0%, #00aa44 100%);
-  color: #fff;
+  background: var(--bg-1);
+  color: var(--ink-hi);
   box-shadow: 0 4px 12px rgba(0, 204, 85, 0.3);
 }
 

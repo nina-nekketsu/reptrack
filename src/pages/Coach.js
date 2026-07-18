@@ -72,9 +72,7 @@ export default function Coach() {
       {/* Cardio compliance */}
       <div className="card coach-card">
         <div className="card-label">Weekly Cardio</div>
-        <div className="cardio-progress">
-          <div className="cardio-progress-fill" style={{ width: `${cardioPercent}%` }} />
-        </div>
+        <progress className="cardio-progress" value={cardioPercent} max="100" aria-label="Weekly cardio progress" />
         <div className="cardio-status">
           {Math.round(weeklyCardioMinutes)} / {cardioTarget} min ({cardioPercent}%)
         </div>

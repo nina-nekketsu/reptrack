@@ -5,6 +5,7 @@ import VolumeGraph from './VolumeGraph';
 import CoachFeedback from './CoachFeedback';
 import RestAdvisor from './RestAdvisor';
 import Toast from './Toast';
+import { CheckIcon, ClipboardIcon, EmptyIcon, TrashIcon } from './icons';
 import { formatBuildId } from '../utils/buildInfo';
 import {
   calcTotals,
@@ -670,7 +671,7 @@ export default function ExerciseLogModal({
                 <span>Reps</span>
                 <span>Weight (kg)</span>
                 <span>Type</span>
-                <span className="sets-header__icon" aria-label="Done">✓</span>
+                <span className="sets-header__icon" aria-label="Done"><CheckIcon /></span>
                 <span></span>
               </div>
 
@@ -754,9 +755,9 @@ export default function ExerciseLogModal({
                         aria-pressed={Boolean(s.done)}
                         aria-label={`Mark set ${getSetLabel(sets, i)} ${s.done ? 'not done' : 'done'}`}
                       >
-                        {s.done ? '✓' : '○'}
+                        {s.done ? <CheckIcon /> : <span aria-hidden="true">o</span>}
                       </button>
-                      <button className="remove-set-btn" aria-label={`Remove set ${i + 1}`} onClick={() => removeSet(i)} disabled={sets.length === 1}>✕</button>
+                      <button className="remove-set-btn" aria-label={`Remove set ${i + 1}`} onClick={() => removeSet(i)} disabled={sets.length === 1}>x</button>
                     </div>
                     {feedback && (
                       <div id={feedbackId} className={`set-feedback set-feedback--${feedback.state}`} role="status">
@@ -869,7 +870,7 @@ export default function ExerciseLogModal({
 
               {!hasHistory && (
                 <p className="insights-no-history">
-                  📭 No history yet on this device/site — log a session to see your records and graph.
+                  <EmptyIcon /> No history yet on this device/site - log a session to see your records and graph.
                 </p>
               )}
 
@@ -888,7 +889,7 @@ export default function ExerciseLogModal({
                   <div className="section-label">Last Session Sets</div>
                   <div className="last-session-sets">
                     <div className="last-session-sets__header">
-                      <span className="last-session-sets__title">📋 Last session</span>
+                      <span className="last-session-sets__title"><ClipboardIcon /> Last session</span>
                       <span className="last-session-sets__date">
                         {new Date(lastSession.date).toLocaleDateString(undefined, {
                           weekday: 'short',
@@ -951,7 +952,7 @@ export default function ExerciseLogModal({
                               handleRequestDelete(session.date);
                             }}
                           >
-                            🗑
+                            <TrashIcon />
                           </button>
                         </div>
                         <div className="session-stats">
@@ -1012,7 +1013,7 @@ export default function ExerciseLogModal({
       {confirmDeleteDate && (
         <div className="confirm-overlay" onClick={handleCancelDelete}>
           <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="confirm-icon">🗑️</div>
+            <div className="confirm-icon" aria-hidden="true"><TrashIcon /></div>
             <p className="confirm-message">Delete this session? This cannot be undone.</p>
             <div className="confirm-actions">
               <button className="btn-danger" onClick={handleConfirmDelete}>

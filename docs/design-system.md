@@ -19,3 +19,11 @@ RepTrack uses one dark, graphite theme: calm neutral surfaces until a state earn
 - Timer: tabular numerals, rest outline, and a pulse no faster than 1Hz. Reduced-motion mode removes the pulse.
 
 All interactive elements are at least 44×44px (48px for workout actions), show the global two-pixel `focus-visible` ring, retain layout when disabled, and use instant state changes under `prefers-reduced-motion`.
+
+## Static PRD gate
+
+`docs/contracts/prd-static-baseline.json` is intentionally empty. The PRD scanner must pass because source is clean, not because findings are allowlisted.
+
+- Functional icons in JSX use local SVG components from `src/components/icons`, inherit `currentColor`, and are either labelled by surrounding text or hidden from assistive technology.
+- Visual styling belongs in CSS classes and semantic tokens. Dynamic progress uses native `progress` elements instead of inline width styles.
+- Legacy hex colors and gradients are limited to the canonical token declarations in `src/index.css`; component CSS consumes `--bg-*`, `--ink-*`, `--go`, `--rest`, `--danger`, `--record`, and `--focus`.

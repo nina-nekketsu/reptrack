@@ -1,5 +1,6 @@
 import React from 'react';
 import { getSessionsDesc } from '../utils/exerciseHelpers';
+import { TimerIcon, TrendIcon, TrophyIcon } from './icons';
 
 export default function PRBlock({ logs, exerciseId }) {
   const sessions = getSessionsDesc(logs, exerciseId);
@@ -32,7 +33,7 @@ export default function PRBlock({ logs, exerciseId }) {
       <div className="pr-block__grid">
         {allTimeBestSet && (
           <div className="pr-item">
-            <span className="pr-item__icon">🏆</span>
+            <span className="pr-item__icon"><TrophyIcon /></span>
             <span className="pr-item__label">Best Set</span>
             <span className="pr-item__value">
               {allTimeBestSet.reps} × {allTimeBestSet.weight} kg
@@ -40,12 +41,12 @@ export default function PRBlock({ logs, exerciseId }) {
           </div>
         )}
         <div className="pr-item">
-          <span className="pr-item__icon">📈</span>
+          <span className="pr-item__icon"><TrendIcon /></span>
           <span className="pr-item__label">Best Session</span>
           <span className="pr-item__value">{bestSessionVol.toLocaleString()} kg</span>
         </div>
         <div className="pr-item">
-          <span className="pr-item__icon">🕐</span>
+          <span className="pr-item__icon"><TimerIcon /></span>
           <span className="pr-item__label">Last Session</span>
           <span className="pr-item__value">
             {lastVol.toLocaleString()} kg

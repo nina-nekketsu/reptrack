@@ -11,6 +11,7 @@ import {
   deleteExerciseWithSessions,
 } from '../utils/exerciseHelpers';
 import { useAuth } from '../context/AuthContext';
+import { TrashIcon, WarningIcon } from '../components/icons';
 
 const MUSCLE_GROUPS = ['All', 'Chest', 'Back', 'Legs', 'Shoulders', 'Arms', 'Core'];
 
@@ -150,7 +151,7 @@ export default function Exercises() {
                   title="Delete exercise"
                   aria-label="Delete exercise"
                 >
-                  🗑
+                  <TrashIcon />
                 </button>
               </div>
             </div>
@@ -179,10 +180,10 @@ export default function Exercises() {
             ))}
           </select>
           <div className="add-form-actions">
-            <button className="btn-primary" style={{ flex: 1 }} onClick={addExercise}>
+            <button className="btn-primary add-form-action" onClick={addExercise}>
               Add
             </button>
-            <button className="btn-secondary" style={{ flex: 1 }} onClick={() => setShowAdd(false)}>
+            <button className="btn-secondary add-form-action" onClick={() => setShowAdd(false)}>
               Cancel
             </button>
           </div>
@@ -218,7 +219,7 @@ export default function Exercises() {
       {deleteExId && deleteExercise && (
         <div className="confirm-overlay" onClick={handleCancelDeleteExercise}>
           <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="confirm-icon">⚠️</div>
+            <div className="confirm-icon" aria-hidden="true"><WarningIcon /></div>
             <p className="confirm-message">
               Delete <strong>{deleteExercise.name}</strong>?
             </p>

@@ -27,6 +27,14 @@
   margin-top: 0.75rem;
 }
 
+.cs-section-label--spaced {
+  margin-top: 0.75rem;
+}
+
+.cs-meta-value--danger {
+  color: var(--danger);
+}
+
 /* Plan list */
 .cs-plan-list {
   display: flex;
@@ -98,7 +106,7 @@
 .cs-style-btn--active {
   background: var(--c-accent) !important;
   border-color: var(--c-accent) !important;
-  color: #123033 !important;
+  color: var(--ink-on-accent) !important;
 }
 
 /* Toggle row */

@@ -6,6 +6,7 @@ import {
   onSyncSnapshotChange,
   retryPendingMutation,
 } from '../lib/sync';
+import { BoltIcon, CheckIcon, RepeatIcon, WarningIcon } from './icons';
 import './SyncIndicator.css';
 
 function countLabel(count, singular, plural = `${singular}s`) {
@@ -61,36 +62,36 @@ export default function SyncIndicator() {
   if (!isConfigured || !user) return null;
 
   const unsyncedCount = snapshot.pendingCount + snapshot.failedCount + snapshot.syncingCount;
-  let icon = '•';
+  let Icon = null;
   let label = 'Not synced yet';
   let state = 'unknown';
 
   if (!online) {
-    icon = '⚡';
+    Icon = BoltIcon;
     label = unsyncedCount > 0
       ? `Offline — ${countLabel(unsyncedCount, 'change')} not synced`
       : 'Offline';
     state = 'offline';
   } else if (snapshot.authExpired || snapshot.pausedReason === 'auth-expired') {
-    icon = '⚠';
+    Icon = WarningIcon;
     label = 'Sign in again to sync';
     state = 'error';
   } else if (snapshot.failedCount > 0 || snapshot.status === 'error') {
-    icon = '⚠';
+    Icon = WarningIcon;
     label = snapshot.failedCount > 0
       ? `${countLabel(snapshot.failedCount, 'change')} failed to sync`
       : 'Sync error';
     state = 'error';
   } else if (snapshot.syncingCount > 0 || snapshot.status === 'syncing') {
-    icon = '↻';
+    Icon = RepeatIcon;
     label = 'Syncing changes';
     state = 'syncing';
   } else if (snapshot.pendingCount > 0) {
-    icon = '…';
+    Icon = null;
     label = `${countLabel(snapshot.pendingCount, 'change')} pending`;
     state = 'pending';
   } else if (snapshot.lastSuccessfulSyncAt) {
-    icon = '✓';
+    Icon = CheckIcon;
     label = 'Synced';
     state = 'synced';
   }
@@ -113,7 +114,7 @@ export default function SyncIndicator() {
       aria-label={label}
       title={label}
     >
-      <span className="sync-indicator__icon" aria-hidden="true">{icon}</span>
+      <span className="sync-indicator__icon" aria-hidden="true">{Icon ? <Icon /> : '...'}</span>
       <span className="sync-indicator__label">{label}</span>
       {state === 'error' && snapshot.failedCount > 0 && (
         <button

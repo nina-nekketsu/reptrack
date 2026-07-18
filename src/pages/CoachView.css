@@ -2,7 +2,7 @@
 
 .cv-screen {
   min-height: 100vh;
-  background: #0d0d1a;
+  background: var(--bg-0);
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -23,7 +23,7 @@
   align-items: center;
   gap: 0.85rem;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid #1e1e36;
+  border-bottom: 1px solid var(--line);
 }
 
 .cv-logo {
@@ -40,13 +40,13 @@
 .cv-title {
   font-size: 1.4rem;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--ink-hi);
   letter-spacing: -0.4px;
 }
 
 .cv-card {
-  background: #16162a;
-  border: 1px solid #2a2a4a;
+  background: var(--bg-1);
+  border: 1px solid var(--line);
   border-radius: 20px;
   padding: 2rem 1.75rem;
   width: 100%;
@@ -57,9 +57,13 @@
   gap: 0.75rem;
 }
 
+.cv-card--centered {
+  text-align: center;
+}
+
 .cv-muted {
   font-size: 0.82rem;
-  color: #9999b3;
+  color: var(--ink-low);
 }
 
 .cv-synced {
@@ -70,7 +74,7 @@
   display: inline-block;
   background: rgba(124, 106, 247, 0.12);
   border: 1px solid rgba(124, 106, 247, 0.3);
-  color: #a78bfa;
+  color: var(--go);
   font-size: 0.75rem;
   font-weight: 600;
   padding: 0.3rem 0.75rem;
@@ -80,8 +84,8 @@
 
 /* ── Section ── */
 .cv-section {
-  background: #16162a;
-  border: 1px solid #2a2a4a;
+  background: var(--bg-1);
+  border: 1px solid var(--line);
   border-radius: 16px;
   padding: 1.25rem 1.25rem;
   display: flex;
@@ -94,13 +98,13 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  color: #7c6af7;
+  color: var(--go);
   margin-bottom: 0.1rem;
 }
 
 .cv-empty {
   font-size: 0.85rem;
-  color: #555575;
+  color: var(--ink-mid);
   font-style: italic;
 }
 
@@ -112,8 +116,8 @@
 }
 
 .cv-exercise-card {
-  background: #1f1f3a;
-  border: 1px solid #2a2a4a;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
   border-radius: 10px;
   padding: 0.6rem 0.75rem;
   display: flex;
@@ -124,12 +128,12 @@
 .cv-ex-name {
   font-size: 0.88rem;
   font-weight: 600;
-  color: #e8e8ff;
+  color: var(--bg-3);
 }
 
 .cv-ex-meta {
   font-size: 0.72rem;
-  color: #7777a0;
+  color: var(--ink-mid);
 }
 
 /* ── Last session ── */
@@ -150,7 +154,7 @@
 .cv-last-session-meta strong {
   font-size: 1rem;
   font-weight: 700;
-  color: #e8e8ff;
+  color: var(--bg-3);
 }
 
 .cv-stats-row {
@@ -167,12 +171,12 @@
 .cv-stat-val {
   font-size: 1.3rem;
   font-weight: 800;
-  color: #a78bfa;
+  color: var(--go);
 }
 
 .cv-stat-lbl {
   font-size: 0.7rem;
-  color: #7777a0;
+  color: var(--ink-mid);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -188,7 +192,7 @@
 .cv-sets-table td {
   text-align: left;
   padding: 0.45rem 0.6rem;
-  border-bottom: 1px solid #1e1e36;
+  border-bottom: 1px solid var(--line);
 }
 
 .cv-sets-table th {
@@ -196,11 +200,11 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #7777a0;
+  color: var(--ink-mid);
 }
 
 .cv-sets-table td {
-  color: #c8c8e8;
+  color: var(--ink-mid);
 }
 
 .cv-sets-table tr:last-child td {
@@ -215,8 +219,8 @@
 }
 
 .cv-pr-card {
-  background: #1f1f3a;
-  border: 1px solid #2a2a4a;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
   border-radius: 10px;
   padding: 0.7rem 0.85rem;
   display: flex;
@@ -229,14 +233,14 @@
 .cv-pr-name {
   font-size: 0.9rem;
   font-weight: 700;
-  color: #e8e8ff;
+  color: var(--bg-3);
 }
 
 .cv-pr-stats {
   display: flex;
   gap: 0.75rem;
   font-size: 0.78rem;
-  color: #9999b3;
+  color: var(--ink-low);
 }
 
 /* ── Volume graph ── */
@@ -254,7 +258,7 @@
 /* ── Footer ── */
 .cv-footer {
   font-size: 0.72rem;
-  color: #444466;
+  color: var(--ink-low);
   text-align: center;
   padding-top: 0.5rem;
 }

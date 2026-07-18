@@ -54,22 +54,22 @@
 
 .coach-fb--improved .coach-fb-status {
   background: var(--c-secondary);
-  color: #fff;
+  color: var(--ink-hi);
 }
 
 .coach-fb--regressed .coach-fb-status {
   background: var(--c-danger);
-  color: #fff;
+  color: var(--ink-hi);
 }
 
 .coach-fb--maintained .coach-fb-status {
   background: var(--c-accent);
-  color: #123033;
+  color: var(--ink-on-accent);
 }
 
 .coach-fb--first .coach-fb-status {
   background: var(--c-primary);
-  color: #fff;
+  color: var(--ink-hi);
 }
 
 .coach-fb-message {
@@ -188,7 +188,7 @@
 .intensity-chip.active {
   background: var(--c-accent);
   border-color: var(--c-accent);
-  color: #123033;
+  color: var(--ink-on-accent);
 }
 
 .intensity-chip:disabled {
@@ -466,7 +466,7 @@
   padding: 8px 14px;
   border-radius: 10px;
   background: var(--c-accent);
-  color: #123033;
+  color: var(--ink-on-accent);
   border: none;
   font-weight: 700;
   font-size: 13px;

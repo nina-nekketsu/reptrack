@@ -132,9 +132,7 @@ export default function CoachSettings() {
       <div className="card cs-card">
         <div className="card-label">Weekly Cardio</div>
         <div className="cardio-section">
-          <div className="cardio-progress">
-            <div className="cardio-progress-fill" style={{ width: `${cardioPercent}%` }} />
-          </div>
+          <progress className="cardio-progress" value={cardioPercent} max="100" aria-label="Weekly cardio progress" />
           <div className="cardio-status">
             {Math.round(weeklyCardioMinutes)} / {cardioTarget} min this week ({cardioPercent}%)
           </div>
@@ -178,11 +176,11 @@ export default function CoachSettings() {
 
         {Object.keys(metadata.plateauRisk).length > 0 && (
           <>
-            <div className="cs-section-label" style={{ marginTop: '0.75rem' }}>Plateau Risk</div>
+            <div className="cs-section-label cs-section-label--spaced">Plateau Risk</div>
             {Object.entries(metadata.plateauRisk).map(([id, risk]) => (
               <div key={id} className="cs-meta-item">
                 <span className="cs-meta-label">{id}</span>
-                <span className="cs-meta-value" style={{ color: risk > 50 ? 'var(--c-danger)' : 'inherit' }}>
+                <span className={`cs-meta-value ${risk > 50 ? 'cs-meta-value--danger' : ''}`}>
                   {risk}%
                 </span>
               </div>

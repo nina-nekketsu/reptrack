@@ -8,6 +8,7 @@ import {
   deleteSession,
 } from '../utils/exerciseHelpers';
 import { useAuth } from '../context/AuthContext';
+import { TrashIcon } from './icons';
 
 /**
  * Full exercise history/detail modal.
@@ -97,7 +98,7 @@ export default function ExerciseHistoryModal({ exercise, logs, onClose, onOpenLo
                         title="Delete this session"
                         aria-label="Delete session"
                       >
-                        🗑
+                        <TrashIcon />
                       </button>
                     </div>
                     <div className="session-stats">
@@ -138,7 +139,7 @@ export default function ExerciseHistoryModal({ exercise, logs, onClose, onOpenLo
       {confirmDate && (
         <div className="confirm-overlay" onClick={handleCancelDelete}>
           <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="confirm-icon">🗑️</div>
+            <div className="confirm-icon" aria-hidden="true"><TrashIcon /></div>
             <p className="confirm-message">Delete this session? This cannot be undone.</p>
             <div className="confirm-actions">
               <button className="btn-danger" onClick={handleConfirmDelete}>

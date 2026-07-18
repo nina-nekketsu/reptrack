@@ -9,22 +9,23 @@ import {
   saveActiveWorkoutSession,
 } from '../lib/activeWorkoutSession';
 import Sheet from '../components/Sheet';
+import { BoltIcon, CheckIcon, DumbbellIcon, RepeatIcon, TimerIcon, TrendIcon } from '../components/icons';
 import './Page.css';
 import './Workouts.css';
 
-// ── Muscle-group emoji map ──
-const GROUP_EMOJI = {
-  Chest:     '🏋️',
-  Back:      '🔙',
-  Legs:      '🦵',
-  Shoulders: '🙆',
-  Arms:      '💪',
-  Core:      '🧘',
-  default:   '⚡',
+const GROUP_ICONS = {
+  Chest: DumbbellIcon,
+  Back: RepeatIcon,
+  Legs: TrendIcon,
+  Shoulders: DumbbellIcon,
+  Arms: DumbbellIcon,
+  Core: TimerIcon,
+  default: BoltIcon,
 };
 
-function thumbEmoji(muscleGroup) {
-  return GROUP_EMOJI[muscleGroup] || GROUP_EMOJI.default;
+function MuscleGroupIcon({ muscleGroup }) {
+  const Icon = GROUP_ICONS[muscleGroup] || GROUP_ICONS.default;
+  return <Icon />;
 }
 
 // ── Seed plans ──
@@ -201,7 +202,7 @@ function EditExerciseModal({ planEx, exercise, onSave, onClose }) {
         </div>
 
         <div className="prescription-editor">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 8, alignItems: 'end' }}>
+          <div className="prescription-grid">
             <div>
               <div className="prescription-label">Sets</div>
               <input
@@ -300,14 +301,13 @@ function AddExerciseModal({ allExercises, planExerciseIds, onAdd, onClose }) {
             return (
               <div
                 key={ex.id}
-                className="exercise-search-row"
+                className={`exercise-search-row ${alreadyIn ? 'exercise-search-row--disabled' : ''}`}
                 onClick={() => !alreadyIn && handlePickExercise(ex)}
-                style={alreadyIn ? { opacity: 0.4, cursor: 'not-allowed' } : {}}
               >
-                <span style={{ fontSize: 20 }}>{thumbEmoji(ex.muscleGroup)}</span>
+                <span className="exercise-search-thumb"><MuscleGroupIcon muscleGroup={ex.muscleGroup} /></span>
                 <span className="exercise-search-name">{ex.name}</span>
                 <span className="exercise-search-meta">{ex.muscleGroup}</span>
-                {alreadyIn && <span style={{ fontSize: 11, color: '#9999b3' }}>Added</span>}
+                {alreadyIn && <span className="exercise-search-added">Added</span>}
               </div>
             );
           })}
@@ -326,7 +326,7 @@ function AddExerciseModal({ allExercises, planExerciseIds, onAdd, onClose }) {
           )}
 
           {filtered.length === 0 && !showCreateNew && (
-            <p style={{ color: '#9999b3', fontSize: 13, textAlign: 'center', padding: '12px 0' }}>
+            <p className="exercise-search-empty">
               No exercises found
             </p>
           )}
@@ -584,12 +584,11 @@ export default function Workouts() {
         <div
           className="active-session-banner"
           onClick={() => navigate(`/workout/${activeSession.planId}`)}
-          style={{ cursor: 'pointer' }}
         >
           <div className="active-dot" />
           <div>
-            <div style={{ fontWeight: 800 }}>{activeSession.planName}</div>
-            <div style={{ fontSize: 12, fontWeight: 500, opacity: 0.85 }}>
+            <div className="active-session-banner__title">{activeSession.planName}</div>
+            <div className="active-session-banner__meta">
               Session active · {elapsed} · Tap to resume
             </div>
           </div>
@@ -601,7 +600,7 @@ export default function Workouts() {
 
       {/* ── Plan picker row ── */}
       <div>
-        <div className="workouts-section-title" style={{ marginBottom: 6 }}>Workout Plan</div>
+        <div className="workouts-section-title workouts-section-title--compact">Workout Plan</div>
         <div className="plan-picker-row">
           <select
             className="plan-picker-select"
@@ -631,13 +630,13 @@ export default function Workouts() {
               className={`plan-start-btn${isActive ? ' active' : ''}`}
               onClick={handleStart}
             >
-              {isActive ? '🟢 In Progress' : '▶ Start'}
+              {isActive ? <><CheckIcon /> In Progress</> : 'Start'}
             </button>
             <button
               className="plan-edit-btn"
               onClick={() => setEditMode(v => !v)}
             >
-              {editMode ? '✓ Done' : '✏️ Edit'}
+              {editMode ? <><CheckIcon /> Done</> : 'Edit'}
             </button>
           </div>
         </div>
@@ -646,7 +645,7 @@ export default function Workouts() {
       {/* ── Exercise list ── */}
       {currentPlan && currentPlan.exercises.length > 0 && (
         <div>
-          <div className="workouts-section-title" style={{ marginBottom: 6 }}>Exercises</div>
+          <div className="workouts-section-title workouts-section-title--compact">Exercises</div>
           <div className="plan-exercise-list">
             {currentPlan.exercises.map((planEx, i) => {
               const ex = getExercise(planEx.exerciseId);
@@ -665,7 +664,7 @@ export default function Workouts() {
                   )}
 
                   <div className="plan-exercise-thumb">
-                    {thumbEmoji(ex.muscleGroup)}
+                    <MuscleGroupIcon muscleGroup={ex.muscleGroup} />
                   </div>
 
                   <div className="plan-exercise-info">
@@ -684,9 +683,8 @@ export default function Workouts() {
                       className="plan-exercise-remove"
                       onClick={e => { e.stopPropagation(); handleRemoveExercise(i); }}
                       title="Remove from plan"
-                      style={{ opacity: 1 }}
                     >
-                      ✕
+                      x
                     </button>
                   )}
                 </div>
@@ -698,7 +696,7 @@ export default function Workouts() {
 
       {/* ── Empty plan state ── */}
       {currentPlan && currentPlan.exercises.length === 0 && (
-        <p style={{ color: '#9999b3', fontSize: 14, textAlign: 'center', padding: '16px 0' }}>
+        <p className="workouts-empty">
           No exercises yet. Add some below!
         </p>
       )}
@@ -716,7 +714,7 @@ export default function Workouts() {
 
       {/* ── No plans fallback ── */}
       {!currentPlan && (
-        <p style={{ color: '#9999b3', fontSize: 14, textAlign: 'center' }}>
+        <p className="workouts-empty workouts-empty--tight">
           No plans yet. Create one!
         </p>
       )}

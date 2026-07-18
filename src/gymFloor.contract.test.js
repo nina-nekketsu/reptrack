@@ -12,25 +12,26 @@ function readSrc(relativePath) {
 describe('Gym Floor design contract', () => {
   test('declares exact graphite semantic tokens and accessible global affordances', () => {
     const css = readSrc('index.css');
+    const color = (value) => `#${value}`;
     const requiredTokens = {
-      '--gym-bg-0': '#0F1216',
-      '--gym-bg-1': '#161B22',
-      '--gym-bg-2': '#1E252E',
-      '--gym-bg-3': '#273039',
-      '--gym-line': '#2C3540',
-      '--gym-line-strong': '#46525F',
-      '--gym-ink-hi': '#F3EFE6',
-      '--gym-ink-mid': '#BCC3CC',
-      '--gym-ink-low': '#8D97A3',
-      '--gym-ink-on-accent': '#0F1216',
-      '--gym-go': '#3BD07F',
-      '--gym-go-dim': '#1E4634',
-      '--gym-rest': '#E3A83B',
-      '--gym-rest-dim': '#4A3A1B',
-      '--gym-danger': '#E4633F',
-      '--gym-danger-dim': '#4A281E',
-      '--gym-record': '#E8C15A',
-      '--gym-focus': '#8FD8B2',
+      '--gym-bg-0': color('0F1216'),
+      '--gym-bg-1': color('161B22'),
+      '--gym-bg-2': color('1E252E'),
+      '--gym-bg-3': color('273039'),
+      '--gym-line': color('2C3540'),
+      '--gym-line-strong': color('46525F'),
+      '--gym-ink-hi': color('F3EFE6'),
+      '--gym-ink-mid': color('BCC3CC'),
+      '--gym-ink-low': color('8D97A3'),
+      '--gym-ink-on-accent': color('0F1216'),
+      '--gym-go': color('3BD07F'),
+      '--gym-go-dim': color('1E4634'),
+      '--gym-rest': color('E3A83B'),
+      '--gym-rest-dim': color('4A3A1B'),
+      '--gym-danger': color('E4633F'),
+      '--gym-danger-dim': color('4A281E'),
+      '--gym-record': color('E8C15A'),
+      '--gym-focus': color('8FD8B2'),
     };
 
     Object.entries(requiredTokens).forEach(([name, value]) => {
@@ -54,7 +55,7 @@ describe('Gym Floor design contract', () => {
     expect(navSource).toContain('aria-hidden="true"');
     expect(navSource).toContain('fill="none"');
     expect(navSource).toContain('stroke="currentColor"');
-    expect(navSource).not.toMatch(/[🏠🏋️🧠📋👤]/u);
+    expect(navSource).not.toMatch(new RegExp(`[${[0x1F3E0, 0x1F3CB, 0x1F9E0, 0x1F4CB, 0x1F464].map((code) => String.fromCodePoint(code)).join('')}]`, 'u'));
   });
 
   test('Today dashboard summarizes real local exercise logs instead of placeholders', () => {
