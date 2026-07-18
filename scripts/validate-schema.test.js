@@ -15,6 +15,7 @@ test('canonical schema defines every table and RPC used by source', () => {
   assert.deepEqual([...contracts.tables].sort(), [
     'active_sessions',
     'coach_shares',
+    'coach_state',
     'coach_workout_sessions',
     'exercise_logs',
     'exercises',

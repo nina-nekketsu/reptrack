@@ -109,7 +109,7 @@ export default function SyncIndicator() {
   return (
     <div
       className={`sync-indicator sync-indicator--truthful sync-indicator--${state}`}
-      role="status"
+      role={state === 'error' ? 'alert' : 'status'}
       aria-label={label}
       title={label}
     >

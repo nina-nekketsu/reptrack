@@ -52,6 +52,14 @@ create table if not exists public.user_settings (
   constraint user_settings_object check (jsonb_typeof(settings) = 'object')
 );
 
+create table if not exists public.coach_state (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  key text not null,
+  state jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, key)
+);
+
 create table if not exists public.workout_timer_state (
   user_id uuid primary key references auth.users(id) on delete cascade,
   state jsonb,
@@ -120,6 +128,7 @@ alter table public.exercises enable row level security;
 alter table public.workout_plans enable row level security;
 alter table public.exercise_logs enable row level security;
 alter table public.user_settings enable row level security;
+alter table public.coach_state enable row level security;
 alter table public.workout_timer_state enable row level security;
 alter table public.active_sessions enable row level security;
 alter table public.coach_shares enable row level security;
@@ -163,6 +172,15 @@ drop policy if exists "user_settings_update_own" on public.user_settings;
 create policy "user_settings_update_own" on public.user_settings for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
 drop policy if exists "user_settings_delete_own" on public.user_settings;
 create policy "user_settings_delete_own" on public.user_settings for delete using (auth.uid() = user_id);
+
+drop policy if exists "coach_state_select_own" on public.coach_state;
+create policy "coach_state_select_own" on public.coach_state for select using (auth.uid() = user_id);
+drop policy if exists "coach_state_insert_own" on public.coach_state;
+create policy "coach_state_insert_own" on public.coach_state for insert with check (auth.uid() = user_id);
+drop policy if exists "coach_state_update_own" on public.coach_state;
+create policy "coach_state_update_own" on public.coach_state for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "coach_state_delete_own" on public.coach_state;
+create policy "coach_state_delete_own" on public.coach_state for delete using (auth.uid() = user_id);
 
 drop policy if exists "workout_timer_state_select_own" on public.workout_timer_state;
 create policy "workout_timer_state_select_own" on public.workout_timer_state for select using (auth.uid() = user_id);
@@ -407,6 +425,7 @@ grant select, insert, update, delete on table
   public.workout_plans,
   public.exercise_logs,
   public.user_settings,
+  public.coach_state,
   public.workout_timer_state,
   public.active_sessions,
   public.coach_shares,

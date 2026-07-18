@@ -2,7 +2,9 @@ import fs from 'fs';
 import path from 'path';
 
 const appPath = path.join(__dirname, 'App.js');
+const syncIndicatorPath = path.join(__dirname, 'components', 'SyncIndicator.js');
 const appSource = () => fs.readFileSync(appPath, 'utf8');
+const syncIndicatorSource = () => fs.readFileSync(syncIndicatorPath, 'utf8');
 
 describe('App route truthfulness', () => {
   test('/home and /workout are redirects, not fake product surfaces', () => {
@@ -40,10 +42,11 @@ describe('App route truthfulness', () => {
 
   test('loading and sync error states expose honest status contracts', () => {
     const source = appSource();
+    const syncSource = syncIndicatorSource();
 
     expect(source).toContain('Loading RepTrack...');
     expect(source).toContain('role="status"');
-    expect(source).toContain('role="alert"');
-    expect(source).toContain('Sync error:');
+    expect(syncSource).toContain("state === 'error' ? 'alert' : 'status'");
+    expect(syncSource).toContain('Sync error');
   });
 });

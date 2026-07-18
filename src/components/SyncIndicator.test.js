@@ -102,7 +102,7 @@ describe('SyncIndicator truthful states', () => {
     };
     render(<SyncIndicator />);
 
-    expect(screen.getByRole('status', { name: '1 change failed to sync' })).toBeInTheDocument();
+    expect(screen.getByRole('alert', { name: '1 change failed to sync' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Retry failed sync' }));
 
     expect(mockRetryPendingMutation).toHaveBeenCalledWith('failed-1');

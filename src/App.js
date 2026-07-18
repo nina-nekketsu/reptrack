@@ -27,7 +27,7 @@ function AppContent() {
   if (loading) {
     return (
       <div className="auth-screen">
-        <div className="auth-card auth-card--loading">
+        <div className="auth-card auth-card--loading" role="status" aria-live="polite">
           <div className="auth-logo auth-logo--mark" aria-hidden="true">R</div>
           <p className="auth-loading-copy">Loading RepTrack...</p>
           <p className="auth-loading-help">
