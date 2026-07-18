@@ -1,13 +1,11 @@
-import { HashRouter, Routes, Route } from 'react-router-dom'
+import { HashRouter, Navigate, Routes, Route } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { TimerProvider } from './context/TimerContext'
 import { CoachProvider } from './context/CoachContext'
 import BottomNav from './components/BottomNav'
 import AuthScreen from './components/AuthScreen'
 import SetupScreen from './components/SetupScreen'
-import Home from './pages/Home'
 import Dashboard from './pages/Dashboard'
-import Workout from './pages/Workout'
 import Workouts from './pages/Workouts'
 import Exercises from './pages/Exercises'
 import History from './pages/History'
@@ -29,11 +27,11 @@ function AppContent() {
   if (loading) {
     return (
       <div className="auth-screen">
-        <div className="auth-card" style={{ textAlign: 'center' }}>
-          <div className="auth-logo">💪</div>
-          <p style={{ color: '#9999b3', fontSize: '0.9rem' }}>Loading RepTrack…</p>
-          <p style={{ color: '#666', fontSize: '0.75rem', marginTop: '1rem' }}>
-            Stuck here? Try: Hold reload button → Reload Without Content Blockers
+        <div className="auth-card auth-card--loading">
+          <div className="auth-logo auth-logo--mark" aria-hidden="true">R</div>
+          <p className="auth-loading-copy">Loading RepTrack...</p>
+          <p className="auth-loading-help">
+            Stuck here? Try holding the reload button and choosing Reload Without Content Blockers.
           </p>
         </div>
       </div>
@@ -60,8 +58,9 @@ function AppContent() {
           <main className="app-main">
             <Routes>
               <Route path="/"              element={<Dashboard />} />
-              <Route path="/home"          element={<Home />} />
-              <Route path="/workout"       element={<Workout />} />
+              <Route path="/today"         element={<Dashboard />} />
+              <Route path="/home"          element={<Navigate to="/today" replace />} />
+              <Route path="/workout"       element={<Navigate to="/workouts" replace />} />
               <Route path="/workout/:planId" element={<ActiveWorkout />} />
               <Route path="/workouts"      element={<Workouts />} />
               <Route path="/exercises"     element={<Exercises />} />

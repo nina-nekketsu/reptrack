@@ -4,7 +4,13 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const SOURCE_EXTENSIONS = new Set(['.js', '.jsx', '.css']);
-const FAKE_SURFACE_MARKERS = ["Today's goal", 'Upper Body', 'Yesterday', "Today's Workout", 'Tricep Dips'];
+const FAKE_SURFACE_MARKERS = [
+  "Today's goal",
+  'Ready to crush it today?',
+  '5 days',
+  "Today's Workout",
+  'Est. 45 min',
+];
 const EMOJI_PATTERN = /\p{Extended_Pictographic}/u;
 const HEX_PATTERN = /#[0-9a-fA-F]{3,8}\b/g;
 const GRADIENT_PATTERN = /(?:linear|radial|conic)-gradient\s*\(/i;
@@ -28,6 +34,10 @@ function add(violations, rule, file, message) {
   violations.push({ rule, file, message });
 }
 
+function isProductionSource(rel) {
+  return !/(^|\.)(test|spec)\.[jt]sx?$/.test(rel);
+}
+
 function scanRepository(root) {
   const violations = [];
   const srcRoot = path.join(root, 'src');
@@ -37,7 +47,7 @@ function scanRepository(root) {
     const rel = relative(root, file);
     const content = fs.readFileSync(file, 'utf8');
 
-    if (FAKE_SURFACE_MARKERS.some((marker) => content.includes(marker))) {
+    if (isProductionSource(rel) && FAKE_SURFACE_MARKERS.some((marker) => content.includes(marker))) {
       add(violations, 'fake-surface', rel, 'Fabricated product-surface copy remains in reachable source.');
     }
 

@@ -62,3 +62,12 @@ test('allows color literals only in the token source and local icon source', () 
   assert.equal(violations.filter((item) => item.rule === 'legacy-color').length, 1);
   assert.match(violations.find((item) => item.rule === 'legacy-color').file, /Card\.css$/);
 });
+
+test('does not treat legitimate plan and exercise names as fake surfaces', () => {
+  const root = validFixture();
+  write(root, 'src/pages/Workouts.js', "export default function Workouts(){ return 'Upper Body Day Tricep Dips'; }");
+  write(root, 'src/pages/productSurfaces.test.js', "test('marker assertion', () => `Today's goal`);");
+
+  const violations = scanRepository(root);
+  assert.equal(violations.filter((item) => item.rule === 'fake-surface').length, 0);
+});

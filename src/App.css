@@ -123,6 +123,35 @@ button:disabled { opacity:.4; cursor:not-allowed; }
   text-align: center;
 }
 
+.auth-card--loading {
+  text-align: center;
+}
+
+.auth-logo--mark {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  display: grid;
+  place-items: center;
+  background: var(--bg-2);
+  color: var(--go);
+  font-size: 1.8rem;
+  font-weight: 800;
+}
+
+.auth-loading-copy {
+  color: var(--ink-mid);
+  font-size: 0.9rem;
+}
+
+.auth-loading-help {
+  color: var(--ink-low);
+  font-size: 0.75rem;
+  margin-top: 1rem;
+}
+
 .auth-title {
   font-size: 1.6rem;
   font-weight: 800;

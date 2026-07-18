@@ -12,7 +12,7 @@ const paths = {
 }
 
 const tabs = [
-  { to: '/', label: 'Today', icon: 'today', end: true },
+  { to: '/today', label: 'Today', icon: 'today', end: true },
   { to: '/workouts', label: 'Workouts', icon: 'workouts', end: false },
   { to: '/coach', label: 'Coach', icon: 'coach', end: false },
   { to: '/exercises', label: 'Exercises', icon: 'exercises', end: false },
