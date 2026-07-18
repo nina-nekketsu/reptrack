@@ -32,7 +32,7 @@ Go to [supabase.com](https://supabase.com) and create a free project.
 
 ### 2. Run the schema
 
-Open the SQL editor in your Supabase project and paste the contents of `supabase/schema.sql`. Run it. This creates five tables with Row Level Security (RLS) enabled — users can only see and modify their own rows.
+For a **new project**, review and apply `supabase/schema_current.sql`. It defines the current flat-JSONB app contract, active session and timer state, coach sharing/live coaching, RPCs, indexes, and owner-scoped Row Level Security. For an existing project, do not paste the full snapshot over production: compare it read-only and apply only a reviewed additive migration.
 
 ### 3. Add credentials to `.env`
 
@@ -141,7 +141,7 @@ jobs:
 | Sign in / sign up UI | `src/components/AuthScreen.js` |
 | Setup instructions screen | `src/components/SetupScreen.js` |
 | Sync upsert helpers | `src/utils/exerciseHelpers.js` — `upsertSession`, `upsertPlan`, `upsertExercise` |
-| Schema + RLS | `supabase/schema.sql` |
+| Canonical schema + RLS | `supabase/schema_current.sql` |
 
 ### Sync flow
 
@@ -191,14 +191,7 @@ Lets a logged-in user generate a private link so a coach can view their training
 
 ### Setup
 
-After running `supabase/schema.sql`, also run `supabase/coach_share.sql` in the Supabase SQL editor:
-
-```sql
--- In Supabase dashboard → SQL editor
--- Paste and run the contents of supabase/coach_share.sql
-```
-
-That creates:
+Coach sharing is included in `supabase/schema_current.sql`; do not run the archived normalized coach-share script. The canonical snapshot creates:
 - `coach_shares` table with RLS
 - `get_coach_data(uuid)` RPC function (SECURITY DEFINER)
 - Indexes for fast token lookups

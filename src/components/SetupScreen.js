@@ -31,7 +31,7 @@ export default function SetupScreen({ onSkip }) {
           <>
             <div className="setup-steps">
               <p><strong>1.</strong> Create a free project at <a href="https://supabase.com" target="_blank" rel="noreferrer">supabase.com</a></p>
-              <p><strong>2.</strong> Run <code>supabase/schema.sql</code> in the SQL editor</p>
+              <p><strong>2.</strong> For a new project, review and run <code>supabase/schema_current.sql</code>. For an existing project, use a reviewed additive migration instead.</p>
               <p><strong>3.</strong> Create <code>.env</code> in the project root:</p>
               <pre className="setup-code">{`REACT_APP_SUPABASE_URL=https://xxxx.supabase.co\nREACT_APP_SUPABASE_ANON_KEY=eyJ...`}</pre>
               <p><strong>4.</strong> Restart with <code>npm start</code></p>
