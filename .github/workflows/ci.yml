@@ -30,6 +30,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Run PRD and schema contracts
+        run: npm run test:prd
+
+      - name: Lint application source
+        run: npm run lint
+
       - name: Run tests
         run: CI=true npm test -- --runInBand
 

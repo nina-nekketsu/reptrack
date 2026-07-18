@@ -21,6 +21,8 @@ describe('GitHub Actions CI workflow contract', () => {
     expect(workflow).toContain('uses: actions/setup-node@v4');
     expect(workflow).toMatch(/node-version: 20\n          cache: npm/);
     expect(workflow).toContain('run: npm ci');
+    expect(workflow).toContain('run: npm run test:prd');
+    expect(workflow).toContain('run: npm run lint');
     expect(workflow).toContain('run: CI=true npm test -- --runInBand');
     expect(workflow).toContain('run: npm run build');
 
