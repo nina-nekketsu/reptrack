@@ -1,0 +1,8 @@
+{
+  "generatedAt": "2026-07-18T17:28:28.599Z",
+  "command": "npm run qa:mobile-readability",
+  "status": "blocked",
+  "reason": "listen EPERM: operation not permitted 127.0.0.1",
+  "chromeStderr": "",
+  "note": "Live viewport screenshots and DOM metrics require a runnable local browser. Static CSS QA is available via npm run qa:mobile-readability:static."
+}

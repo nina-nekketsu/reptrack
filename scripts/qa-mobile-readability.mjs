@@ -1,14 +1,48 @@
 import { spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import net from 'node:net';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const chrome = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const fixture = path.join(root, 'docs/design-qa/mobile-readability/fixture.html');
 const outputDir = path.join(root, 'docs/design-qa/mobile-readability');
 const profileDir = `/tmp/reptrack-mobile-readability-chrome-${process.pid}`;
+
+function resolveChromeExecutable() {
+  const candidates = [
+    process.env.CHROME_BIN,
+    process.env.GOOGLE_CHROME_BIN,
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    '/Applications/Chromium.app/Contents/MacOS/Chromium',
+    '/usr/bin/google-chrome',
+    '/usr/bin/google-chrome-stable',
+    '/usr/bin/chromium',
+    '/usr/bin/chromium-browser',
+    process.env.PROGRAMFILES && path.join(process.env.PROGRAMFILES, 'Google/Chrome/Application/chrome.exe'),
+    process.env['PROGRAMFILES(X86)'] && path.join(process.env['PROGRAMFILES(X86)'], 'Google/Chrome/Application/chrome.exe'),
+    process.env.LOCALAPPDATA && path.join(process.env.LOCALAPPDATA, 'Google/Chrome/Application/chrome.exe'),
+  ].filter(Boolean);
+
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) return candidate;
+  }
+
+  const pathExtensions = process.platform === 'win32'
+    ? (process.env.PATHEXT || '.EXE;.CMD;.BAT').split(';')
+    : [''];
+  for (const directory of (process.env.PATH || '').split(path.delimiter).filter(Boolean)) {
+    for (const command of ['google-chrome', 'google-chrome-stable', 'chromium', 'chromium-browser', 'chrome']) {
+      for (const extension of pathExtensions) {
+        const candidate = path.join(directory, `${command}${extension}`);
+        if (existsSync(candidate)) return candidate;
+      }
+    }
+  }
+
+  throw new Error('Chrome/Chromium executable not found. Set CHROME_BIN to run mobile readability browser QA.');
+}
 
 const viewports = [
   { width: 320, height: 568 },
@@ -169,6 +203,7 @@ const results = [];
 
 try {
   const port = await getFreePort();
+  const chrome = resolveChromeExecutable();
   chromeProcess = spawn(chrome, [
     '--headless=new',
     '--disable-gpu',
