@@ -104,7 +104,6 @@ const booleanVerdict = Object.fromEntries(
 );
 
 const report = {
-  generatedAt: new Date().toISOString(),
   type: 'static-css-source-audit',
   note: 'This complements, but does not replace, browser screenshot QA.',
   digitClampPx,
