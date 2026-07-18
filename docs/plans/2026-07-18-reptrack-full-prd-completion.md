@@ -6,7 +6,7 @@
 
 **Architecture:** Preserve the current local-first React/Supabase architecture and dedicated active-session lifecycle row. Extend the durable outbox and owner-scoped schema instead of introducing a second data model. Replace legacy visual islands incrementally behind shared Gym Floor primitives, with truthful real-data surfaces and a minimal service worker whose cache policy respects GitHub Pages build provenance.
 
-**Tech stack:** React 18, React Router 6, CRA/react-scripts, Supabase JS, Jest/Testing Library, GitHub Pages/GitHub Actions, Playwright/CDP browser QA, plain CSS and local SVG icons.
+**Tech stack:** React 19, React Router 7, CRA/react-scripts, Supabase JS, Jest/Testing Library, GitHub Pages/GitHub Actions, Playwright/CDP browser QA, plain CSS and local SVG icons.
 
 **Canonical matrix:** `docs/REPTRACK-FULL-PRD-ACCEPTANCE-MATRIX-2026-07-18.md`
 
