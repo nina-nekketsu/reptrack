@@ -1,0 +1,222 @@
+[
+  {
+    "rule": "functional-emoji",
+    "file": "src/components/AuthScreen.js",
+    "message": "Functional emoji must be replaced with local SVG icons."
+  },
+  {
+    "rule": "functional-emoji",
+    "file": "src/components/ExerciseHistoryModal.js",
+    "message": "Functional emoji must be replaced with local SVG icons."
+  },
+  {
+    "rule": "functional-emoji",
+    "file": "src/components/ExerciseLogModal.js",
+    "message": "Functional emoji must be replaced with local SVG icons."
+  },
+  {
+    "rule": "functional-emoji",
+    "file": "src/components/PRBlock.js",
+    "message": "Functional emoji must be replaced with local SVG icons."
+  },
+  {
+    "rule": "functional-emoji",
+    "file": "src/components/RecordBadges.js",
+    "message": "Functional emoji must be replaced with local SVG icons."
+  },
+  {
+    "rule": "functional-emoji",
+    "file": "src/components/SetupScreen.js",
+    "message": "Functional emoji must be replaced with local SVG icons."
+  },
+  {
+    "rule": "functional-emoji",
+    "file": "src/components/SyncIndicator.js",
+    "message": "Functional emoji must be replaced with local SVG icons."
+  },
+  {
+    "rule": "functional-emoji",
+    "file": "src/gymFloor.contract.test.js",
+    "message": "Functional emoji must be replaced with local SVG icons."
+  },
+  {
+    "rule": "functional-emoji",
+    "file": "src/pages/ActiveWorkout.js",
+    "message": "Functional emoji must be replaced with local SVG icons."
+  },
+  {
+    "rule": "functional-emoji",
+    "file": "src/pages/CoachView.js",
+    "message": "Functional emoji must be replaced with local SVG icons."
+  },
+  {
+    "rule": "functional-emoji",
+    "file": "src/pages/Exercises.js",
+    "message": "Functional emoji must be replaced with local SVG icons."
+  },
+  {
+    "rule": "functional-emoji",
+    "file": "src/pages/Profile.js",
+    "message": "Functional emoji must be replaced with local SVG icons."
+  },
+  {
+    "rule": "functional-emoji",
+    "file": "src/pages/Workouts.js",
+    "message": "Functional emoji must be replaced with local SVG icons."
+  },
+  {
+    "rule": "inline-visual-style",
+    "file": "src/components/SetupScreen.js",
+    "message": "Inline visual style objects must be replaced by design-system classes."
+  },
+  {
+    "rule": "inline-visual-style",
+    "file": "src/components/WorkoutSummary.js",
+    "message": "Inline visual style objects must be replaced by design-system classes."
+  },
+  {
+    "rule": "inline-visual-style",
+    "file": "src/pages/ActiveWorkout.js",
+    "message": "Inline visual style objects must be replaced by design-system classes."
+  },
+  {
+    "rule": "inline-visual-style",
+    "file": "src/pages/Coach.js",
+    "message": "Inline visual style objects must be replaced by design-system classes."
+  },
+  {
+    "rule": "inline-visual-style",
+    "file": "src/pages/CoachOnboarding.js",
+    "message": "Inline visual style objects must be replaced by design-system classes."
+  },
+  {
+    "rule": "inline-visual-style",
+    "file": "src/pages/CoachSettings.js",
+    "message": "Inline visual style objects must be replaced by design-system classes."
+  },
+  {
+    "rule": "inline-visual-style",
+    "file": "src/pages/CoachView.js",
+    "message": "Inline visual style objects must be replaced by design-system classes."
+  },
+  {
+    "rule": "inline-visual-style",
+    "file": "src/pages/Exercises.js",
+    "message": "Inline visual style objects must be replaced by design-system classes."
+  },
+  {
+    "rule": "inline-visual-style",
+    "file": "src/pages/Profile.js",
+    "message": "Inline visual style objects must be replaced by design-system classes."
+  },
+  {
+    "rule": "inline-visual-style",
+    "file": "src/pages/Progress.js",
+    "message": "Inline visual style objects must be replaced by design-system classes."
+  },
+  {
+    "rule": "inline-visual-style",
+    "file": "src/pages/Workouts.js",
+    "message": "Inline visual style objects must be replaced by design-system classes."
+  },
+  {
+    "rule": "legacy-color",
+    "file": "src/App.css",
+    "message": "Hard-coded color exists outside the canonical token/icon source."
+  },
+  {
+    "rule": "legacy-color",
+    "file": "src/components/CoachComponents.css",
+    "message": "Hard-coded color exists outside the canonical token/icon source."
+  },
+  {
+    "rule": "legacy-color",
+    "file": "src/components/VolumeGraph.js",
+    "message": "Hard-coded color exists outside the canonical token/icon source."
+  },
+  {
+    "rule": "legacy-color",
+    "file": "src/gymFloor.contract.test.js",
+    "message": "Hard-coded color exists outside the canonical token/icon source."
+  },
+  {
+    "rule": "legacy-color",
+    "file": "src/pages/ActiveWorkout.css",
+    "message": "Hard-coded color exists outside the canonical token/icon source."
+  },
+  {
+    "rule": "legacy-color",
+    "file": "src/pages/CoachOnboarding.css",
+    "message": "Hard-coded color exists outside the canonical token/icon source."
+  },
+  {
+    "rule": "legacy-color",
+    "file": "src/pages/CoachSettings.css",
+    "message": "Hard-coded color exists outside the canonical token/icon source."
+  },
+  {
+    "rule": "legacy-color",
+    "file": "src/pages/CoachView.css",
+    "message": "Hard-coded color exists outside the canonical token/icon source."
+  },
+  {
+    "rule": "legacy-color",
+    "file": "src/pages/CoachView.js",
+    "message": "Hard-coded color exists outside the canonical token/icon source."
+  },
+  {
+    "rule": "legacy-color",
+    "file": "src/pages/Exercises.css",
+    "message": "Hard-coded color exists outside the canonical token/icon source."
+  },
+  {
+    "rule": "legacy-color",
+    "file": "src/pages/Page.css",
+    "message": "Hard-coded color exists outside the canonical token/icon source."
+  },
+  {
+    "rule": "legacy-color",
+    "file": "src/pages/Profile.js",
+    "message": "Hard-coded color exists outside the canonical token/icon source."
+  },
+  {
+    "rule": "legacy-color",
+    "file": "src/pages/Workouts.css",
+    "message": "Hard-coded color exists outside the canonical token/icon source."
+  },
+  {
+    "rule": "legacy-color",
+    "file": "src/pages/Workouts.js",
+    "message": "Hard-coded color exists outside the canonical token/icon source."
+  },
+  {
+    "rule": "legacy-color",
+    "file": "src/pwa.contract.test.js",
+    "message": "Hard-coded color exists outside the canonical token/icon source."
+  },
+  {
+    "rule": "legacy-gradient",
+    "file": "src/components/Sheet.css",
+    "message": "Legacy gradient remains; Gym Floor uses semantic flat surfaces."
+  },
+  {
+    "rule": "legacy-gradient",
+    "file": "src/pages/ActiveWorkout.css",
+    "message": "Legacy gradient remains; Gym Floor uses semantic flat surfaces."
+  },
+  {
+    "rule": "legacy-gradient",
+    "file": "src/pages/Exercises.css",
+    "message": "Legacy gradient remains; Gym Floor uses semantic flat surfaces."
+  },
+  {
+    "rule": "legacy-gradient",
+    "file": "src/pages/Page.css",
+    "message": "Legacy gradient remains; Gym Floor uses semantic flat surfaces."
+  },
+  {
+    "rule": "legacy-gradient",
+    "file": "src/pages/Workouts.css",
+    "message": "Legacy gradient remains; Gym Floor uses semantic flat surfaces."
+  }
+]

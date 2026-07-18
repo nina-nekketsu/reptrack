@@ -21,7 +21,15 @@ function validFixture() {
   write(root, 'supabase/schema_current.sql', 'create table exercise_logs(id uuid);');
   write(root, 'docs/qa-checklists.md', '# QA');
   write(root, 'public/service-worker.js', "self.addEventListener('fetch', () => {});");
-  write(root, 'package.json', JSON.stringify({ scripts: { predeploy: 'node scripts/check-clean.js && npm run build' } }));
+  write(root, 'public/index.html', '<link rel="manifest" href="%PUBLIC_URL%/manifest.json"><link rel="apple-touch-icon" href="%PUBLIC_URL%/reptrack-192.png">');
+  write(root, 'public/manifest.json', JSON.stringify({ id: '/reptrack/', start_url: '/reptrack/', scope: '/reptrack/' }));
+  write(root, 'public/service-worker.js', "const SHELL_PATHS = ['./', './index.html', './manifest.json', './reptrack-192.png', './reptrack-512.png'];");
+  write(root, 'package.json', JSON.stringify({
+    homepage: 'https://nina-nekketsu.github.io/reptrack',
+    scripts: {
+      predeploy: 'node scripts/check-clean.js && npm run build && node scripts/validate-build-metadata.js --require-origin-main',
+    },
+  }));
   return root;
 }
 
@@ -51,8 +59,42 @@ test('reports each prohibited legacy or release-safety condition', () => {
     'missing-schema-current',
     'missing-qa-checklist',
     'missing-service-worker',
+    'invalid-subpath-assets',
     'unsafe-predeploy',
   ]));
+});
+
+test('rejects GitHub Pages subpath asset drift', () => {
+  const root = validFixture();
+  write(root, 'package.json', JSON.stringify({
+    homepage: 'https://example.com/',
+    scripts: {
+      predeploy: 'node scripts/check-clean.js && npm run build && node scripts/validate-build-metadata.js',
+    },
+  }));
+  write(root, 'public/manifest.json', JSON.stringify({ id: '/', start_url: '/', scope: '/' }));
+  write(root, 'public/index.html', '<link rel="manifest" href="/manifest.json">');
+  write(root, 'public/service-worker.js', "const SHELL_PATHS = ['/reptrack/', '/reptrack/index.html'];");
+
+  const violations = scanRepository(root);
+  assert.equal(violations.some((item) => item.rule === 'invalid-subpath-assets'), true);
+});
+
+test('allows explicitly baselined legacy findings but still reports new findings', () => {
+  const root = validFixture();
+  write(root, 'docs/contracts/prd-static-baseline.json', JSON.stringify([
+    {
+      rule: 'legacy-color',
+      file: 'src/components/Card.css',
+      message: 'Known legacy color before the release QA lane.',
+    },
+  ]));
+  write(root, 'src/components/Card.css', '.card { color: #ffffff; }');
+  write(root, 'src/components/NewCard.css', '.new-card { color: #ffffff; }');
+
+  const violations = scanRepository(root);
+  assert.equal(violations.filter((item) => item.rule === 'legacy-color').length, 1);
+  assert.equal(violations.find((item) => item.rule === 'legacy-color').file, 'src/components/NewCard.css');
 });
 
 test('allows color literals only in the token source and local icon source', () => {

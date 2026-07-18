@@ -14,6 +14,7 @@ const FAKE_SURFACE_MARKERS = [
 const EMOJI_PATTERN = /\p{Extended_Pictographic}/u;
 const HEX_PATTERN = /#[0-9a-fA-F]{3,8}\b/g;
 const GRADIENT_PATTERN = /(?:linear|radial|conic)-gradient\s*\(/i;
+const BASELINE_PATH = path.join('docs', 'contracts', 'prd-static-baseline.json');
 
 function walk(directory) {
   if (!fs.existsSync(directory)) return [];
@@ -34,11 +35,67 @@ function add(violations, rule, file, message) {
   violations.push({ rule, file, message });
 }
 
+function violationKey(violation) {
+  return `${violation.rule}\t${violation.file}`;
+}
+
+function readBaseline(root) {
+  const target = path.join(root, BASELINE_PATH);
+  if (!fs.existsSync(target)) return new Set();
+  const entries = JSON.parse(fs.readFileSync(target, 'utf8'));
+  if (!Array.isArray(entries)) {
+    throw new Error(`${BASELINE_PATH} must contain an array.`);
+  }
+  return new Set(entries.map((entry) => `${entry.rule}\t${entry.file}`));
+}
+
+function readJson(root, relativePath, violations, rule) {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(root, relativePath), 'utf8'));
+  } catch (error) {
+    add(violations, rule, relativePath, `Cannot read JSON contract: ${error.message}`);
+    return null;
+  }
+}
+
 function isProductionSource(rel) {
   return !/(^|\.)(test|spec)\.[jt]sx?$/.test(rel);
 }
 
-function scanRepository(root) {
+function validateSubpathAssets(root, violations) {
+  const pkg = readJson(root, 'package.json', violations, 'invalid-subpath-assets');
+  const manifest = readJson(root, 'public/manifest.json', violations, 'invalid-subpath-assets');
+  const indexPath = path.join(root, 'public', 'index.html');
+  const serviceWorkerPath = path.join(root, 'public', 'service-worker.js');
+  const html = fs.existsSync(indexPath) ? fs.readFileSync(indexPath, 'utf8') : '';
+  const serviceWorker = fs.existsSync(serviceWorkerPath) ? fs.readFileSync(serviceWorkerPath, 'utf8') : '';
+  const homepagePath = (() => {
+    try {
+      return new URL(pkg?.homepage || '').pathname.replace(/\/?$/, '/');
+    } catch {
+      return '';
+    }
+  })();
+
+  if (homepagePath !== '/reptrack/') {
+    add(violations, 'invalid-subpath-assets', 'package.json', 'homepage must target the /reptrack/ GitHub Pages subpath.');
+  }
+  if (manifest?.id !== homepagePath || manifest?.start_url !== homepagePath || manifest?.scope !== homepagePath) {
+    add(violations, 'invalid-subpath-assets', 'public/manifest.json', 'Manifest id, start_url, and scope must match the homepage subpath.');
+  }
+  for (const asset of ['manifest.json', 'reptrack-192.png']) {
+    if (!html.includes(`%PUBLIC_URL%/${asset}`)) {
+      add(violations, 'invalid-subpath-assets', 'public/index.html', `HTML must reference ${asset} through %PUBLIC_URL%.`);
+    }
+  }
+  for (const shellPath of ['./', './index.html', './manifest.json', './reptrack-192.png', './reptrack-512.png']) {
+    if (!serviceWorker.includes(`'${shellPath}'`) && !serviceWorker.includes(`"${shellPath}"`)) {
+      add(violations, 'invalid-subpath-assets', 'public/service-worker.js', `Service worker shell cache must use relative subpath-safe ${shellPath}.`);
+    }
+  }
+}
+
+function scanRepository(root, options = {}) {
   const violations = [];
   const srcRoot = path.join(root, 'src');
   const sourceFiles = walk(srcRoot).filter((file) => SOURCE_EXTENSIONS.has(path.extname(file)));
@@ -92,8 +149,17 @@ function scanRepository(root) {
   if (cleanIndex < 0 || buildIndex < 0 || cleanIndex > buildIndex) {
     add(violations, 'unsafe-predeploy', 'package.json', 'predeploy must run the clean-tree gate before the production build.');
   }
+  if (!predeploy.includes('validate-build-metadata')) {
+    add(violations, 'unsafe-predeploy', 'package.json', 'predeploy must validate exact build metadata after the production build.');
+  }
 
-  return violations.sort((a, b) => `${a.rule}:${a.file}`.localeCompare(`${b.rule}:${b.file}`));
+  validateSubpathAssets(root, violations);
+
+  const sorted = violations.sort((a, b) => `${a.rule}:${a.file}`.localeCompare(`${b.rule}:${b.file}`));
+  if (options.includeBaseline === true) return sorted;
+
+  const baseline = readBaseline(root);
+  return sorted.filter((violation) => !baseline.has(violationKey(violation)));
 }
 
 if (require.main === module) {

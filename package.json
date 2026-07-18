@@ -19,12 +19,12 @@
     "start": "react-scripts start",
     "prebuild": "node scripts/write-build-info.js",
     "build": "react-scripts build",
-    "check:prd": "node scripts/check-prd-static-contracts.js",
+    "check:prd": "node scripts/check-prd-static-contracts.js && node scripts/validate-build-metadata.js",
     "check:schema": "node scripts/validate-schema.js",
-    "test:prd": "node --test scripts/check-prd-static-contracts.test.js scripts/validate-schema.test.js",
+    "test:prd": "node --test scripts/check-clean.test.js scripts/check-prd-static-contracts.test.js scripts/validate-build-metadata.test.js scripts/validate-schema.test.js",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "predeploy": "npm run build",
+    "predeploy": "node scripts/check-clean.js && npm run build && node scripts/validate-build-metadata.js --require-origin-main",
     "deploy": "npm run predeploy && gh-pages -d build --no-history"
   },
   "eslintConfig": {
