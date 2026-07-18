@@ -733,31 +733,38 @@ export default function ExerciseLogModal({
                         />
                         <button type="button" className="set-stepper__button" data-testid="set-stepper-button" aria-hidden="true" tabIndex={-1} aria-label={`Increase set ${i + 1} weight`} onClick={() => stepSetValue(i, 'weight', 2.5)}>+</button>
                       </div>
-                      {childRow ? (
-                        <span className="set-input set-type-child" title="Dropset child">↳</span>
-                      ) : (
-                        <select
-                          className="set-input"
-                          value={s.setType || 'normal'}
-                          onChange={(e) => updateSet(i, 'setType', e.target.value)}
-                          aria-label={`Set ${getSetLabel(sets, i)} type`}
+                      <div className="set-row-actions">
+                        {childRow ? (
+                          <span className="set-input set-type-child" title="Dropset child">↳</span>
+                        ) : (
+                          <select
+                            className="set-input"
+                            value={s.setType || 'normal'}
+                            onChange={(e) => updateSet(i, 'setType', e.target.value)}
+                            aria-label={`Set ${getSetLabel(sets, i)} type`}
+                          >
+                            <option value="normal">N</option>
+                            <option value="warmup">W</option>
+                            <option value="dropset">D</option>
+                          </select>
+                        )}
+                        <button
+                          type="button"
+                          className={`set-done-btn ${s.done ? 'set-done-btn--active' : ''}`}
+                          onClick={() => updateSet(i, 'done', !s.done)}
+                          disabled={childRow || !meaningful}
+                          aria-pressed={Boolean(s.done)}
+                          aria-label={`Mark set ${getSetLabel(sets, i)} ${s.done ? 'not done' : 'done'}`}
                         >
-                          <option value="normal">N</option>
-                          <option value="warmup">W</option>
-                          <option value="dropset">D</option>
-                        </select>
+                          {s.done ? <CheckIcon /> : <span aria-hidden="true">o</span>}
+                        </button>
+                        <button className="remove-set-btn" aria-label={`Remove set ${i + 1}`} onClick={() => removeSet(i)} disabled={sets.length === 1}>x</button>
+                      </div>
+                      {previousSessionSets[i] && isMeaningfulSet(previousSessionSets[i]) && (
+                        <div className="set-ghost" aria-label={`Previous session set ${i + 1}`}>
+                          Last: {previousSessionSets[i].reps || 0} reps · {previousSessionSets[i].weight || 0} kg
+                        </div>
                       )}
-                      <button
-                        type="button"
-                        className={`set-done-btn ${s.done ? 'set-done-btn--active' : ''}`}
-                        onClick={() => updateSet(i, 'done', !s.done)}
-                        disabled={childRow || !meaningful}
-                        aria-pressed={Boolean(s.done)}
-                        aria-label={`Mark set ${getSetLabel(sets, i)} ${s.done ? 'not done' : 'done'}`}
-                      >
-                        {s.done ? <CheckIcon /> : <span aria-hidden="true">o</span>}
-                      </button>
-                      <button className="remove-set-btn" aria-label={`Remove set ${i + 1}`} onClick={() => removeSet(i)} disabled={sets.length === 1}>x</button>
                     </div>
                     {feedback && (
                       <div id={feedbackId} className={`set-feedback set-feedback--${feedback.state}`} role="status">
@@ -768,11 +775,6 @@ export default function ExerciseLogModal({
                     {validation && (
                       <div id={validationId} className="set-validation" role="alert">
                         {validation}
-                      </div>
-                    )}
-                    {previousSessionSets[i] && isMeaningfulSet(previousSessionSets[i]) && (
-                      <div className="set-ghost" aria-label={`Previous session set ${i + 1}`}>
-                        Last: {previousSessionSets[i].reps || 0} reps · {previousSessionSets[i].weight || 0} kg
                       </div>
                     )}
                   </React.Fragment>

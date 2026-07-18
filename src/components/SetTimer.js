@@ -46,6 +46,8 @@ export default function SetTimer({ exerciseId }) {
 
   const activeIsRest = timer.isResting || timer.isAlert;
   const activeLabel = activeIsRest ? 'REST TIMER' : 'EXERCISE TIMER';
+  const activePhaseClass = activeIsRest ? 'timer-phase--rest' : 'timer-phase--exercise';
+  const inactivePhaseClass = activeIsRest ? 'timer-phase--exercise' : 'timer-phase--rest';
   const activeDisplay = activeIsRest
     ? timer.restDisplay
     : (timer.isExercising ? timer.exerciseDisplay : formatMs(timer.exerciseElapsedMs));
@@ -59,7 +61,7 @@ export default function SetTimer({ exerciseId }) {
       <p className="sr-only" aria-live="polite">Rest started, {restSeconds} seconds</p>
 
       <div
-        className={`timer-phase timer-phase--active ${timer.isAlert ? 'timer-phase--pulse' : ''}`}
+        className={`timer-phase timer-phase--active ${activePhaseClass} ${timer.isAlert ? 'timer-phase--pulse' : ''}`}
         data-testid="timer-active-phase"
       >
         <span className="timer-phase__label">{activeLabel}</span>
@@ -67,7 +69,7 @@ export default function SetTimer({ exerciseId }) {
         {timer.isAlert && <span className="timer-phase__hint">Get ready</span>}
       </div>
 
-      <div className="timer-phase timer-phase--inactive" data-testid="timer-inactive-phase">
+      <div className={`timer-phase timer-phase--inactive ${inactivePhaseClass}`} data-testid="timer-inactive-phase">
         <span className="timer-phase__label">{inactiveLabel}</span>
         <span className="timer-phase__display timer-phase__display--small">{inactiveDisplay}</span>
       </div>

@@ -1,0 +1,85 @@
+{
+  "type": "static-css-source-audit",
+  "note": "This complements, but does not replace, browser screenshot QA.",
+  "digitClampPx": [
+    {
+      "width": 320,
+      "activeDigitPx": 28,
+      "inactiveDigitPx": 14.4
+    },
+    {
+      "width": 360,
+      "activeDigitPx": 28,
+      "inactiveDigitPx": 14.4
+    },
+    {
+      "width": 375,
+      "activeDigitPx": 28.125,
+      "inactiveDigitPx": 14.4
+    },
+    {
+      "width": 390,
+      "activeDigitPx": 29.25,
+      "inactiveDigitPx": 14.4
+    },
+    {
+      "width": 393,
+      "activeDigitPx": 29.474999999999998,
+      "inactiveDigitPx": 14.4
+    },
+    {
+      "width": 430,
+      "activeDigitPx": 32.25,
+      "inactiveDigitPx": 14.4
+    }
+  ],
+  "colors": {
+    "bg2": "#1E252E",
+    "bg1": "#161B22",
+    "inkHi": "#F3EFE6",
+    "inkMid": "#BCC3CC",
+    "inkLow": "#8D97A3",
+    "go": "#3BD07F",
+    "goDim": "#1E4634",
+    "rest": "#E3A83B",
+    "restDim": "#4A3A1B",
+    "danger": "#E4633F",
+    "dangerDim": "#4A281E"
+  },
+  "checks": {
+    "srOnlyDefined": true,
+    "semanticTimerHooks": true,
+    "noInkHiBackgroundOnLogZones": true,
+    "logZonesDark": true,
+    "modalMaxHeight92": true,
+    "no96dvhOverride": true,
+    "activeDigitClamp": true,
+    "inactiveDigitClamp": true,
+    "inputFontSize16": true,
+    "mobileStepperTargets44": true,
+    "semanticPhaseColors": true,
+    "modalLightFixtureAbsent": true,
+    "contrast": {
+      "modalSubOnBg2": 8.69300070033934,
+      "setGhostOnBg2": 5.214557629323735,
+      "setNumOnBg2": 5.214557629323735,
+      "timerLabelOnRestDim": 6.179338741063544,
+      "timerDigitOnRestDim": 9.570128809017326
+    }
+  },
+  "verdict": {
+    "srOnlyDefined": true,
+    "semanticTimerHooks": true,
+    "noInkHiBackgroundOnLogZones": true,
+    "logZonesDark": true,
+    "modalMaxHeight92": true,
+    "no96dvhOverride": true,
+    "activeDigitClamp": true,
+    "inactiveDigitClamp": true,
+    "inputFontSize16": true,
+    "mobileStepperTargets44": true,
+    "semanticPhaseColors": true,
+    "modalLightFixtureAbsent": true,
+    "contrast": true
+  }
+}

@@ -1,0 +1,5553 @@
+[
+  {
+    "name": "320x568",
+    "screenshotPath": "docs/design-qa/mobile-readability/after-320x568.png",
+    "metrics": {
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "documentOverflow": 0,
+      "modalOverflow": 0,
+      "scrollBodyOverflow": 0,
+      "modalHeight": 522.546875,
+      "stickyHeight": 304.71875,
+      "timerHeight": 188.125,
+      "activeDigitFontSize": 28,
+      "inputFontSize": 16,
+      "completeRowsVisible": 1,
+      "rowLayouts": [
+        {
+          "rowIndex": 0,
+          "rowRect": {
+            "x": 11.40625,
+            "y": 392.4375,
+            "width": 297.1875,
+            "height": 124,
+            "top": 392.4375,
+            "right": 308.59375,
+            "bottom": 516.4375,
+            "left": 11.40625
+          },
+          "ghostRect": {
+            "x": 186.3125,
+            "y": 478.640625,
+            "width": 122.28125,
+            "height": 17.59375,
+            "top": 478.640625,
+            "right": 308.59375,
+            "bottom": 496.234375,
+            "left": 186.3125
+          },
+          "nextRowRect": null,
+          "elements": [
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 35.40625,
+                "y": 398.4375,
+                "width": 138,
+                "height": 16,
+                "top": 398.4375,
+                "right": 173.40625,
+                "bottom": 414.4375,
+                "left": 35.40625
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 35.40625,
+                "y": 417.4375,
+                "width": 44,
+                "height": 44,
+                "top": 417.4375,
+                "right": 79.40625,
+                "bottom": 461.4375,
+                "left": 35.40625
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 82.40625,
+                "y": 415.4375,
+                "width": 44,
+                "height": 48,
+                "top": 415.4375,
+                "right": 126.40625,
+                "bottom": 463.4375,
+                "left": 82.40625
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 129.40625,
+                "y": 417.4375,
+                "width": 44,
+                "height": 44,
+                "top": 417.4375,
+                "right": 173.40625,
+                "bottom": 461.4375,
+                "left": 129.40625
+              }
+            },
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 174,
+                "y": 398.4375,
+                "width": 138,
+                "height": 16,
+                "top": 398.4375,
+                "right": 312,
+                "bottom": 414.4375,
+                "left": 174
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 174,
+                "y": 417.4375,
+                "width": 44,
+                "height": 44,
+                "top": 417.4375,
+                "right": 218,
+                "bottom": 461.4375,
+                "left": 174
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 221,
+                "y": 415.4375,
+                "width": 44,
+                "height": 48,
+                "top": 415.4375,
+                "right": 265,
+                "bottom": 463.4375,
+                "left": 221
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 268,
+                "y": 417.4375,
+                "width": 44,
+                "height": 44,
+                "top": 417.4375,
+                "right": 312,
+                "bottom": 461.4375,
+                "left": 268
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 35.40625,
+                "y": 465.4375,
+                "width": 44,
+                "height": 44,
+                "top": 465.4375,
+                "right": 79.40625,
+                "bottom": 509.4375,
+                "left": 35.40625
+              }
+            },
+            {
+              "name": "set-done-btn set-done-btn--active",
+              "rect": {
+                "x": 79.40625,
+                "y": 465.4375,
+                "width": 44,
+                "height": 44,
+                "top": 465.4375,
+                "right": 123.40625,
+                "bottom": 509.4375,
+                "left": 79.40625
+              }
+            },
+            {
+              "name": "remove-set-btn",
+              "rect": {
+                "x": 123.40625,
+                "y": 465.4375,
+                "width": 44,
+                "height": 44,
+                "top": 465.4375,
+                "right": 167.40625,
+                "bottom": 509.4375,
+                "left": 123.40625
+              }
+            },
+            {
+              "name": "set-ghost",
+              "rect": {
+                "x": 186.3125,
+                "y": 478.640625,
+                "width": 122.28125,
+                "height": 17.59375,
+                "top": 478.640625,
+                "right": 308.59375,
+                "bottom": 496.234375,
+                "left": 186.3125
+              }
+            }
+          ],
+          "controlOverlaps": [],
+          "contentEscapesRow": false,
+          "flowOverlap": false
+        },
+        {
+          "rowIndex": 1,
+          "rowRect": {
+            "x": 11.40625,
+            "y": 524.4375,
+            "width": 297.1875,
+            "height": 124,
+            "top": 524.4375,
+            "right": 308.59375,
+            "bottom": 648.4375,
+            "left": 11.40625
+          },
+          "ghostRect": {
+            "x": 194.28125,
+            "y": 610.640625,
+            "width": 114.3125,
+            "height": 17.59375,
+            "top": 610.640625,
+            "right": 308.59375,
+            "bottom": 628.234375,
+            "left": 194.28125
+          },
+          "nextRowRect": null,
+          "elements": [
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 35.40625,
+                "y": 530.4375,
+                "width": 138,
+                "height": 16,
+                "top": 530.4375,
+                "right": 173.40625,
+                "bottom": 546.4375,
+                "left": 35.40625
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 35.40625,
+                "y": 549.4375,
+                "width": 44,
+                "height": 44,
+                "top": 549.4375,
+                "right": 79.40625,
+                "bottom": 593.4375,
+                "left": 35.40625
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 82.40625,
+                "y": 547.4375,
+                "width": 44,
+                "height": 48,
+                "top": 547.4375,
+                "right": 126.40625,
+                "bottom": 595.4375,
+                "left": 82.40625
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 129.40625,
+                "y": 549.4375,
+                "width": 44,
+                "height": 44,
+                "top": 549.4375,
+                "right": 173.40625,
+                "bottom": 593.4375,
+                "left": 129.40625
+              }
+            },
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 174,
+                "y": 530.4375,
+                "width": 138,
+                "height": 16,
+                "top": 530.4375,
+                "right": 312,
+                "bottom": 546.4375,
+                "left": 174
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 174,
+                "y": 549.4375,
+                "width": 44,
+                "height": 44,
+                "top": 549.4375,
+                "right": 218,
+                "bottom": 593.4375,
+                "left": 174
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 221,
+                "y": 547.4375,
+                "width": 44,
+                "height": 48,
+                "top": 547.4375,
+                "right": 265,
+                "bottom": 595.4375,
+                "left": 221
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 268,
+                "y": 549.4375,
+                "width": 44,
+                "height": 44,
+                "top": 549.4375,
+                "right": 312,
+                "bottom": 593.4375,
+                "left": 268
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 35.40625,
+                "y": 597.4375,
+                "width": 44,
+                "height": 44,
+                "top": 597.4375,
+                "right": 79.40625,
+                "bottom": 641.4375,
+                "left": 35.40625
+              }
+            },
+            {
+              "name": "set-done-btn set-done-btn--active",
+              "rect": {
+                "x": 79.40625,
+                "y": 597.4375,
+                "width": 44,
+                "height": 44,
+                "top": 597.4375,
+                "right": 123.40625,
+                "bottom": 641.4375,
+                "left": 79.40625
+              }
+            },
+            {
+              "name": "remove-set-btn",
+              "rect": {
+                "x": 123.40625,
+                "y": 597.4375,
+                "width": 44,
+                "height": 44,
+                "top": 597.4375,
+                "right": 167.40625,
+                "bottom": 641.4375,
+                "left": 123.40625
+              }
+            },
+            {
+              "name": "set-ghost",
+              "rect": {
+                "x": 194.28125,
+                "y": 610.640625,
+                "width": 114.3125,
+                "height": 17.59375,
+                "top": 610.640625,
+                "right": 308.59375,
+                "bottom": 628.234375,
+                "left": 194.28125
+              }
+            }
+          ],
+          "controlOverlaps": [],
+          "contentEscapesRow": false,
+          "flowOverlap": false
+        },
+        {
+          "rowIndex": 2,
+          "rowRect": {
+            "x": 11.40625,
+            "y": 656.4375,
+            "width": 297.1875,
+            "height": 124,
+            "top": 656.4375,
+            "right": 308.59375,
+            "bottom": 780.4375,
+            "left": 11.40625
+          },
+          "ghostRect": {
+            "x": 194.28125,
+            "y": 742.640625,
+            "width": 114.3125,
+            "height": 17.59375,
+            "top": 742.640625,
+            "right": 308.59375,
+            "bottom": 760.234375,
+            "left": 194.28125
+          },
+          "nextRowRect": null,
+          "elements": [
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 38.40625,
+                "y": 662.4375,
+                "width": 138,
+                "height": 16,
+                "top": 662.4375,
+                "right": 176.40625,
+                "bottom": 678.4375,
+                "left": 38.40625
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 38.40625,
+                "y": 681.4375,
+                "width": 44,
+                "height": 44,
+                "top": 681.4375,
+                "right": 82.40625,
+                "bottom": 725.4375,
+                "left": 38.40625
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 85.40625,
+                "y": 679.4375,
+                "width": 44,
+                "height": 48,
+                "top": 679.4375,
+                "right": 129.40625,
+                "bottom": 727.4375,
+                "left": 85.40625
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 132.40625,
+                "y": 681.4375,
+                "width": 44,
+                "height": 44,
+                "top": 681.4375,
+                "right": 176.40625,
+                "bottom": 725.4375,
+                "left": 132.40625
+              }
+            },
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 175.5,
+                "y": 662.4375,
+                "width": 138,
+                "height": 16,
+                "top": 662.4375,
+                "right": 313.5,
+                "bottom": 678.4375,
+                "left": 175.5
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 175.5,
+                "y": 681.4375,
+                "width": 44,
+                "height": 44,
+                "top": 681.4375,
+                "right": 219.5,
+                "bottom": 725.4375,
+                "left": 175.5
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 222.5,
+                "y": 679.4375,
+                "width": 44,
+                "height": 48,
+                "top": 679.4375,
+                "right": 266.5,
+                "bottom": 727.4375,
+                "left": 222.5
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 269.5,
+                "y": 681.4375,
+                "width": 44,
+                "height": 44,
+                "top": 681.4375,
+                "right": 313.5,
+                "bottom": 725.4375,
+                "left": 269.5
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 38.40625,
+                "y": 729.4375,
+                "width": 44,
+                "height": 44,
+                "top": 729.4375,
+                "right": 82.40625,
+                "bottom": 773.4375,
+                "left": 38.40625
+              }
+            },
+            {
+              "name": "set-done-btn",
+              "rect": {
+                "x": 82.40625,
+                "y": 729.4375,
+                "width": 44,
+                "height": 44,
+                "top": 729.4375,
+                "right": 126.40625,
+                "bottom": 773.4375,
+                "left": 82.40625
+              }
+            },
+            {
+              "name": "remove-set-btn",
+              "rect": {
+                "x": 126.40625,
+                "y": 729.4375,
+                "width": 44,
+                "height": 44,
+                "top": 729.4375,
+                "right": 170.40625,
+                "bottom": 773.4375,
+                "left": 126.40625
+              }
+            },
+            {
+              "name": "set-ghost",
+              "rect": {
+                "x": 194.28125,
+                "y": 742.640625,
+                "width": 114.3125,
+                "height": 17.59375,
+                "top": 742.640625,
+                "right": 308.59375,
+                "bottom": 760.234375,
+                "left": 194.28125
+              }
+            }
+          ],
+          "controlOverlaps": [],
+          "contentEscapesRow": false,
+          "flowOverlap": false
+        },
+        {
+          "rowIndex": 3,
+          "rowRect": {
+            "x": 11.40625,
+            "y": 788.4375,
+            "width": 297.1875,
+            "height": 124,
+            "top": 788.4375,
+            "right": 308.59375,
+            "bottom": 912.4375,
+            "left": 11.40625
+          },
+          "ghostRect": {
+            "x": 194.28125,
+            "y": 874.640625,
+            "width": 114.3125,
+            "height": 17.59375,
+            "top": 874.640625,
+            "right": 308.59375,
+            "bottom": 892.234375,
+            "left": 194.28125
+          },
+          "nextRowRect": null,
+          "elements": [
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 35.40625,
+                "y": 794.4375,
+                "width": 138,
+                "height": 16,
+                "top": 794.4375,
+                "right": 173.40625,
+                "bottom": 810.4375,
+                "left": 35.40625
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 35.40625,
+                "y": 813.4375,
+                "width": 44,
+                "height": 44,
+                "top": 813.4375,
+                "right": 79.40625,
+                "bottom": 857.4375,
+                "left": 35.40625
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 82.40625,
+                "y": 811.4375,
+                "width": 44,
+                "height": 48,
+                "top": 811.4375,
+                "right": 126.40625,
+                "bottom": 859.4375,
+                "left": 82.40625
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 129.40625,
+                "y": 813.4375,
+                "width": 44,
+                "height": 44,
+                "top": 813.4375,
+                "right": 173.40625,
+                "bottom": 857.4375,
+                "left": 129.40625
+              }
+            },
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 174,
+                "y": 794.4375,
+                "width": 138,
+                "height": 16,
+                "top": 794.4375,
+                "right": 312,
+                "bottom": 810.4375,
+                "left": 174
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 174,
+                "y": 813.4375,
+                "width": 44,
+                "height": 44,
+                "top": 813.4375,
+                "right": 218,
+                "bottom": 857.4375,
+                "left": 174
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 221,
+                "y": 811.4375,
+                "width": 44,
+                "height": 48,
+                "top": 811.4375,
+                "right": 265,
+                "bottom": 859.4375,
+                "left": 221
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 268,
+                "y": 813.4375,
+                "width": 44,
+                "height": 44,
+                "top": 813.4375,
+                "right": 312,
+                "bottom": 857.4375,
+                "left": 268
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 35.40625,
+                "y": 861.4375,
+                "width": 44,
+                "height": 44,
+                "top": 861.4375,
+                "right": 79.40625,
+                "bottom": 905.4375,
+                "left": 35.40625
+              }
+            },
+            {
+              "name": "set-done-btn",
+              "rect": {
+                "x": 79.40625,
+                "y": 861.4375,
+                "width": 44,
+                "height": 44,
+                "top": 861.4375,
+                "right": 123.40625,
+                "bottom": 905.4375,
+                "left": 79.40625
+              }
+            },
+            {
+              "name": "remove-set-btn",
+              "rect": {
+                "x": 123.40625,
+                "y": 861.4375,
+                "width": 44,
+                "height": 44,
+                "top": 861.4375,
+                "right": 167.40625,
+                "bottom": 905.4375,
+                "left": 123.40625
+              }
+            },
+            {
+              "name": "set-ghost",
+              "rect": {
+                "x": 194.28125,
+                "y": 874.640625,
+                "width": 114.3125,
+                "height": 17.59375,
+                "top": 874.640625,
+                "right": 308.59375,
+                "bottom": 892.234375,
+                "left": 194.28125
+              }
+            }
+          ],
+          "controlOverlaps": [],
+          "contentEscapesRow": false,
+          "flowOverlap": false
+        }
+      ],
+      "minControlSize": 44,
+      "srOnly": {
+        "position": "absolute",
+        "width": "1px",
+        "height": "1px",
+        "overflow": "hidden"
+      },
+      "lightBackgrounds": [],
+      "colors": {
+        "activeBorder": "rgb(227, 168, 59)",
+        "restPickerValue": "rgb(227, 168, 59)",
+        "modalSubContrast": 8.69300070033934,
+        "setGhostContrast": 7.088056251648137,
+        "setNumContrast": 7.088056251648137,
+        "timerLabelContrast": 6.179338741063544
+      }
+    },
+    "verdict": {
+      "noDocumentOverflow": true,
+      "noModalOverflow": true,
+      "modalAtMost92dvh": true,
+      "timerAtMost40Percent390": true,
+      "threeRowsVisible390": true,
+      "noSetControlOverlaps": true,
+      "setContentContained": true,
+      "noSetFlowOverlaps": true,
+      "digitClamp": true,
+      "inputFontSize": true,
+      "touchTargets": true,
+      "srOnlyHidden": true,
+      "noLightModalBackgrounds": true,
+      "contrast": true
+    }
+  },
+  {
+    "name": "360x640",
+    "screenshotPath": "docs/design-qa/mobile-readability/after-360x640.png",
+    "metrics": {
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "documentOverflow": 0,
+      "modalOverflow": 0,
+      "scrollBodyOverflow": 0,
+      "modalHeight": 588.796875,
+      "stickyHeight": 304.71875,
+      "timerHeight": 188.125,
+      "activeDigitFontSize": 28,
+      "inputFontSize": 16,
+      "completeRowsVisible": 1,
+      "rowLayouts": [
+        {
+          "rowIndex": 0,
+          "rowRect": {
+            "x": 12.203125,
+            "y": 395.3125,
+            "width": 335.59375,
+            "height": 124,
+            "top": 395.3125,
+            "right": 347.796875,
+            "bottom": 519.3125,
+            "left": 12.203125
+          },
+          "ghostRect": {
+            "x": 225.515625,
+            "y": 481.515625,
+            "width": 122.28125,
+            "height": 17.59375,
+            "top": 481.515625,
+            "right": 347.796875,
+            "bottom": 499.109375,
+            "left": 225.515625
+          },
+          "nextRowRect": null,
+          "elements": [
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 36.203125,
+                "y": 401.3125,
+                "width": 153.796875,
+                "height": 16,
+                "top": 401.3125,
+                "right": 190,
+                "bottom": 417.3125,
+                "left": 36.203125
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 36.203125,
+                "y": 420.3125,
+                "width": 44,
+                "height": 44,
+                "top": 420.3125,
+                "right": 80.203125,
+                "bottom": 464.3125,
+                "left": 36.203125
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 83.203125,
+                "y": 418.3125,
+                "width": 59.796875,
+                "height": 48,
+                "top": 418.3125,
+                "right": 143,
+                "bottom": 466.3125,
+                "left": 83.203125
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 146,
+                "y": 420.3125,
+                "width": 44,
+                "height": 44,
+                "top": 420.3125,
+                "right": 190,
+                "bottom": 464.3125,
+                "left": 146
+              }
+            },
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 194,
+                "y": 401.3125,
+                "width": 153.796875,
+                "height": 16,
+                "top": 401.3125,
+                "right": 347.796875,
+                "bottom": 417.3125,
+                "left": 194
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 194,
+                "y": 420.3125,
+                "width": 44,
+                "height": 44,
+                "top": 420.3125,
+                "right": 238,
+                "bottom": 464.3125,
+                "left": 194
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 241,
+                "y": 418.3125,
+                "width": 59.796875,
+                "height": 48,
+                "top": 418.3125,
+                "right": 300.796875,
+                "bottom": 466.3125,
+                "left": 241
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 303.796875,
+                "y": 420.3125,
+                "width": 44,
+                "height": 44,
+                "top": 420.3125,
+                "right": 347.796875,
+                "bottom": 464.3125,
+                "left": 303.796875
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 36.203125,
+                "y": 468.3125,
+                "width": 44,
+                "height": 44,
+                "top": 468.3125,
+                "right": 80.203125,
+                "bottom": 512.3125,
+                "left": 36.203125
+              }
+            },
+            {
+              "name": "set-done-btn set-done-btn--active",
+              "rect": {
+                "x": 80.203125,
+                "y": 468.3125,
+                "width": 44,
+                "height": 44,
+                "top": 468.3125,
+                "right": 124.203125,
+                "bottom": 512.3125,
+                "left": 80.203125
+              }
+            },
+            {
+              "name": "remove-set-btn",
+              "rect": {
+                "x": 124.203125,
+                "y": 468.3125,
+                "width": 44,
+                "height": 44,
+                "top": 468.3125,
+                "right": 168.203125,
+                "bottom": 512.3125,
+                "left": 124.203125
+              }
+            },
+            {
+              "name": "set-ghost",
+              "rect": {
+                "x": 225.515625,
+                "y": 481.515625,
+                "width": 122.28125,
+                "height": 17.59375,
+                "top": 481.515625,
+                "right": 347.796875,
+                "bottom": 499.109375,
+                "left": 225.515625
+              }
+            }
+          ],
+          "controlOverlaps": [],
+          "contentEscapesRow": false,
+          "flowOverlap": false
+        },
+        {
+          "rowIndex": 1,
+          "rowRect": {
+            "x": 12.203125,
+            "y": 527.3125,
+            "width": 335.59375,
+            "height": 124,
+            "top": 527.3125,
+            "right": 347.796875,
+            "bottom": 651.3125,
+            "left": 12.203125
+          },
+          "ghostRect": {
+            "x": 233.484375,
+            "y": 613.515625,
+            "width": 114.3125,
+            "height": 17.59375,
+            "top": 613.515625,
+            "right": 347.796875,
+            "bottom": 631.109375,
+            "left": 233.484375
+          },
+          "nextRowRect": null,
+          "elements": [
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 36.203125,
+                "y": 533.3125,
+                "width": 153.796875,
+                "height": 16,
+                "top": 533.3125,
+                "right": 190,
+                "bottom": 549.3125,
+                "left": 36.203125
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 36.203125,
+                "y": 552.3125,
+                "width": 44,
+                "height": 44,
+                "top": 552.3125,
+                "right": 80.203125,
+                "bottom": 596.3125,
+                "left": 36.203125
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 83.203125,
+                "y": 550.3125,
+                "width": 59.796875,
+                "height": 48,
+                "top": 550.3125,
+                "right": 143,
+                "bottom": 598.3125,
+                "left": 83.203125
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 146,
+                "y": 552.3125,
+                "width": 44,
+                "height": 44,
+                "top": 552.3125,
+                "right": 190,
+                "bottom": 596.3125,
+                "left": 146
+              }
+            },
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 194,
+                "y": 533.3125,
+                "width": 153.796875,
+                "height": 16,
+                "top": 533.3125,
+                "right": 347.796875,
+                "bottom": 549.3125,
+                "left": 194
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 194,
+                "y": 552.3125,
+                "width": 44,
+                "height": 44,
+                "top": 552.3125,
+                "right": 238,
+                "bottom": 596.3125,
+                "left": 194
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 241,
+                "y": 550.3125,
+                "width": 59.796875,
+                "height": 48,
+                "top": 550.3125,
+                "right": 300.796875,
+                "bottom": 598.3125,
+                "left": 241
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 303.796875,
+                "y": 552.3125,
+                "width": 44,
+                "height": 44,
+                "top": 552.3125,
+                "right": 347.796875,
+                "bottom": 596.3125,
+                "left": 303.796875
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 36.203125,
+                "y": 600.3125,
+                "width": 44,
+                "height": 44,
+                "top": 600.3125,
+                "right": 80.203125,
+                "bottom": 644.3125,
+                "left": 36.203125
+              }
+            },
+            {
+              "name": "set-done-btn set-done-btn--active",
+              "rect": {
+                "x": 80.203125,
+                "y": 600.3125,
+                "width": 44,
+                "height": 44,
+                "top": 600.3125,
+                "right": 124.203125,
+                "bottom": 644.3125,
+                "left": 80.203125
+              }
+            },
+            {
+              "name": "remove-set-btn",
+              "rect": {
+                "x": 124.203125,
+                "y": 600.3125,
+                "width": 44,
+                "height": 44,
+                "top": 600.3125,
+                "right": 168.203125,
+                "bottom": 644.3125,
+                "left": 124.203125
+              }
+            },
+            {
+              "name": "set-ghost",
+              "rect": {
+                "x": 233.484375,
+                "y": 613.515625,
+                "width": 114.3125,
+                "height": 17.59375,
+                "top": 613.515625,
+                "right": 347.796875,
+                "bottom": 631.109375,
+                "left": 233.484375
+              }
+            }
+          ],
+          "controlOverlaps": [],
+          "contentEscapesRow": false,
+          "flowOverlap": false
+        },
+        {
+          "rowIndex": 2,
+          "rowRect": {
+            "x": 12.203125,
+            "y": 659.3125,
+            "width": 335.59375,
+            "height": 124,
+            "top": 659.3125,
+            "right": 347.796875,
+            "bottom": 783.3125,
+            "left": 12.203125
+          },
+          "ghostRect": {
+            "x": 233.484375,
+            "y": 745.515625,
+            "width": 114.3125,
+            "height": 17.59375,
+            "top": 745.515625,
+            "right": 347.796875,
+            "bottom": 763.109375,
+            "left": 233.484375
+          },
+          "nextRowRect": null,
+          "elements": [
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 39.203125,
+                "y": 665.3125,
+                "width": 152.296875,
+                "height": 16,
+                "top": 665.3125,
+                "right": 191.5,
+                "bottom": 681.3125,
+                "left": 39.203125
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 39.203125,
+                "y": 684.3125,
+                "width": 44,
+                "height": 44,
+                "top": 684.3125,
+                "right": 83.203125,
+                "bottom": 728.3125,
+                "left": 39.203125
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 86.203125,
+                "y": 682.3125,
+                "width": 58.296875,
+                "height": 48,
+                "top": 682.3125,
+                "right": 144.5,
+                "bottom": 730.3125,
+                "left": 86.203125
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 147.5,
+                "y": 684.3125,
+                "width": 44,
+                "height": 44,
+                "top": 684.3125,
+                "right": 191.5,
+                "bottom": 728.3125,
+                "left": 147.5
+              }
+            },
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 195.5,
+                "y": 665.3125,
+                "width": 152.296875,
+                "height": 16,
+                "top": 665.3125,
+                "right": 347.796875,
+                "bottom": 681.3125,
+                "left": 195.5
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 195.5,
+                "y": 684.3125,
+                "width": 44,
+                "height": 44,
+                "top": 684.3125,
+                "right": 239.5,
+                "bottom": 728.3125,
+                "left": 195.5
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 242.5,
+                "y": 682.3125,
+                "width": 58.296875,
+                "height": 48,
+                "top": 682.3125,
+                "right": 300.796875,
+                "bottom": 730.3125,
+                "left": 242.5
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 303.796875,
+                "y": 684.3125,
+                "width": 44,
+                "height": 44,
+                "top": 684.3125,
+                "right": 347.796875,
+                "bottom": 728.3125,
+                "left": 303.796875
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 39.203125,
+                "y": 732.3125,
+                "width": 44,
+                "height": 44,
+                "top": 732.3125,
+                "right": 83.203125,
+                "bottom": 776.3125,
+                "left": 39.203125
+              }
+            },
+            {
+              "name": "set-done-btn",
+              "rect": {
+                "x": 83.203125,
+                "y": 732.3125,
+                "width": 44,
+                "height": 44,
+                "top": 732.3125,
+                "right": 127.203125,
+                "bottom": 776.3125,
+                "left": 83.203125
+              }
+            },
+            {
+              "name": "remove-set-btn",
+              "rect": {
+                "x": 127.203125,
+                "y": 732.3125,
+                "width": 44,
+                "height": 44,
+                "top": 732.3125,
+                "right": 171.203125,
+                "bottom": 776.3125,
+                "left": 127.203125
+              }
+            },
+            {
+              "name": "set-ghost",
+              "rect": {
+                "x": 233.484375,
+                "y": 745.515625,
+                "width": 114.3125,
+                "height": 17.59375,
+                "top": 745.515625,
+                "right": 347.796875,
+                "bottom": 763.109375,
+                "left": 233.484375
+              }
+            }
+          ],
+          "controlOverlaps": [],
+          "contentEscapesRow": false,
+          "flowOverlap": false
+        },
+        {
+          "rowIndex": 3,
+          "rowRect": {
+            "x": 12.203125,
+            "y": 791.3125,
+            "width": 335.59375,
+            "height": 124,
+            "top": 791.3125,
+            "right": 347.796875,
+            "bottom": 915.3125,
+            "left": 12.203125
+          },
+          "ghostRect": {
+            "x": 233.484375,
+            "y": 877.515625,
+            "width": 114.3125,
+            "height": 17.59375,
+            "top": 877.515625,
+            "right": 347.796875,
+            "bottom": 895.109375,
+            "left": 233.484375
+          },
+          "nextRowRect": null,
+          "elements": [
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 36.203125,
+                "y": 797.3125,
+                "width": 153.796875,
+                "height": 16,
+                "top": 797.3125,
+                "right": 190,
+                "bottom": 813.3125,
+                "left": 36.203125
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 36.203125,
+                "y": 816.3125,
+                "width": 44,
+                "height": 44,
+                "top": 816.3125,
+                "right": 80.203125,
+                "bottom": 860.3125,
+                "left": 36.203125
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 83.203125,
+                "y": 814.3125,
+                "width": 59.796875,
+                "height": 48,
+                "top": 814.3125,
+                "right": 143,
+                "bottom": 862.3125,
+                "left": 83.203125
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 146,
+                "y": 816.3125,
+                "width": 44,
+                "height": 44,
+                "top": 816.3125,
+                "right": 190,
+                "bottom": 860.3125,
+                "left": 146
+              }
+            },
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 194,
+                "y": 797.3125,
+                "width": 153.796875,
+                "height": 16,
+                "top": 797.3125,
+                "right": 347.796875,
+                "bottom": 813.3125,
+                "left": 194
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 194,
+                "y": 816.3125,
+                "width": 44,
+                "height": 44,
+                "top": 816.3125,
+                "right": 238,
+                "bottom": 860.3125,
+                "left": 194
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 241,
+                "y": 814.3125,
+                "width": 59.796875,
+                "height": 48,
+                "top": 814.3125,
+                "right": 300.796875,
+                "bottom": 862.3125,
+                "left": 241
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 303.796875,
+                "y": 816.3125,
+                "width": 44,
+                "height": 44,
+                "top": 816.3125,
+                "right": 347.796875,
+                "bottom": 860.3125,
+                "left": 303.796875
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 36.203125,
+                "y": 864.3125,
+                "width": 44,
+                "height": 44,
+                "top": 864.3125,
+                "right": 80.203125,
+                "bottom": 908.3125,
+                "left": 36.203125
+              }
+            },
+            {
+              "name": "set-done-btn",
+              "rect": {
+                "x": 80.203125,
+                "y": 864.3125,
+                "width": 44,
+                "height": 44,
+                "top": 864.3125,
+                "right": 124.203125,
+                "bottom": 908.3125,
+                "left": 80.203125
+              }
+            },
+            {
+              "name": "remove-set-btn",
+              "rect": {
+                "x": 124.203125,
+                "y": 864.3125,
+                "width": 44,
+                "height": 44,
+                "top": 864.3125,
+                "right": 168.203125,
+                "bottom": 908.3125,
+                "left": 124.203125
+              }
+            },
+            {
+              "name": "set-ghost",
+              "rect": {
+                "x": 233.484375,
+                "y": 877.515625,
+                "width": 114.3125,
+                "height": 17.59375,
+                "top": 877.515625,
+                "right": 347.796875,
+                "bottom": 895.109375,
+                "left": 233.484375
+              }
+            }
+          ],
+          "controlOverlaps": [],
+          "contentEscapesRow": false,
+          "flowOverlap": false
+        }
+      ],
+      "minControlSize": 44,
+      "srOnly": {
+        "position": "absolute",
+        "width": "1px",
+        "height": "1px",
+        "overflow": "hidden"
+      },
+      "lightBackgrounds": [],
+      "colors": {
+        "activeBorder": "rgb(227, 168, 59)",
+        "restPickerValue": "rgb(227, 168, 59)",
+        "modalSubContrast": 8.69300070033934,
+        "setGhostContrast": 7.088056251648137,
+        "setNumContrast": 7.088056251648137,
+        "timerLabelContrast": 6.179338741063544
+      }
+    },
+    "verdict": {
+      "noDocumentOverflow": true,
+      "noModalOverflow": true,
+      "modalAtMost92dvh": true,
+      "timerAtMost40Percent390": true,
+      "threeRowsVisible390": true,
+      "noSetControlOverlaps": true,
+      "setContentContained": true,
+      "noSetFlowOverlaps": true,
+      "digitClamp": true,
+      "inputFontSize": true,
+      "touchTargets": true,
+      "srOnlyHidden": true,
+      "noLightModalBackgrounds": true,
+      "contrast": true
+    }
+  },
+  {
+    "name": "375x667",
+    "screenshotPath": "docs/design-qa/mobile-readability/after-375x667.png",
+    "metrics": {
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "documentOverflow": 0,
+      "modalOverflow": 0,
+      "scrollBodyOverflow": 0,
+      "modalHeight": 613.625,
+      "stickyHeight": 252,
+      "timerHeight": 135.40625,
+      "activeDigitFontSize": 28.125,
+      "inputFontSize": 16,
+      "completeRowsVisible": 2,
+      "rowLayouts": [
+        {
+          "rowIndex": 0,
+          "rowRect": {
+            "x": 20.5,
+            "y": 343.6875,
+            "width": 334,
+            "height": 123,
+            "top": 343.6875,
+            "right": 354.5,
+            "bottom": 466.6875,
+            "left": 20.5
+          },
+          "ghostRect": {
+            "x": 232.21875,
+            "y": 428.890625,
+            "width": 122.28125,
+            "height": 17.59375,
+            "top": 428.890625,
+            "right": 354.5,
+            "bottom": 446.484375,
+            "left": 232.21875
+          },
+          "nextRowRect": null,
+          "elements": [
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 49.75,
+                "y": 349.6875,
+                "width": 149.75,
+                "height": 16,
+                "top": 349.6875,
+                "right": 199.5,
+                "bottom": 365.6875,
+                "left": 49.75
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 49.75,
+                "y": 367.6875,
+                "width": 44,
+                "height": 44,
+                "top": 367.6875,
+                "right": 93.75,
+                "bottom": 411.6875,
+                "left": 49.75
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 97.75,
+                "y": 365.6875,
+                "width": 53.75,
+                "height": 48,
+                "top": 365.6875,
+                "right": 151.5,
+                "bottom": 413.6875,
+                "left": 97.75
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 155.5,
+                "y": 367.6875,
+                "width": 44,
+                "height": 44,
+                "top": 367.6875,
+                "right": 199.5,
+                "bottom": 411.6875,
+                "left": 155.5
+              }
+            },
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 204.75,
+                "y": 349.6875,
+                "width": 149.75,
+                "height": 16,
+                "top": 349.6875,
+                "right": 354.5,
+                "bottom": 365.6875,
+                "left": 204.75
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 204.75,
+                "y": 367.6875,
+                "width": 44,
+                "height": 44,
+                "top": 367.6875,
+                "right": 248.75,
+                "bottom": 411.6875,
+                "left": 204.75
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 252.75,
+                "y": 365.6875,
+                "width": 53.75,
+                "height": 48,
+                "top": 365.6875,
+                "right": 306.5,
+                "bottom": 413.6875,
+                "left": 252.75
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 310.5,
+                "y": 367.6875,
+                "width": 44,
+                "height": 44,
+                "top": 367.6875,
+                "right": 354.5,
+                "bottom": 411.6875,
+                "left": 310.5
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 49.75,
+                "y": 415.6875,
+                "width": 44,
+                "height": 44,
+                "top": 415.6875,
+                "right": 93.75,
+                "bottom": 459.6875,
+                "left": 49.75
+              }
+            },
+            {
+              "name": "set-done-btn set-done-btn--active",
+              "rect": {
+                "x": 93.75,
+                "y": 415.6875,
+                "width": 44,
+                "height": 44,
+                "top": 415.6875,
+                "right": 137.75,
+                "bottom": 459.6875,
+                "left": 93.75
+              }
+            },
+            {
+              "name": "remove-set-btn",
+              "rect": {
+                "x": 137.75,
+                "y": 415.6875,
+                "width": 44,
+                "height": 44,
+                "top": 415.6875,
+                "right": 181.75,
+                "bottom": 459.6875,
+                "left": 137.75
+              }
+            },
+            {
+              "name": "set-ghost",
+              "rect": {
+                "x": 232.21875,
+                "y": 428.890625,
+                "width": 122.28125,
+                "height": 17.59375,
+                "top": 428.890625,
+                "right": 354.5,
+                "bottom": 446.484375,
+                "left": 232.21875
+              }
+            }
+          ],
+          "controlOverlaps": [],
+          "contentEscapesRow": false,
+          "flowOverlap": false
+        },
+        {
+          "rowIndex": 1,
+          "rowRect": {
+            "x": 20.5,
+            "y": 474.6875,
+            "width": 334,
+            "height": 123,
+            "top": 474.6875,
+            "right": 354.5,
+            "bottom": 597.6875,
+            "left": 20.5
+          },
+          "ghostRect": {
+            "x": 240.1875,
+            "y": 559.890625,
+            "width": 114.3125,
+            "height": 17.59375,
+            "top": 559.890625,
+            "right": 354.5,
+            "bottom": 577.484375,
+            "left": 240.1875
+          },
+          "nextRowRect": null,
+          "elements": [
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 49.75,
+                "y": 480.6875,
+                "width": 149.75,
+                "height": 16,
+                "top": 480.6875,
+                "right": 199.5,
+                "bottom": 496.6875,
+                "left": 49.75
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 49.75,
+                "y": 498.6875,
+                "width": 44,
+                "height": 44,
+                "top": 498.6875,
+                "right": 93.75,
+                "bottom": 542.6875,
+                "left": 49.75
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 97.75,
+                "y": 496.6875,
+                "width": 53.75,
+                "height": 48,
+                "top": 496.6875,
+                "right": 151.5,
+                "bottom": 544.6875,
+                "left": 97.75
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 155.5,
+                "y": 498.6875,
+                "width": 44,
+                "height": 44,
+                "top": 498.6875,
+                "right": 199.5,
+                "bottom": 542.6875,
+                "left": 155.5
+              }
+            },
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 204.75,
+                "y": 480.6875,
+                "width": 149.75,
+                "height": 16,
+                "top": 480.6875,
+                "right": 354.5,
+                "bottom": 496.6875,
+                "left": 204.75
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 204.75,
+                "y": 498.6875,
+                "width": 44,
+                "height": 44,
+                "top": 498.6875,
+                "right": 248.75,
+                "bottom": 542.6875,
+                "left": 204.75
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 252.75,
+                "y": 496.6875,
+                "width": 53.75,
+                "height": 48,
+                "top": 496.6875,
+                "right": 306.5,
+                "bottom": 544.6875,
+                "left": 252.75
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 310.5,
+                "y": 498.6875,
+                "width": 44,
+                "height": 44,
+                "top": 498.6875,
+                "right": 354.5,
+                "bottom": 542.6875,
+                "left": 310.5
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 49.75,
+                "y": 546.6875,
+                "width": 44,
+                "height": 44,
+                "top": 546.6875,
+                "right": 93.75,
+                "bottom": 590.6875,
+                "left": 49.75
+              }
+            },
+            {
+              "name": "set-done-btn set-done-btn--active",
+              "rect": {
+                "x": 93.75,
+                "y": 546.6875,
+                "width": 44,
+                "height": 44,
+                "top": 546.6875,
+                "right": 137.75,
+                "bottom": 590.6875,
+                "left": 93.75
+              }
+            },
+            {
+              "name": "remove-set-btn",
+              "rect": {
+                "x": 137.75,
+                "y": 546.6875,
+                "width": 44,
+                "height": 44,
+                "top": 546.6875,
+                "right": 181.75,
+                "bottom": 590.6875,
+                "left": 137.75
+              }
+            },
+            {
+              "name": "set-ghost",
+              "rect": {
+                "x": 240.1875,
+                "y": 559.890625,
+                "width": 114.3125,
+                "height": 17.59375,
+                "top": 559.890625,
+                "right": 354.5,
+                "bottom": 577.484375,
+                "left": 240.1875
+              }
+            }
+          ],
+          "controlOverlaps": [],
+          "contentEscapesRow": false,
+          "flowOverlap": false
+        },
+        {
+          "rowIndex": 2,
+          "rowRect": {
+            "x": 20.5,
+            "y": 605.6875,
+            "width": 334,
+            "height": 123,
+            "top": 605.6875,
+            "right": 354.5,
+            "bottom": 728.6875,
+            "left": 20.5
+          },
+          "ghostRect": {
+            "x": 240.1875,
+            "y": 690.890625,
+            "width": 114.3125,
+            "height": 17.59375,
+            "top": 690.890625,
+            "right": 354.5,
+            "bottom": 708.484375,
+            "left": 240.1875
+          },
+          "nextRowRect": null,
+          "elements": [
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 52.75,
+                "y": 611.6875,
+                "width": 148.25,
+                "height": 16,
+                "top": 611.6875,
+                "right": 201,
+                "bottom": 627.6875,
+                "left": 52.75
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 52.75,
+                "y": 629.6875,
+                "width": 44,
+                "height": 44,
+                "top": 629.6875,
+                "right": 96.75,
+                "bottom": 673.6875,
+                "left": 52.75
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 100.75,
+                "y": 627.6875,
+                "width": 52.25,
+                "height": 48,
+                "top": 627.6875,
+                "right": 153,
+                "bottom": 675.6875,
+                "left": 100.75
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 157,
+                "y": 629.6875,
+                "width": 44,
+                "height": 44,
+                "top": 629.6875,
+                "right": 201,
+                "bottom": 673.6875,
+                "left": 157
+              }
+            },
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 206.25,
+                "y": 611.6875,
+                "width": 148.25,
+                "height": 16,
+                "top": 611.6875,
+                "right": 354.5,
+                "bottom": 627.6875,
+                "left": 206.25
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 206.25,
+                "y": 629.6875,
+                "width": 44,
+                "height": 44,
+                "top": 629.6875,
+                "right": 250.25,
+                "bottom": 673.6875,
+                "left": 206.25
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 254.25,
+                "y": 627.6875,
+                "width": 52.25,
+                "height": 48,
+                "top": 627.6875,
+                "right": 306.5,
+                "bottom": 675.6875,
+                "left": 254.25
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 310.5,
+                "y": 629.6875,
+                "width": 44,
+                "height": 44,
+                "top": 629.6875,
+                "right": 354.5,
+                "bottom": 673.6875,
+                "left": 310.5
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 52.75,
+                "y": 677.6875,
+                "width": 44,
+                "height": 44,
+                "top": 677.6875,
+                "right": 96.75,
+                "bottom": 721.6875,
+                "left": 52.75
+              }
+            },
+            {
+              "name": "set-done-btn",
+              "rect": {
+                "x": 96.75,
+                "y": 677.6875,
+                "width": 44,
+                "height": 44,
+                "top": 677.6875,
+                "right": 140.75,
+                "bottom": 721.6875,
+                "left": 96.75
+              }
+            },
+            {
+              "name": "remove-set-btn",
+              "rect": {
+                "x": 140.75,
+                "y": 677.6875,
+                "width": 44,
+                "height": 44,
+                "top": 677.6875,
+                "right": 184.75,
+                "bottom": 721.6875,
+                "left": 140.75
+              }
+            },
+            {
+              "name": "set-ghost",
+              "rect": {
+                "x": 240.1875,
+                "y": 690.890625,
+                "width": 114.3125,
+                "height": 17.59375,
+                "top": 690.890625,
+                "right": 354.5,
+                "bottom": 708.484375,
+                "left": 240.1875
+              }
+            }
+          ],
+          "controlOverlaps": [],
+          "contentEscapesRow": false,
+          "flowOverlap": false
+        },
+        {
+          "rowIndex": 3,
+          "rowRect": {
+            "x": 20.5,
+            "y": 736.6875,
+            "width": 334,
+            "height": 123,
+            "top": 736.6875,
+            "right": 354.5,
+            "bottom": 859.6875,
+            "left": 20.5
+          },
+          "ghostRect": {
+            "x": 240.1875,
+            "y": 821.890625,
+            "width": 114.3125,
+            "height": 17.59375,
+            "top": 821.890625,
+            "right": 354.5,
+            "bottom": 839.484375,
+            "left": 240.1875
+          },
+          "nextRowRect": null,
+          "elements": [
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 49.75,
+                "y": 742.6875,
+                "width": 149.75,
+                "height": 16,
+                "top": 742.6875,
+                "right": 199.5,
+                "bottom": 758.6875,
+                "left": 49.75
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 49.75,
+                "y": 760.6875,
+                "width": 44,
+                "height": 44,
+                "top": 760.6875,
+                "right": 93.75,
+                "bottom": 804.6875,
+                "left": 49.75
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 97.75,
+                "y": 758.6875,
+                "width": 53.75,
+                "height": 48,
+                "top": 758.6875,
+                "right": 151.5,
+                "bottom": 806.6875,
+                "left": 97.75
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 155.5,
+                "y": 760.6875,
+                "width": 44,
+                "height": 44,
+                "top": 760.6875,
+                "right": 199.5,
+                "bottom": 804.6875,
+                "left": 155.5
+              }
+            },
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 204.75,
+                "y": 742.6875,
+                "width": 149.75,
+                "height": 16,
+                "top": 742.6875,
+                "right": 354.5,
+                "bottom": 758.6875,
+                "left": 204.75
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 204.75,
+                "y": 760.6875,
+                "width": 44,
+                "height": 44,
+                "top": 760.6875,
+                "right": 248.75,
+                "bottom": 804.6875,
+                "left": 204.75
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 252.75,
+                "y": 758.6875,
+                "width": 53.75,
+                "height": 48,
+                "top": 758.6875,
+                "right": 306.5,
+                "bottom": 806.6875,
+                "left": 252.75
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 310.5,
+                "y": 760.6875,
+                "width": 44,
+                "height": 44,
+                "top": 760.6875,
+                "right": 354.5,
+                "bottom": 804.6875,
+                "left": 310.5
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 49.75,
+                "y": 808.6875,
+                "width": 44,
+                "height": 44,
+                "top": 808.6875,
+                "right": 93.75,
+                "bottom": 852.6875,
+                "left": 49.75
+              }
+            },
+            {
+              "name": "set-done-btn",
+              "rect": {
+                "x": 93.75,
+                "y": 808.6875,
+                "width": 44,
+                "height": 44,
+                "top": 808.6875,
+                "right": 137.75,
+                "bottom": 852.6875,
+                "left": 93.75
+              }
+            },
+            {
+              "name": "remove-set-btn",
+              "rect": {
+                "x": 137.75,
+                "y": 808.6875,
+                "width": 44,
+                "height": 44,
+                "top": 808.6875,
+                "right": 181.75,
+                "bottom": 852.6875,
+                "left": 137.75
+              }
+            },
+            {
+              "name": "set-ghost",
+              "rect": {
+                "x": 240.1875,
+                "y": 821.890625,
+                "width": 114.3125,
+                "height": 17.59375,
+                "top": 821.890625,
+                "right": 354.5,
+                "bottom": 839.484375,
+                "left": 240.1875
+              }
+            }
+          ],
+          "controlOverlaps": [],
+          "contentEscapesRow": false,
+          "flowOverlap": false
+        }
+      ],
+      "minControlSize": 44,
+      "srOnly": {
+        "position": "absolute",
+        "width": "1px",
+        "height": "1px",
+        "overflow": "hidden"
+      },
+      "lightBackgrounds": [],
+      "colors": {
+        "activeBorder": "rgb(227, 168, 59)",
+        "restPickerValue": "rgb(227, 168, 59)",
+        "modalSubContrast": 8.69300070033934,
+        "setGhostContrast": 7.088056251648137,
+        "setNumContrast": 7.088056251648137,
+        "timerLabelContrast": 6.179338741063544
+      }
+    },
+    "verdict": {
+      "noDocumentOverflow": true,
+      "noModalOverflow": true,
+      "modalAtMost92dvh": true,
+      "timerAtMost40Percent390": true,
+      "threeRowsVisible390": true,
+      "noSetControlOverlaps": true,
+      "setContentContained": true,
+      "noSetFlowOverlaps": true,
+      "digitClamp": true,
+      "inputFontSize": true,
+      "touchTargets": true,
+      "srOnlyHidden": true,
+      "noLightModalBackgrounds": true,
+      "contrast": true
+    }
+  },
+  {
+    "name": "390x844",
+    "screenshotPath": "docs/design-qa/mobile-readability/after-390x844.png",
+    "metrics": {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "documentOverflow": 0,
+      "modalOverflow": 0,
+      "scrollBodyOverflow": 0,
+      "modalHeight": 720,
+      "stickyHeight": 253.46875,
+      "timerHeight": 136.875,
+      "activeDigitFontSize": 29.25,
+      "inputFontSize": 16,
+      "completeRowsVisible": 3,
+      "rowLayouts": [
+        {
+          "rowIndex": 0,
+          "rowRect": {
+            "x": 20.796875,
+            "y": 380.46875,
+            "width": 348.390625,
+            "height": 123,
+            "top": 380.46875,
+            "right": 369.1875,
+            "bottom": 503.46875,
+            "left": 20.796875
+          },
+          "ghostRect": {
+            "x": 246.90625,
+            "y": 465.671875,
+            "width": 122.28125,
+            "height": 17.59375,
+            "top": 465.671875,
+            "right": 369.1875,
+            "bottom": 483.265625,
+            "left": 246.90625
+          },
+          "nextRowRect": null,
+          "elements": [
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 50.25,
+                "y": 386.46875,
+                "width": 156.734375,
+                "height": 16,
+                "top": 386.46875,
+                "right": 206.984375,
+                "bottom": 402.46875,
+                "left": 50.25
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 50.25,
+                "y": 404.46875,
+                "width": 44,
+                "height": 44,
+                "top": 404.46875,
+                "right": 94.25,
+                "bottom": 448.46875,
+                "left": 50.25
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 98.25,
+                "y": 402.46875,
+                "width": 60.734375,
+                "height": 48,
+                "top": 402.46875,
+                "right": 158.984375,
+                "bottom": 450.46875,
+                "left": 98.25
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 162.984375,
+                "y": 404.46875,
+                "width": 44,
+                "height": 44,
+                "top": 404.46875,
+                "right": 206.984375,
+                "bottom": 448.46875,
+                "left": 162.984375
+              }
+            },
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 212.4375,
+                "y": 386.46875,
+                "width": 156.75,
+                "height": 16,
+                "top": 386.46875,
+                "right": 369.1875,
+                "bottom": 402.46875,
+                "left": 212.4375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 212.4375,
+                "y": 404.46875,
+                "width": 44,
+                "height": 44,
+                "top": 404.46875,
+                "right": 256.4375,
+                "bottom": 448.46875,
+                "left": 212.4375
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 260.4375,
+                "y": 402.46875,
+                "width": 60.75,
+                "height": 48,
+                "top": 402.46875,
+                "right": 321.1875,
+                "bottom": 450.46875,
+                "left": 260.4375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 325.1875,
+                "y": 404.46875,
+                "width": 44,
+                "height": 44,
+                "top": 404.46875,
+                "right": 369.1875,
+                "bottom": 448.46875,
+                "left": 325.1875
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 50.25,
+                "y": 452.46875,
+                "width": 44,
+                "height": 44,
+                "top": 452.46875,
+                "right": 94.25,
+                "bottom": 496.46875,
+                "left": 50.25
+              }
+            },
+            {
+              "name": "set-done-btn set-done-btn--active",
+              "rect": {
+                "x": 94.25,
+                "y": 452.46875,
+                "width": 44,
+                "height": 44,
+                "top": 452.46875,
+                "right": 138.25,
+                "bottom": 496.46875,
+                "left": 94.25
+              }
+            },
+            {
+              "name": "remove-set-btn",
+              "rect": {
+                "x": 138.25,
+                "y": 452.46875,
+                "width": 44,
+                "height": 44,
+                "top": 452.46875,
+                "right": 182.25,
+                "bottom": 496.46875,
+                "left": 138.25
+              }
+            },
+            {
+              "name": "set-ghost",
+              "rect": {
+                "x": 246.90625,
+                "y": 465.671875,
+                "width": 122.28125,
+                "height": 17.59375,
+                "top": 465.671875,
+                "right": 369.1875,
+                "bottom": 483.265625,
+                "left": 246.90625
+              }
+            }
+          ],
+          "controlOverlaps": [],
+          "contentEscapesRow": false,
+          "flowOverlap": false
+        },
+        {
+          "rowIndex": 1,
+          "rowRect": {
+            "x": 20.796875,
+            "y": 511.46875,
+            "width": 348.390625,
+            "height": 123,
+            "top": 511.46875,
+            "right": 369.1875,
+            "bottom": 634.46875,
+            "left": 20.796875
+          },
+          "ghostRect": {
+            "x": 254.875,
+            "y": 596.671875,
+            "width": 114.3125,
+            "height": 17.59375,
+            "top": 596.671875,
+            "right": 369.1875,
+            "bottom": 614.265625,
+            "left": 254.875
+          },
+          "nextRowRect": null,
+          "elements": [
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 50.25,
+                "y": 517.46875,
+                "width": 156.734375,
+                "height": 16,
+                "top": 517.46875,
+                "right": 206.984375,
+                "bottom": 533.46875,
+                "left": 50.25
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 50.25,
+                "y": 535.46875,
+                "width": 44,
+                "height": 44,
+                "top": 535.46875,
+                "right": 94.25,
+                "bottom": 579.46875,
+                "left": 50.25
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 98.25,
+                "y": 533.46875,
+                "width": 60.734375,
+                "height": 48,
+                "top": 533.46875,
+                "right": 158.984375,
+                "bottom": 581.46875,
+                "left": 98.25
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 162.984375,
+                "y": 535.46875,
+                "width": 44,
+                "height": 44,
+                "top": 535.46875,
+                "right": 206.984375,
+                "bottom": 579.46875,
+                "left": 162.984375
+              }
+            },
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 212.4375,
+                "y": 517.46875,
+                "width": 156.75,
+                "height": 16,
+                "top": 517.46875,
+                "right": 369.1875,
+                "bottom": 533.46875,
+                "left": 212.4375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 212.4375,
+                "y": 535.46875,
+                "width": 44,
+                "height": 44,
+                "top": 535.46875,
+                "right": 256.4375,
+                "bottom": 579.46875,
+                "left": 212.4375
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 260.4375,
+                "y": 533.46875,
+                "width": 60.75,
+                "height": 48,
+                "top": 533.46875,
+                "right": 321.1875,
+                "bottom": 581.46875,
+                "left": 260.4375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 325.1875,
+                "y": 535.46875,
+                "width": 44,
+                "height": 44,
+                "top": 535.46875,
+                "right": 369.1875,
+                "bottom": 579.46875,
+                "left": 325.1875
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 50.25,
+                "y": 583.46875,
+                "width": 44,
+                "height": 44,
+                "top": 583.46875,
+                "right": 94.25,
+                "bottom": 627.46875,
+                "left": 50.25
+              }
+            },
+            {
+              "name": "set-done-btn set-done-btn--active",
+              "rect": {
+                "x": 94.25,
+                "y": 583.46875,
+                "width": 44,
+                "height": 44,
+                "top": 583.46875,
+                "right": 138.25,
+                "bottom": 627.46875,
+                "left": 94.25
+              }
+            },
+            {
+              "name": "remove-set-btn",
+              "rect": {
+                "x": 138.25,
+                "y": 583.46875,
+                "width": 44,
+                "height": 44,
+                "top": 583.46875,
+                "right": 182.25,
+                "bottom": 627.46875,
+                "left": 138.25
+              }
+            },
+            {
+              "name": "set-ghost",
+              "rect": {
+                "x": 254.875,
+                "y": 596.671875,
+                "width": 114.3125,
+                "height": 17.59375,
+                "top": 596.671875,
+                "right": 369.1875,
+                "bottom": 614.265625,
+                "left": 254.875
+              }
+            }
+          ],
+          "controlOverlaps": [],
+          "contentEscapesRow": false,
+          "flowOverlap": false
+        },
+        {
+          "rowIndex": 2,
+          "rowRect": {
+            "x": 20.796875,
+            "y": 642.46875,
+            "width": 348.390625,
+            "height": 123,
+            "top": 642.46875,
+            "right": 369.1875,
+            "bottom": 765.46875,
+            "left": 20.796875
+          },
+          "ghostRect": {
+            "x": 254.875,
+            "y": 727.671875,
+            "width": 114.3125,
+            "height": 17.59375,
+            "top": 727.671875,
+            "right": 369.1875,
+            "bottom": 745.265625,
+            "left": 254.875
+          },
+          "nextRowRect": null,
+          "elements": [
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 53.25,
+                "y": 648.46875,
+                "width": 155.234375,
+                "height": 16,
+                "top": 648.46875,
+                "right": 208.484375,
+                "bottom": 664.46875,
+                "left": 53.25
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 53.25,
+                "y": 666.46875,
+                "width": 44,
+                "height": 44,
+                "top": 666.46875,
+                "right": 97.25,
+                "bottom": 710.46875,
+                "left": 53.25
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 101.25,
+                "y": 664.46875,
+                "width": 59.234375,
+                "height": 48,
+                "top": 664.46875,
+                "right": 160.484375,
+                "bottom": 712.46875,
+                "left": 101.25
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 164.484375,
+                "y": 666.46875,
+                "width": 44,
+                "height": 44,
+                "top": 666.46875,
+                "right": 208.484375,
+                "bottom": 710.46875,
+                "left": 164.484375
+              }
+            },
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 213.9375,
+                "y": 648.46875,
+                "width": 155.25,
+                "height": 16,
+                "top": 648.46875,
+                "right": 369.1875,
+                "bottom": 664.46875,
+                "left": 213.9375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 213.9375,
+                "y": 666.46875,
+                "width": 44,
+                "height": 44,
+                "top": 666.46875,
+                "right": 257.9375,
+                "bottom": 710.46875,
+                "left": 213.9375
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 261.9375,
+                "y": 664.46875,
+                "width": 59.25,
+                "height": 48,
+                "top": 664.46875,
+                "right": 321.1875,
+                "bottom": 712.46875,
+                "left": 261.9375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 325.1875,
+                "y": 666.46875,
+                "width": 44,
+                "height": 44,
+                "top": 666.46875,
+                "right": 369.1875,
+                "bottom": 710.46875,
+                "left": 325.1875
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 53.25,
+                "y": 714.46875,
+                "width": 44,
+                "height": 44,
+                "top": 714.46875,
+                "right": 97.25,
+                "bottom": 758.46875,
+                "left": 53.25
+              }
+            },
+            {
+              "name": "set-done-btn",
+              "rect": {
+                "x": 97.25,
+                "y": 714.46875,
+                "width": 44,
+                "height": 44,
+                "top": 714.46875,
+                "right": 141.25,
+                "bottom": 758.46875,
+                "left": 97.25
+              }
+            },
+            {
+              "name": "remove-set-btn",
+              "rect": {
+                "x": 141.25,
+                "y": 714.46875,
+                "width": 44,
+                "height": 44,
+                "top": 714.46875,
+                "right": 185.25,
+                "bottom": 758.46875,
+                "left": 141.25
+              }
+            },
+            {
+              "name": "set-ghost",
+              "rect": {
+                "x": 254.875,
+                "y": 727.671875,
+                "width": 114.3125,
+                "height": 17.59375,
+                "top": 727.671875,
+                "right": 369.1875,
+                "bottom": 745.265625,
+                "left": 254.875
+              }
+            }
+          ],
+          "controlOverlaps": [],
+          "contentEscapesRow": false,
+          "flowOverlap": false
+        },
+        {
+          "rowIndex": 3,
+          "rowRect": {
+            "x": 20.796875,
+            "y": 773.46875,
+            "width": 348.390625,
+            "height": 123,
+            "top": 773.46875,
+            "right": 369.1875,
+            "bottom": 896.46875,
+            "left": 20.796875
+          },
+          "ghostRect": {
+            "x": 254.875,
+            "y": 858.671875,
+            "width": 114.3125,
+            "height": 17.59375,
+            "top": 858.671875,
+            "right": 369.1875,
+            "bottom": 876.265625,
+            "left": 254.875
+          },
+          "nextRowRect": null,
+          "elements": [
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 50.25,
+                "y": 779.46875,
+                "width": 156.734375,
+                "height": 16,
+                "top": 779.46875,
+                "right": 206.984375,
+                "bottom": 795.46875,
+                "left": 50.25
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 50.25,
+                "y": 797.46875,
+                "width": 44,
+                "height": 44,
+                "top": 797.46875,
+                "right": 94.25,
+                "bottom": 841.46875,
+                "left": 50.25
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 98.25,
+                "y": 795.46875,
+                "width": 60.734375,
+                "height": 48,
+                "top": 795.46875,
+                "right": 158.984375,
+                "bottom": 843.46875,
+                "left": 98.25
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 162.984375,
+                "y": 797.46875,
+                "width": 44,
+                "height": 44,
+                "top": 797.46875,
+                "right": 206.984375,
+                "bottom": 841.46875,
+                "left": 162.984375
+              }
+            },
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 212.4375,
+                "y": 779.46875,
+                "width": 156.75,
+                "height": 16,
+                "top": 779.46875,
+                "right": 369.1875,
+                "bottom": 795.46875,
+                "left": 212.4375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 212.4375,
+                "y": 797.46875,
+                "width": 44,
+                "height": 44,
+                "top": 797.46875,
+                "right": 256.4375,
+                "bottom": 841.46875,
+                "left": 212.4375
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 260.4375,
+                "y": 795.46875,
+                "width": 60.75,
+                "height": 48,
+                "top": 795.46875,
+                "right": 321.1875,
+                "bottom": 843.46875,
+                "left": 260.4375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 325.1875,
+                "y": 797.46875,
+                "width": 44,
+                "height": 44,
+                "top": 797.46875,
+                "right": 369.1875,
+                "bottom": 841.46875,
+                "left": 325.1875
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 50.25,
+                "y": 845.46875,
+                "width": 44,
+                "height": 44,
+                "top": 845.46875,
+                "right": 94.25,
+                "bottom": 889.46875,
+                "left": 50.25
+              }
+            },
+            {
+              "name": "set-done-btn",
+              "rect": {
+                "x": 94.25,
+                "y": 845.46875,
+                "width": 44,
+                "height": 44,
+                "top": 845.46875,
+                "right": 138.25,
+                "bottom": 889.46875,
+                "left": 94.25
+              }
+            },
+            {
+              "name": "remove-set-btn",
+              "rect": {
+                "x": 138.25,
+                "y": 845.46875,
+                "width": 44,
+                "height": 44,
+                "top": 845.46875,
+                "right": 182.25,
+                "bottom": 889.46875,
+                "left": 138.25
+              }
+            },
+            {
+              "name": "set-ghost",
+              "rect": {
+                "x": 254.875,
+                "y": 858.671875,
+                "width": 114.3125,
+                "height": 17.59375,
+                "top": 858.671875,
+                "right": 369.1875,
+                "bottom": 876.265625,
+                "left": 254.875
+              }
+            }
+          ],
+          "controlOverlaps": [],
+          "contentEscapesRow": false,
+          "flowOverlap": false
+        }
+      ],
+      "minControlSize": 44,
+      "srOnly": {
+        "position": "absolute",
+        "width": "1px",
+        "height": "1px",
+        "overflow": "hidden"
+      },
+      "lightBackgrounds": [],
+      "colors": {
+        "activeBorder": "rgb(227, 168, 59)",
+        "restPickerValue": "rgb(227, 168, 59)",
+        "modalSubContrast": 8.69300070033934,
+        "setGhostContrast": 7.088056251648137,
+        "setNumContrast": 7.088056251648137,
+        "timerLabelContrast": 6.179338741063544
+      }
+    },
+    "verdict": {
+      "noDocumentOverflow": true,
+      "noModalOverflow": true,
+      "modalAtMost92dvh": true,
+      "timerAtMost40Percent390": true,
+      "threeRowsVisible390": true,
+      "noSetControlOverlaps": true,
+      "setContentContained": true,
+      "noSetFlowOverlaps": true,
+      "digitClamp": true,
+      "inputFontSize": true,
+      "touchTargets": true,
+      "srOnlyHidden": true,
+      "noLightModalBackgrounds": true,
+      "contrast": true
+    }
+  },
+  {
+    "name": "393x852",
+    "screenshotPath": "docs/design-qa/mobile-readability/after-393x852.png",
+    "metrics": {
+      "viewport": {
+        "width": 393,
+        "height": 852
+      },
+      "documentOverflow": 0,
+      "modalOverflow": 0,
+      "scrollBodyOverflow": 0,
+      "modalHeight": 720,
+      "stickyHeight": 253.8125,
+      "timerHeight": 137.21875,
+      "activeDigitFontSize": 29.475,
+      "inputFontSize": 16,
+      "completeRowsVisible": 3,
+      "rowLayouts": [
+        {
+          "rowIndex": 0,
+          "rowRect": {
+            "x": 20.859375,
+            "y": 384.8125,
+            "width": 351.265625,
+            "height": 123,
+            "top": 384.8125,
+            "right": 372.125,
+            "bottom": 507.8125,
+            "left": 20.859375
+          },
+          "ghostRect": {
+            "x": 249.84375,
+            "y": 470.015625,
+            "width": 122.28125,
+            "height": 17.59375,
+            "top": 470.015625,
+            "right": 372.125,
+            "bottom": 487.609375,
+            "left": 249.84375
+          },
+          "nextRowRect": null,
+          "elements": [
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 50.359375,
+                "y": 390.8125,
+                "width": 158.125,
+                "height": 16,
+                "top": 390.8125,
+                "right": 208.484375,
+                "bottom": 406.8125,
+                "left": 50.359375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 50.359375,
+                "y": 408.8125,
+                "width": 44,
+                "height": 44,
+                "top": 408.8125,
+                "right": 94.359375,
+                "bottom": 452.8125,
+                "left": 50.359375
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 98.359375,
+                "y": 406.8125,
+                "width": 62.125,
+                "height": 48,
+                "top": 406.8125,
+                "right": 160.484375,
+                "bottom": 454.8125,
+                "left": 98.359375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 164.484375,
+                "y": 408.8125,
+                "width": 44,
+                "height": 44,
+                "top": 408.8125,
+                "right": 208.484375,
+                "bottom": 452.8125,
+                "left": 164.484375
+              }
+            },
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 213.984375,
+                "y": 390.8125,
+                "width": 158.140625,
+                "height": 16,
+                "top": 390.8125,
+                "right": 372.125,
+                "bottom": 406.8125,
+                "left": 213.984375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 213.984375,
+                "y": 408.8125,
+                "width": 44,
+                "height": 44,
+                "top": 408.8125,
+                "right": 257.984375,
+                "bottom": 452.8125,
+                "left": 213.984375
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 261.984375,
+                "y": 406.8125,
+                "width": 62.140625,
+                "height": 48,
+                "top": 406.8125,
+                "right": 324.125,
+                "bottom": 454.8125,
+                "left": 261.984375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 328.125,
+                "y": 408.8125,
+                "width": 44,
+                "height": 44,
+                "top": 408.8125,
+                "right": 372.125,
+                "bottom": 452.8125,
+                "left": 328.125
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 50.359375,
+                "y": 456.8125,
+                "width": 44,
+                "height": 44,
+                "top": 456.8125,
+                "right": 94.359375,
+                "bottom": 500.8125,
+                "left": 50.359375
+              }
+            },
+            {
+              "name": "set-done-btn set-done-btn--active",
+              "rect": {
+                "x": 94.359375,
+                "y": 456.8125,
+                "width": 44,
+                "height": 44,
+                "top": 456.8125,
+                "right": 138.359375,
+                "bottom": 500.8125,
+                "left": 94.359375
+              }
+            },
+            {
+              "name": "remove-set-btn",
+              "rect": {
+                "x": 138.359375,
+                "y": 456.8125,
+                "width": 44,
+                "height": 44,
+                "top": 456.8125,
+                "right": 182.359375,
+                "bottom": 500.8125,
+                "left": 138.359375
+              }
+            },
+            {
+              "name": "set-ghost",
+              "rect": {
+                "x": 249.84375,
+                "y": 470.015625,
+                "width": 122.28125,
+                "height": 17.59375,
+                "top": 470.015625,
+                "right": 372.125,
+                "bottom": 487.609375,
+                "left": 249.84375
+              }
+            }
+          ],
+          "controlOverlaps": [],
+          "contentEscapesRow": false,
+          "flowOverlap": false
+        },
+        {
+          "rowIndex": 1,
+          "rowRect": {
+            "x": 20.859375,
+            "y": 515.8125,
+            "width": 351.265625,
+            "height": 123,
+            "top": 515.8125,
+            "right": 372.125,
+            "bottom": 638.8125,
+            "left": 20.859375
+          },
+          "ghostRect": {
+            "x": 257.8125,
+            "y": 601.015625,
+            "width": 114.3125,
+            "height": 17.59375,
+            "top": 601.015625,
+            "right": 372.125,
+            "bottom": 618.609375,
+            "left": 257.8125
+          },
+          "nextRowRect": null,
+          "elements": [
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 50.359375,
+                "y": 521.8125,
+                "width": 158.125,
+                "height": 16,
+                "top": 521.8125,
+                "right": 208.484375,
+                "bottom": 537.8125,
+                "left": 50.359375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 50.359375,
+                "y": 539.8125,
+                "width": 44,
+                "height": 44,
+                "top": 539.8125,
+                "right": 94.359375,
+                "bottom": 583.8125,
+                "left": 50.359375
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 98.359375,
+                "y": 537.8125,
+                "width": 62.125,
+                "height": 48,
+                "top": 537.8125,
+                "right": 160.484375,
+                "bottom": 585.8125,
+                "left": 98.359375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 164.484375,
+                "y": 539.8125,
+                "width": 44,
+                "height": 44,
+                "top": 539.8125,
+                "right": 208.484375,
+                "bottom": 583.8125,
+                "left": 164.484375
+              }
+            },
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 213.984375,
+                "y": 521.8125,
+                "width": 158.140625,
+                "height": 16,
+                "top": 521.8125,
+                "right": 372.125,
+                "bottom": 537.8125,
+                "left": 213.984375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 213.984375,
+                "y": 539.8125,
+                "width": 44,
+                "height": 44,
+                "top": 539.8125,
+                "right": 257.984375,
+                "bottom": 583.8125,
+                "left": 213.984375
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 261.984375,
+                "y": 537.8125,
+                "width": 62.140625,
+                "height": 48,
+                "top": 537.8125,
+                "right": 324.125,
+                "bottom": 585.8125,
+                "left": 261.984375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 328.125,
+                "y": 539.8125,
+                "width": 44,
+                "height": 44,
+                "top": 539.8125,
+                "right": 372.125,
+                "bottom": 583.8125,
+                "left": 328.125
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 50.359375,
+                "y": 587.8125,
+                "width": 44,
+                "height": 44,
+                "top": 587.8125,
+                "right": 94.359375,
+                "bottom": 631.8125,
+                "left": 50.359375
+              }
+            },
+            {
+              "name": "set-done-btn set-done-btn--active",
+              "rect": {
+                "x": 94.359375,
+                "y": 587.8125,
+                "width": 44,
+                "height": 44,
+                "top": 587.8125,
+                "right": 138.359375,
+                "bottom": 631.8125,
+                "left": 94.359375
+              }
+            },
+            {
+              "name": "remove-set-btn",
+              "rect": {
+                "x": 138.359375,
+                "y": 587.8125,
+                "width": 44,
+                "height": 44,
+                "top": 587.8125,
+                "right": 182.359375,
+                "bottom": 631.8125,
+                "left": 138.359375
+              }
+            },
+            {
+              "name": "set-ghost",
+              "rect": {
+                "x": 257.8125,
+                "y": 601.015625,
+                "width": 114.3125,
+                "height": 17.59375,
+                "top": 601.015625,
+                "right": 372.125,
+                "bottom": 618.609375,
+                "left": 257.8125
+              }
+            }
+          ],
+          "controlOverlaps": [],
+          "contentEscapesRow": false,
+          "flowOverlap": false
+        },
+        {
+          "rowIndex": 2,
+          "rowRect": {
+            "x": 20.859375,
+            "y": 646.8125,
+            "width": 351.265625,
+            "height": 123,
+            "top": 646.8125,
+            "right": 372.125,
+            "bottom": 769.8125,
+            "left": 20.859375
+          },
+          "ghostRect": {
+            "x": 257.8125,
+            "y": 732.015625,
+            "width": 114.3125,
+            "height": 17.59375,
+            "top": 732.015625,
+            "right": 372.125,
+            "bottom": 749.609375,
+            "left": 257.8125
+          },
+          "nextRowRect": null,
+          "elements": [
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 53.359375,
+                "y": 652.8125,
+                "width": 156.625,
+                "height": 16,
+                "top": 652.8125,
+                "right": 209.984375,
+                "bottom": 668.8125,
+                "left": 53.359375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 53.359375,
+                "y": 670.8125,
+                "width": 44,
+                "height": 44,
+                "top": 670.8125,
+                "right": 97.359375,
+                "bottom": 714.8125,
+                "left": 53.359375
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 101.359375,
+                "y": 668.8125,
+                "width": 60.625,
+                "height": 48,
+                "top": 668.8125,
+                "right": 161.984375,
+                "bottom": 716.8125,
+                "left": 101.359375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 165.984375,
+                "y": 670.8125,
+                "width": 44,
+                "height": 44,
+                "top": 670.8125,
+                "right": 209.984375,
+                "bottom": 714.8125,
+                "left": 165.984375
+              }
+            },
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 215.484375,
+                "y": 652.8125,
+                "width": 156.640625,
+                "height": 16,
+                "top": 652.8125,
+                "right": 372.125,
+                "bottom": 668.8125,
+                "left": 215.484375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 215.484375,
+                "y": 670.8125,
+                "width": 44,
+                "height": 44,
+                "top": 670.8125,
+                "right": 259.484375,
+                "bottom": 714.8125,
+                "left": 215.484375
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 263.484375,
+                "y": 668.8125,
+                "width": 60.640625,
+                "height": 48,
+                "top": 668.8125,
+                "right": 324.125,
+                "bottom": 716.8125,
+                "left": 263.484375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 328.125,
+                "y": 670.8125,
+                "width": 44,
+                "height": 44,
+                "top": 670.8125,
+                "right": 372.125,
+                "bottom": 714.8125,
+                "left": 328.125
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 53.359375,
+                "y": 718.8125,
+                "width": 44,
+                "height": 44,
+                "top": 718.8125,
+                "right": 97.359375,
+                "bottom": 762.8125,
+                "left": 53.359375
+              }
+            },
+            {
+              "name": "set-done-btn",
+              "rect": {
+                "x": 97.359375,
+                "y": 718.8125,
+                "width": 44,
+                "height": 44,
+                "top": 718.8125,
+                "right": 141.359375,
+                "bottom": 762.8125,
+                "left": 97.359375
+              }
+            },
+            {
+              "name": "remove-set-btn",
+              "rect": {
+                "x": 141.359375,
+                "y": 718.8125,
+                "width": 44,
+                "height": 44,
+                "top": 718.8125,
+                "right": 185.359375,
+                "bottom": 762.8125,
+                "left": 141.359375
+              }
+            },
+            {
+              "name": "set-ghost",
+              "rect": {
+                "x": 257.8125,
+                "y": 732.015625,
+                "width": 114.3125,
+                "height": 17.59375,
+                "top": 732.015625,
+                "right": 372.125,
+                "bottom": 749.609375,
+                "left": 257.8125
+              }
+            }
+          ],
+          "controlOverlaps": [],
+          "contentEscapesRow": false,
+          "flowOverlap": false
+        },
+        {
+          "rowIndex": 3,
+          "rowRect": {
+            "x": 20.859375,
+            "y": 777.8125,
+            "width": 351.265625,
+            "height": 123,
+            "top": 777.8125,
+            "right": 372.125,
+            "bottom": 900.8125,
+            "left": 20.859375
+          },
+          "ghostRect": {
+            "x": 257.8125,
+            "y": 863.015625,
+            "width": 114.3125,
+            "height": 17.59375,
+            "top": 863.015625,
+            "right": 372.125,
+            "bottom": 880.609375,
+            "left": 257.8125
+          },
+          "nextRowRect": null,
+          "elements": [
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 50.359375,
+                "y": 783.8125,
+                "width": 158.125,
+                "height": 16,
+                "top": 783.8125,
+                "right": 208.484375,
+                "bottom": 799.8125,
+                "left": 50.359375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 50.359375,
+                "y": 801.8125,
+                "width": 44,
+                "height": 44,
+                "top": 801.8125,
+                "right": 94.359375,
+                "bottom": 845.8125,
+                "left": 50.359375
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 98.359375,
+                "y": 799.8125,
+                "width": 62.125,
+                "height": 48,
+                "top": 799.8125,
+                "right": 160.484375,
+                "bottom": 847.8125,
+                "left": 98.359375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 164.484375,
+                "y": 801.8125,
+                "width": 44,
+                "height": 44,
+                "top": 801.8125,
+                "right": 208.484375,
+                "bottom": 845.8125,
+                "left": 164.484375
+              }
+            },
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 213.984375,
+                "y": 783.8125,
+                "width": 158.140625,
+                "height": 16,
+                "top": 783.8125,
+                "right": 372.125,
+                "bottom": 799.8125,
+                "left": 213.984375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 213.984375,
+                "y": 801.8125,
+                "width": 44,
+                "height": 44,
+                "top": 801.8125,
+                "right": 257.984375,
+                "bottom": 845.8125,
+                "left": 213.984375
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 261.984375,
+                "y": 799.8125,
+                "width": 62.140625,
+                "height": 48,
+                "top": 799.8125,
+                "right": 324.125,
+                "bottom": 847.8125,
+                "left": 261.984375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 328.125,
+                "y": 801.8125,
+                "width": 44,
+                "height": 44,
+                "top": 801.8125,
+                "right": 372.125,
+                "bottom": 845.8125,
+                "left": 328.125
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 50.359375,
+                "y": 849.8125,
+                "width": 44,
+                "height": 44,
+                "top": 849.8125,
+                "right": 94.359375,
+                "bottom": 893.8125,
+                "left": 50.359375
+              }
+            },
+            {
+              "name": "set-done-btn",
+              "rect": {
+                "x": 94.359375,
+                "y": 849.8125,
+                "width": 44,
+                "height": 44,
+                "top": 849.8125,
+                "right": 138.359375,
+                "bottom": 893.8125,
+                "left": 94.359375
+              }
+            },
+            {
+              "name": "remove-set-btn",
+              "rect": {
+                "x": 138.359375,
+                "y": 849.8125,
+                "width": 44,
+                "height": 44,
+                "top": 849.8125,
+                "right": 182.359375,
+                "bottom": 893.8125,
+                "left": 138.359375
+              }
+            },
+            {
+              "name": "set-ghost",
+              "rect": {
+                "x": 257.8125,
+                "y": 863.015625,
+                "width": 114.3125,
+                "height": 17.59375,
+                "top": 863.015625,
+                "right": 372.125,
+                "bottom": 880.609375,
+                "left": 257.8125
+              }
+            }
+          ],
+          "controlOverlaps": [],
+          "contentEscapesRow": false,
+          "flowOverlap": false
+        }
+      ],
+      "minControlSize": 44,
+      "srOnly": {
+        "position": "absolute",
+        "width": "1px",
+        "height": "1px",
+        "overflow": "hidden"
+      },
+      "lightBackgrounds": [],
+      "colors": {
+        "activeBorder": "rgb(227, 168, 59)",
+        "restPickerValue": "rgb(227, 168, 59)",
+        "modalSubContrast": 8.69300070033934,
+        "setGhostContrast": 7.088056251648137,
+        "setNumContrast": 7.088056251648137,
+        "timerLabelContrast": 6.179338741063544
+      }
+    },
+    "verdict": {
+      "noDocumentOverflow": true,
+      "noModalOverflow": true,
+      "modalAtMost92dvh": true,
+      "timerAtMost40Percent390": true,
+      "threeRowsVisible390": true,
+      "noSetControlOverlaps": true,
+      "setContentContained": true,
+      "noSetFlowOverlaps": true,
+      "digitClamp": true,
+      "inputFontSize": true,
+      "touchTargets": true,
+      "srOnlyHidden": true,
+      "noLightModalBackgrounds": true,
+      "contrast": true
+    }
+  },
+  {
+    "name": "430x932",
+    "screenshotPath": "docs/design-qa/mobile-readability/after-430x932.png",
+    "metrics": {
+      "viewport": {
+        "width": 430,
+        "height": 932
+      },
+      "documentOverflow": 0,
+      "modalOverflow": 0,
+      "scrollBodyOverflow": 0,
+      "modalHeight": 720,
+      "stickyHeight": 260.8125,
+      "timerHeight": 142.75,
+      "activeDigitFontSize": 32.25,
+      "inputFontSize": 16,
+      "completeRowsVisible": 2,
+      "rowLayouts": [
+        {
+          "rowIndex": 0,
+          "rowRect": {
+            "x": 21.59375,
+            "y": 431.8125,
+            "width": 386.796875,
+            "height": 123,
+            "top": 431.8125,
+            "right": 408.390625,
+            "bottom": 554.8125,
+            "left": 21.59375
+          },
+          "ghostRect": {
+            "x": 286.109375,
+            "y": 517.015625,
+            "width": 122.28125,
+            "height": 17.59375,
+            "top": 517.015625,
+            "right": 408.390625,
+            "bottom": 534.609375,
+            "left": 286.109375
+          },
+          "nextRowRect": null,
+          "elements": [
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 51.59375,
+                "y": 437.8125,
+                "width": 175.390625,
+                "height": 16,
+                "top": 437.8125,
+                "right": 226.984375,
+                "bottom": 453.8125,
+                "left": 51.59375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 51.59375,
+                "y": 455.8125,
+                "width": 44,
+                "height": 44,
+                "top": 455.8125,
+                "right": 95.59375,
+                "bottom": 499.8125,
+                "left": 51.59375
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 99.59375,
+                "y": 453.8125,
+                "width": 79.390625,
+                "height": 48,
+                "top": 453.8125,
+                "right": 178.984375,
+                "bottom": 501.8125,
+                "left": 99.59375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 182.984375,
+                "y": 455.8125,
+                "width": 44,
+                "height": 44,
+                "top": 455.8125,
+                "right": 226.984375,
+                "bottom": 499.8125,
+                "left": 182.984375
+              }
+            },
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 232.984375,
+                "y": 437.8125,
+                "width": 175.40625,
+                "height": 16,
+                "top": 437.8125,
+                "right": 408.390625,
+                "bottom": 453.8125,
+                "left": 232.984375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 232.984375,
+                "y": 455.8125,
+                "width": 44,
+                "height": 44,
+                "top": 455.8125,
+                "right": 276.984375,
+                "bottom": 499.8125,
+                "left": 232.984375
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 280.984375,
+                "y": 453.8125,
+                "width": 79.40625,
+                "height": 48,
+                "top": 453.8125,
+                "right": 360.390625,
+                "bottom": 501.8125,
+                "left": 280.984375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 364.390625,
+                "y": 455.8125,
+                "width": 44,
+                "height": 44,
+                "top": 455.8125,
+                "right": 408.390625,
+                "bottom": 499.8125,
+                "left": 364.390625
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 51.59375,
+                "y": 503.8125,
+                "width": 44,
+                "height": 44,
+                "top": 503.8125,
+                "right": 95.59375,
+                "bottom": 547.8125,
+                "left": 51.59375
+              }
+            },
+            {
+              "name": "set-done-btn set-done-btn--active",
+              "rect": {
+                "x": 95.59375,
+                "y": 503.8125,
+                "width": 44,
+                "height": 44,
+                "top": 503.8125,
+                "right": 139.59375,
+                "bottom": 547.8125,
+                "left": 95.59375
+              }
+            },
+            {
+              "name": "remove-set-btn",
+              "rect": {
+                "x": 139.59375,
+                "y": 503.8125,
+                "width": 44,
+                "height": 44,
+                "top": 503.8125,
+                "right": 183.59375,
+                "bottom": 547.8125,
+                "left": 139.59375
+              }
+            },
+            {
+              "name": "set-ghost",
+              "rect": {
+                "x": 286.109375,
+                "y": 517.015625,
+                "width": 122.28125,
+                "height": 17.59375,
+                "top": 517.015625,
+                "right": 408.390625,
+                "bottom": 534.609375,
+                "left": 286.109375
+              }
+            }
+          ],
+          "controlOverlaps": [],
+          "contentEscapesRow": false,
+          "flowOverlap": false
+        },
+        {
+          "rowIndex": 1,
+          "rowRect": {
+            "x": 21.59375,
+            "y": 562.8125,
+            "width": 386.796875,
+            "height": 123,
+            "top": 562.8125,
+            "right": 408.390625,
+            "bottom": 685.8125,
+            "left": 21.59375
+          },
+          "ghostRect": {
+            "x": 294.078125,
+            "y": 648.015625,
+            "width": 114.3125,
+            "height": 17.59375,
+            "top": 648.015625,
+            "right": 408.390625,
+            "bottom": 665.609375,
+            "left": 294.078125
+          },
+          "nextRowRect": null,
+          "elements": [
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 51.59375,
+                "y": 568.8125,
+                "width": 175.390625,
+                "height": 16,
+                "top": 568.8125,
+                "right": 226.984375,
+                "bottom": 584.8125,
+                "left": 51.59375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 51.59375,
+                "y": 586.8125,
+                "width": 44,
+                "height": 44,
+                "top": 586.8125,
+                "right": 95.59375,
+                "bottom": 630.8125,
+                "left": 51.59375
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 99.59375,
+                "y": 584.8125,
+                "width": 79.390625,
+                "height": 48,
+                "top": 584.8125,
+                "right": 178.984375,
+                "bottom": 632.8125,
+                "left": 99.59375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 182.984375,
+                "y": 586.8125,
+                "width": 44,
+                "height": 44,
+                "top": 586.8125,
+                "right": 226.984375,
+                "bottom": 630.8125,
+                "left": 182.984375
+              }
+            },
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 232.984375,
+                "y": 568.8125,
+                "width": 175.40625,
+                "height": 16,
+                "top": 568.8125,
+                "right": 408.390625,
+                "bottom": 584.8125,
+                "left": 232.984375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 232.984375,
+                "y": 586.8125,
+                "width": 44,
+                "height": 44,
+                "top": 586.8125,
+                "right": 276.984375,
+                "bottom": 630.8125,
+                "left": 232.984375
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 280.984375,
+                "y": 584.8125,
+                "width": 79.40625,
+                "height": 48,
+                "top": 584.8125,
+                "right": 360.390625,
+                "bottom": 632.8125,
+                "left": 280.984375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 364.390625,
+                "y": 586.8125,
+                "width": 44,
+                "height": 44,
+                "top": 586.8125,
+                "right": 408.390625,
+                "bottom": 630.8125,
+                "left": 364.390625
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 51.59375,
+                "y": 634.8125,
+                "width": 44,
+                "height": 44,
+                "top": 634.8125,
+                "right": 95.59375,
+                "bottom": 678.8125,
+                "left": 51.59375
+              }
+            },
+            {
+              "name": "set-done-btn set-done-btn--active",
+              "rect": {
+                "x": 95.59375,
+                "y": 634.8125,
+                "width": 44,
+                "height": 44,
+                "top": 634.8125,
+                "right": 139.59375,
+                "bottom": 678.8125,
+                "left": 95.59375
+              }
+            },
+            {
+              "name": "remove-set-btn",
+              "rect": {
+                "x": 139.59375,
+                "y": 634.8125,
+                "width": 44,
+                "height": 44,
+                "top": 634.8125,
+                "right": 183.59375,
+                "bottom": 678.8125,
+                "left": 139.59375
+              }
+            },
+            {
+              "name": "set-ghost",
+              "rect": {
+                "x": 294.078125,
+                "y": 648.015625,
+                "width": 114.3125,
+                "height": 17.59375,
+                "top": 648.015625,
+                "right": 408.390625,
+                "bottom": 665.609375,
+                "left": 294.078125
+              }
+            }
+          ],
+          "controlOverlaps": [],
+          "contentEscapesRow": false,
+          "flowOverlap": false
+        },
+        {
+          "rowIndex": 2,
+          "rowRect": {
+            "x": 21.59375,
+            "y": 693.8125,
+            "width": 386.796875,
+            "height": 123,
+            "top": 693.8125,
+            "right": 408.390625,
+            "bottom": 816.8125,
+            "left": 21.59375
+          },
+          "ghostRect": {
+            "x": 294.078125,
+            "y": 779.015625,
+            "width": 114.3125,
+            "height": 17.59375,
+            "top": 779.015625,
+            "right": 408.390625,
+            "bottom": 796.609375,
+            "left": 294.078125
+          },
+          "nextRowRect": null,
+          "elements": [
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 54.59375,
+                "y": 699.8125,
+                "width": 173.890625,
+                "height": 16,
+                "top": 699.8125,
+                "right": 228.484375,
+                "bottom": 715.8125,
+                "left": 54.59375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 54.59375,
+                "y": 717.8125,
+                "width": 44,
+                "height": 44,
+                "top": 717.8125,
+                "right": 98.59375,
+                "bottom": 761.8125,
+                "left": 54.59375
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 102.59375,
+                "y": 715.8125,
+                "width": 77.890625,
+                "height": 48,
+                "top": 715.8125,
+                "right": 180.484375,
+                "bottom": 763.8125,
+                "left": 102.59375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 184.484375,
+                "y": 717.8125,
+                "width": 44,
+                "height": 44,
+                "top": 717.8125,
+                "right": 228.484375,
+                "bottom": 761.8125,
+                "left": 184.484375
+              }
+            },
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 234.484375,
+                "y": 699.8125,
+                "width": 173.90625,
+                "height": 16,
+                "top": 699.8125,
+                "right": 408.390625,
+                "bottom": 715.8125,
+                "left": 234.484375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 234.484375,
+                "y": 717.8125,
+                "width": 44,
+                "height": 44,
+                "top": 717.8125,
+                "right": 278.484375,
+                "bottom": 761.8125,
+                "left": 234.484375
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 282.484375,
+                "y": 715.8125,
+                "width": 77.90625,
+                "height": 48,
+                "top": 715.8125,
+                "right": 360.390625,
+                "bottom": 763.8125,
+                "left": 282.484375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 364.390625,
+                "y": 717.8125,
+                "width": 44,
+                "height": 44,
+                "top": 717.8125,
+                "right": 408.390625,
+                "bottom": 761.8125,
+                "left": 364.390625
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 54.59375,
+                "y": 765.8125,
+                "width": 44,
+                "height": 44,
+                "top": 765.8125,
+                "right": 98.59375,
+                "bottom": 809.8125,
+                "left": 54.59375
+              }
+            },
+            {
+              "name": "set-done-btn",
+              "rect": {
+                "x": 98.59375,
+                "y": 765.8125,
+                "width": 44,
+                "height": 44,
+                "top": 765.8125,
+                "right": 142.59375,
+                "bottom": 809.8125,
+                "left": 98.59375
+              }
+            },
+            {
+              "name": "remove-set-btn",
+              "rect": {
+                "x": 142.59375,
+                "y": 765.8125,
+                "width": 44,
+                "height": 44,
+                "top": 765.8125,
+                "right": 186.59375,
+                "bottom": 809.8125,
+                "left": 142.59375
+              }
+            },
+            {
+              "name": "set-ghost",
+              "rect": {
+                "x": 294.078125,
+                "y": 779.015625,
+                "width": 114.3125,
+                "height": 17.59375,
+                "top": 779.015625,
+                "right": 408.390625,
+                "bottom": 796.609375,
+                "left": 294.078125
+              }
+            }
+          ],
+          "controlOverlaps": [],
+          "contentEscapesRow": false,
+          "flowOverlap": false
+        },
+        {
+          "rowIndex": 3,
+          "rowRect": {
+            "x": 21.59375,
+            "y": 824.8125,
+            "width": 386.796875,
+            "height": 123,
+            "top": 824.8125,
+            "right": 408.390625,
+            "bottom": 947.8125,
+            "left": 21.59375
+          },
+          "ghostRect": {
+            "x": 294.078125,
+            "y": 910.015625,
+            "width": 114.3125,
+            "height": 17.59375,
+            "top": 910.015625,
+            "right": 408.390625,
+            "bottom": 927.609375,
+            "left": 294.078125
+          },
+          "nextRowRect": null,
+          "elements": [
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 51.59375,
+                "y": 830.8125,
+                "width": 175.390625,
+                "height": 16,
+                "top": 830.8125,
+                "right": 226.984375,
+                "bottom": 846.8125,
+                "left": 51.59375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 51.59375,
+                "y": 848.8125,
+                "width": 44,
+                "height": 44,
+                "top": 848.8125,
+                "right": 95.59375,
+                "bottom": 892.8125,
+                "left": 51.59375
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 99.59375,
+                "y": 846.8125,
+                "width": 79.390625,
+                "height": 48,
+                "top": 846.8125,
+                "right": 178.984375,
+                "bottom": 894.8125,
+                "left": 99.59375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 182.984375,
+                "y": 848.8125,
+                "width": 44,
+                "height": 44,
+                "top": 848.8125,
+                "right": 226.984375,
+                "bottom": 892.8125,
+                "left": 182.984375
+              }
+            },
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 232.984375,
+                "y": 830.8125,
+                "width": 175.40625,
+                "height": 16,
+                "top": 830.8125,
+                "right": 408.390625,
+                "bottom": 846.8125,
+                "left": 232.984375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 232.984375,
+                "y": 848.8125,
+                "width": 44,
+                "height": 44,
+                "top": 848.8125,
+                "right": 276.984375,
+                "bottom": 892.8125,
+                "left": 232.984375
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 280.984375,
+                "y": 846.8125,
+                "width": 79.40625,
+                "height": 48,
+                "top": 846.8125,
+                "right": 360.390625,
+                "bottom": 894.8125,
+                "left": 280.984375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 364.390625,
+                "y": 848.8125,
+                "width": 44,
+                "height": 44,
+                "top": 848.8125,
+                "right": 408.390625,
+                "bottom": 892.8125,
+                "left": 364.390625
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 51.59375,
+                "y": 896.8125,
+                "width": 44,
+                "height": 44,
+                "top": 896.8125,
+                "right": 95.59375,
+                "bottom": 940.8125,
+                "left": 51.59375
+              }
+            },
+            {
+              "name": "set-done-btn",
+              "rect": {
+                "x": 95.59375,
+                "y": 896.8125,
+                "width": 44,
+                "height": 44,
+                "top": 896.8125,
+                "right": 139.59375,
+                "bottom": 940.8125,
+                "left": 95.59375
+              }
+            },
+            {
+              "name": "remove-set-btn",
+              "rect": {
+                "x": 139.59375,
+                "y": 896.8125,
+                "width": 44,
+                "height": 44,
+                "top": 896.8125,
+                "right": 183.59375,
+                "bottom": 940.8125,
+                "left": 139.59375
+              }
+            },
+            {
+              "name": "set-ghost",
+              "rect": {
+                "x": 294.078125,
+                "y": 910.015625,
+                "width": 114.3125,
+                "height": 17.59375,
+                "top": 910.015625,
+                "right": 408.390625,
+                "bottom": 927.609375,
+                "left": 294.078125
+              }
+            }
+          ],
+          "controlOverlaps": [],
+          "contentEscapesRow": false,
+          "flowOverlap": false
+        }
+      ],
+      "minControlSize": 44,
+      "srOnly": {
+        "position": "absolute",
+        "width": "1px",
+        "height": "1px",
+        "overflow": "hidden"
+      },
+      "lightBackgrounds": [],
+      "colors": {
+        "activeBorder": "rgb(227, 168, 59)",
+        "restPickerValue": "rgb(227, 168, 59)",
+        "modalSubContrast": 8.69300070033934,
+        "setGhostContrast": 7.088056251648137,
+        "setNumContrast": 7.088056251648137,
+        "timerLabelContrast": 6.179338741063544
+      }
+    },
+    "verdict": {
+      "noDocumentOverflow": true,
+      "noModalOverflow": true,
+      "modalAtMost92dvh": true,
+      "timerAtMost40Percent390": true,
+      "threeRowsVisible390": true,
+      "noSetControlOverlaps": true,
+      "setContentContained": true,
+      "noSetFlowOverlaps": true,
+      "digitClamp": true,
+      "inputFontSize": true,
+      "touchTargets": true,
+      "srOnlyHidden": true,
+      "noLightModalBackgrounds": true,
+      "contrast": true
+    }
+  },
+  {
+    "name": "430x390-short",
+    "screenshotPath": "docs/design-qa/mobile-readability/after-430x390-short.png",
+    "metrics": {
+      "viewport": {
+        "width": 430,
+        "height": 390
+      },
+      "documentOverflow": 0,
+      "modalOverflow": 0,
+      "scrollBodyOverflow": 0,
+      "modalHeight": 358.796875,
+      "stickyHeight": 260.8125,
+      "timerHeight": 142.75,
+      "activeDigitFontSize": 32.25,
+      "inputFontSize": 16,
+      "completeRowsVisible": 0,
+      "rowLayouts": [
+        {
+          "rowIndex": 0,
+          "rowRect": {
+            "x": 21.59375,
+            "y": 341.40625,
+            "width": 386.796875,
+            "height": 123,
+            "top": 341.40625,
+            "right": 408.390625,
+            "bottom": 464.40625,
+            "left": 21.59375
+          },
+          "ghostRect": {
+            "x": 286.109375,
+            "y": 426.609375,
+            "width": 122.28125,
+            "height": 17.59375,
+            "top": 426.609375,
+            "right": 408.390625,
+            "bottom": 444.203125,
+            "left": 286.109375
+          },
+          "nextRowRect": null,
+          "elements": [
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 51.59375,
+                "y": 347.40625,
+                "width": 175.390625,
+                "height": 16,
+                "top": 347.40625,
+                "right": 226.984375,
+                "bottom": 363.40625,
+                "left": 51.59375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 51.59375,
+                "y": 365.40625,
+                "width": 44,
+                "height": 44,
+                "top": 365.40625,
+                "right": 95.59375,
+                "bottom": 409.40625,
+                "left": 51.59375
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 99.59375,
+                "y": 363.40625,
+                "width": 79.390625,
+                "height": 48,
+                "top": 363.40625,
+                "right": 178.984375,
+                "bottom": 411.40625,
+                "left": 99.59375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 182.984375,
+                "y": 365.40625,
+                "width": 44,
+                "height": 44,
+                "top": 365.40625,
+                "right": 226.984375,
+                "bottom": 409.40625,
+                "left": 182.984375
+              }
+            },
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 232.984375,
+                "y": 347.40625,
+                "width": 175.40625,
+                "height": 16,
+                "top": 347.40625,
+                "right": 408.390625,
+                "bottom": 363.40625,
+                "left": 232.984375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 232.984375,
+                "y": 365.40625,
+                "width": 44,
+                "height": 44,
+                "top": 365.40625,
+                "right": 276.984375,
+                "bottom": 409.40625,
+                "left": 232.984375
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 280.984375,
+                "y": 363.40625,
+                "width": 79.40625,
+                "height": 48,
+                "top": 363.40625,
+                "right": 360.390625,
+                "bottom": 411.40625,
+                "left": 280.984375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 364.390625,
+                "y": 365.40625,
+                "width": 44,
+                "height": 44,
+                "top": 365.40625,
+                "right": 408.390625,
+                "bottom": 409.40625,
+                "left": 364.390625
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 51.59375,
+                "y": 413.40625,
+                "width": 44,
+                "height": 44,
+                "top": 413.40625,
+                "right": 95.59375,
+                "bottom": 457.40625,
+                "left": 51.59375
+              }
+            },
+            {
+              "name": "set-done-btn set-done-btn--active",
+              "rect": {
+                "x": 95.59375,
+                "y": 413.40625,
+                "width": 44,
+                "height": 44,
+                "top": 413.40625,
+                "right": 139.59375,
+                "bottom": 457.40625,
+                "left": 95.59375
+              }
+            },
+            {
+              "name": "remove-set-btn",
+              "rect": {
+                "x": 139.59375,
+                "y": 413.40625,
+                "width": 44,
+                "height": 44,
+                "top": 413.40625,
+                "right": 183.59375,
+                "bottom": 457.40625,
+                "left": 139.59375
+              }
+            },
+            {
+              "name": "set-ghost",
+              "rect": {
+                "x": 286.109375,
+                "y": 426.609375,
+                "width": 122.28125,
+                "height": 17.59375,
+                "top": 426.609375,
+                "right": 408.390625,
+                "bottom": 444.203125,
+                "left": 286.109375
+              }
+            }
+          ],
+          "controlOverlaps": [],
+          "contentEscapesRow": false,
+          "flowOverlap": false
+        },
+        {
+          "rowIndex": 1,
+          "rowRect": {
+            "x": 21.59375,
+            "y": 472.40625,
+            "width": 386.796875,
+            "height": 123,
+            "top": 472.40625,
+            "right": 408.390625,
+            "bottom": 595.40625,
+            "left": 21.59375
+          },
+          "ghostRect": {
+            "x": 294.078125,
+            "y": 557.609375,
+            "width": 114.3125,
+            "height": 17.59375,
+            "top": 557.609375,
+            "right": 408.390625,
+            "bottom": 575.203125,
+            "left": 294.078125
+          },
+          "nextRowRect": null,
+          "elements": [
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 51.59375,
+                "y": 478.40625,
+                "width": 175.390625,
+                "height": 16,
+                "top": 478.40625,
+                "right": 226.984375,
+                "bottom": 494.40625,
+                "left": 51.59375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 51.59375,
+                "y": 496.40625,
+                "width": 44,
+                "height": 44,
+                "top": 496.40625,
+                "right": 95.59375,
+                "bottom": 540.40625,
+                "left": 51.59375
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 99.59375,
+                "y": 494.40625,
+                "width": 79.390625,
+                "height": 48,
+                "top": 494.40625,
+                "right": 178.984375,
+                "bottom": 542.40625,
+                "left": 99.59375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 182.984375,
+                "y": 496.40625,
+                "width": 44,
+                "height": 44,
+                "top": 496.40625,
+                "right": 226.984375,
+                "bottom": 540.40625,
+                "left": 182.984375
+              }
+            },
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 232.984375,
+                "y": 478.40625,
+                "width": 175.40625,
+                "height": 16,
+                "top": 478.40625,
+                "right": 408.390625,
+                "bottom": 494.40625,
+                "left": 232.984375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 232.984375,
+                "y": 496.40625,
+                "width": 44,
+                "height": 44,
+                "top": 496.40625,
+                "right": 276.984375,
+                "bottom": 540.40625,
+                "left": 232.984375
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 280.984375,
+                "y": 494.40625,
+                "width": 79.40625,
+                "height": 48,
+                "top": 494.40625,
+                "right": 360.390625,
+                "bottom": 542.40625,
+                "left": 280.984375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 364.390625,
+                "y": 496.40625,
+                "width": 44,
+                "height": 44,
+                "top": 496.40625,
+                "right": 408.390625,
+                "bottom": 540.40625,
+                "left": 364.390625
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 51.59375,
+                "y": 544.40625,
+                "width": 44,
+                "height": 44,
+                "top": 544.40625,
+                "right": 95.59375,
+                "bottom": 588.40625,
+                "left": 51.59375
+              }
+            },
+            {
+              "name": "set-done-btn set-done-btn--active",
+              "rect": {
+                "x": 95.59375,
+                "y": 544.40625,
+                "width": 44,
+                "height": 44,
+                "top": 544.40625,
+                "right": 139.59375,
+                "bottom": 588.40625,
+                "left": 95.59375
+              }
+            },
+            {
+              "name": "remove-set-btn",
+              "rect": {
+                "x": 139.59375,
+                "y": 544.40625,
+                "width": 44,
+                "height": 44,
+                "top": 544.40625,
+                "right": 183.59375,
+                "bottom": 588.40625,
+                "left": 139.59375
+              }
+            },
+            {
+              "name": "set-ghost",
+              "rect": {
+                "x": 294.078125,
+                "y": 557.609375,
+                "width": 114.3125,
+                "height": 17.59375,
+                "top": 557.609375,
+                "right": 408.390625,
+                "bottom": 575.203125,
+                "left": 294.078125
+              }
+            }
+          ],
+          "controlOverlaps": [],
+          "contentEscapesRow": false,
+          "flowOverlap": false
+        },
+        {
+          "rowIndex": 2,
+          "rowRect": {
+            "x": 21.59375,
+            "y": 603.40625,
+            "width": 386.796875,
+            "height": 123,
+            "top": 603.40625,
+            "right": 408.390625,
+            "bottom": 726.40625,
+            "left": 21.59375
+          },
+          "ghostRect": {
+            "x": 294.078125,
+            "y": 688.609375,
+            "width": 114.3125,
+            "height": 17.59375,
+            "top": 688.609375,
+            "right": 408.390625,
+            "bottom": 706.203125,
+            "left": 294.078125
+          },
+          "nextRowRect": null,
+          "elements": [
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 54.59375,
+                "y": 609.40625,
+                "width": 173.890625,
+                "height": 16,
+                "top": 609.40625,
+                "right": 228.484375,
+                "bottom": 625.40625,
+                "left": 54.59375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 54.59375,
+                "y": 627.40625,
+                "width": 44,
+                "height": 44,
+                "top": 627.40625,
+                "right": 98.59375,
+                "bottom": 671.40625,
+                "left": 54.59375
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 102.59375,
+                "y": 625.40625,
+                "width": 77.890625,
+                "height": 48,
+                "top": 625.40625,
+                "right": 180.484375,
+                "bottom": 673.40625,
+                "left": 102.59375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 184.484375,
+                "y": 627.40625,
+                "width": 44,
+                "height": 44,
+                "top": 627.40625,
+                "right": 228.484375,
+                "bottom": 671.40625,
+                "left": 184.484375
+              }
+            },
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 234.484375,
+                "y": 609.40625,
+                "width": 173.90625,
+                "height": 16,
+                "top": 609.40625,
+                "right": 408.390625,
+                "bottom": 625.40625,
+                "left": 234.484375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 234.484375,
+                "y": 627.40625,
+                "width": 44,
+                "height": 44,
+                "top": 627.40625,
+                "right": 278.484375,
+                "bottom": 671.40625,
+                "left": 234.484375
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 282.484375,
+                "y": 625.40625,
+                "width": 77.90625,
+                "height": 48,
+                "top": 625.40625,
+                "right": 360.390625,
+                "bottom": 673.40625,
+                "left": 282.484375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 364.390625,
+                "y": 627.40625,
+                "width": 44,
+                "height": 44,
+                "top": 627.40625,
+                "right": 408.390625,
+                "bottom": 671.40625,
+                "left": 364.390625
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 54.59375,
+                "y": 675.40625,
+                "width": 44,
+                "height": 44,
+                "top": 675.40625,
+                "right": 98.59375,
+                "bottom": 719.40625,
+                "left": 54.59375
+              }
+            },
+            {
+              "name": "set-done-btn",
+              "rect": {
+                "x": 98.59375,
+                "y": 675.40625,
+                "width": 44,
+                "height": 44,
+                "top": 675.40625,
+                "right": 142.59375,
+                "bottom": 719.40625,
+                "left": 98.59375
+              }
+            },
+            {
+              "name": "remove-set-btn",
+              "rect": {
+                "x": 142.59375,
+                "y": 675.40625,
+                "width": 44,
+                "height": 44,
+                "top": 675.40625,
+                "right": 186.59375,
+                "bottom": 719.40625,
+                "left": 142.59375
+              }
+            },
+            {
+              "name": "set-ghost",
+              "rect": {
+                "x": 294.078125,
+                "y": 688.609375,
+                "width": 114.3125,
+                "height": 17.59375,
+                "top": 688.609375,
+                "right": 408.390625,
+                "bottom": 706.203125,
+                "left": 294.078125
+              }
+            }
+          ],
+          "controlOverlaps": [],
+          "contentEscapesRow": false,
+          "flowOverlap": false
+        },
+        {
+          "rowIndex": 3,
+          "rowRect": {
+            "x": 21.59375,
+            "y": 734.40625,
+            "width": 386.796875,
+            "height": 123,
+            "top": 734.40625,
+            "right": 408.390625,
+            "bottom": 857.40625,
+            "left": 21.59375
+          },
+          "ghostRect": {
+            "x": 294.078125,
+            "y": 819.609375,
+            "width": 114.3125,
+            "height": 17.59375,
+            "top": 819.609375,
+            "right": 408.390625,
+            "bottom": 837.203125,
+            "left": 294.078125
+          },
+          "nextRowRect": null,
+          "elements": [
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 51.59375,
+                "y": 740.40625,
+                "width": 175.390625,
+                "height": 16,
+                "top": 740.40625,
+                "right": 226.984375,
+                "bottom": 756.40625,
+                "left": 51.59375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 51.59375,
+                "y": 758.40625,
+                "width": 44,
+                "height": 44,
+                "top": 758.40625,
+                "right": 95.59375,
+                "bottom": 802.40625,
+                "left": 51.59375
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 99.59375,
+                "y": 756.40625,
+                "width": 79.390625,
+                "height": 48,
+                "top": 756.40625,
+                "right": 178.984375,
+                "bottom": 804.40625,
+                "left": 99.59375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 182.984375,
+                "y": 758.40625,
+                "width": 44,
+                "height": 44,
+                "top": 758.40625,
+                "right": 226.984375,
+                "bottom": 802.40625,
+                "left": 182.984375
+              }
+            },
+            {
+              "name": "set-stepper__label",
+              "rect": {
+                "x": 232.984375,
+                "y": 740.40625,
+                "width": 175.40625,
+                "height": 16,
+                "top": 740.40625,
+                "right": 408.390625,
+                "bottom": 756.40625,
+                "left": 232.984375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 232.984375,
+                "y": 758.40625,
+                "width": 44,
+                "height": 44,
+                "top": 758.40625,
+                "right": 276.984375,
+                "bottom": 802.40625,
+                "left": 232.984375
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 280.984375,
+                "y": 756.40625,
+                "width": 79.40625,
+                "height": 48,
+                "top": 756.40625,
+                "right": 360.390625,
+                "bottom": 804.40625,
+                "left": 280.984375
+              }
+            },
+            {
+              "name": "set-stepper__button",
+              "rect": {
+                "x": 364.390625,
+                "y": 758.40625,
+                "width": 44,
+                "height": 44,
+                "top": 758.40625,
+                "right": 408.390625,
+                "bottom": 802.40625,
+                "left": 364.390625
+              }
+            },
+            {
+              "name": "set-input",
+              "rect": {
+                "x": 51.59375,
+                "y": 806.40625,
+                "width": 44,
+                "height": 44,
+                "top": 806.40625,
+                "right": 95.59375,
+                "bottom": 850.40625,
+                "left": 51.59375
+              }
+            },
+            {
+              "name": "set-done-btn",
+              "rect": {
+                "x": 95.59375,
+                "y": 806.40625,
+                "width": 44,
+                "height": 44,
+                "top": 806.40625,
+                "right": 139.59375,
+                "bottom": 850.40625,
+                "left": 95.59375
+              }
+            },
+            {
+              "name": "remove-set-btn",
+              "rect": {
+                "x": 139.59375,
+                "y": 806.40625,
+                "width": 44,
+                "height": 44,
+                "top": 806.40625,
+                "right": 183.59375,
+                "bottom": 850.40625,
+                "left": 139.59375
+              }
+            },
+            {
+              "name": "set-ghost",
+              "rect": {
+                "x": 294.078125,
+                "y": 819.609375,
+                "width": 114.3125,
+                "height": 17.59375,
+                "top": 819.609375,
+                "right": 408.390625,
+                "bottom": 837.203125,
+                "left": 294.078125
+              }
+            }
+          ],
+          "controlOverlaps": [],
+          "contentEscapesRow": false,
+          "flowOverlap": false
+        }
+      ],
+      "minControlSize": 44,
+      "srOnly": {
+        "position": "absolute",
+        "width": "1px",
+        "height": "1px",
+        "overflow": "hidden"
+      },
+      "lightBackgrounds": [],
+      "colors": {
+        "activeBorder": "rgb(227, 168, 59)",
+        "restPickerValue": "rgb(227, 168, 59)",
+        "modalSubContrast": 8.69300070033934,
+        "setGhostContrast": 7.088056251648137,
+        "setNumContrast": 7.088056251648137,
+        "timerLabelContrast": 6.179338741063544
+      }
+    },
+    "verdict": {
+      "noDocumentOverflow": true,
+      "noModalOverflow": true,
+      "modalAtMost92dvh": true,
+      "timerAtMost40Percent390": true,
+      "threeRowsVisible390": true,
+      "noSetControlOverlaps": true,
+      "setContentContained": true,
+      "noSetFlowOverlaps": true,
+      "digitClamp": true,
+      "inputFontSize": true,
+      "touchTargets": true,
+      "srOnlyHidden": true,
+      "noLightModalBackgrounds": true,
+      "contrast": true
+    }
+  }
+]

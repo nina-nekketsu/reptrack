@@ -1,5 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import fs from 'fs';
+import path from 'path';
 import SetTimer from './SetTimer';
 import { useTimer } from '../context/TimerContext';
 
@@ -56,8 +58,21 @@ describe('SetTimer DS-11 redesign', () => {
     expect(activePhase).toHaveTextContent('1:12');
     expect(inactivePhase).toHaveTextContent(/EXERCISE/);
     expect(inactivePhase).toHaveTextContent('0:00');
+    expect(activePhase).toHaveClass('timer-phase--rest');
+    expect(inactivePhase).toHaveClass('timer-phase--exercise');
     expect(screen.getByText('Rest started, 90 seconds')).toHaveClass('sr-only');
     expect(screen.queryAllByText(/^Rest$/i)).toHaveLength(0);
+  });
+
+  test('defines the sr-only utility as visually hidden CSS', () => {
+    const indexCss = fs.readFileSync(path.join(process.cwd(), 'src/index.css'), 'utf8');
+    const srOnlyRule = indexCss.match(/\.sr-only\s*{[^}]+}/)?.[0] || '';
+
+    expect(srOnlyRule).toContain('position: absolute');
+    expect(srOnlyRule).toContain('width: 1px');
+    expect(srOnlyRule).toContain('height: 1px');
+    expect(srOnlyRule).toContain('overflow: hidden');
+    expect(srOnlyRule).toContain('white-space: nowrap');
   });
 
   test('opens a rest quick-select sheet with advisor copy and updates rest in two taps', async () => {
