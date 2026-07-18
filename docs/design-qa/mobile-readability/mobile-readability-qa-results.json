@@ -1,7 +1,7 @@
 [
   {
     "name": "320x568",
-    "screenshotPath": "/Volumes/Sanctum/Boman/reptrack-canonical-integration/docs/design-qa/mobile-readability/after-320x568.png",
+    "screenshotPath": "docs/design-qa/mobile-readability/after-320x568.png",
     "metrics": {
       "viewport": {
         "width": 320,
@@ -771,7 +771,7 @@
         "restPickerValue": "rgb(227, 168, 59)",
         "modalSubContrast": 8.69300070033934,
         "setGhostContrast": 7.088056251648137,
-        "setNumContrast": 7.561888685307599,
+        "setNumContrast": 7.088056251648137,
         "timerLabelContrast": 6.179338741063544
       }
     },
@@ -794,7 +794,7 @@
   },
   {
     "name": "360x640",
-    "screenshotPath": "/Volumes/Sanctum/Boman/reptrack-canonical-integration/docs/design-qa/mobile-readability/after-360x640.png",
+    "screenshotPath": "docs/design-qa/mobile-readability/after-360x640.png",
     "metrics": {
       "viewport": {
         "width": 360,
@@ -1564,7 +1564,7 @@
         "restPickerValue": "rgb(227, 168, 59)",
         "modalSubContrast": 8.69300070033934,
         "setGhostContrast": 7.088056251648137,
-        "setNumContrast": 7.561888685307599,
+        "setNumContrast": 7.088056251648137,
         "timerLabelContrast": 6.179338741063544
       }
     },
@@ -1587,7 +1587,7 @@
   },
   {
     "name": "375x667",
-    "screenshotPath": "/Volumes/Sanctum/Boman/reptrack-canonical-integration/docs/design-qa/mobile-readability/after-375x667.png",
+    "screenshotPath": "docs/design-qa/mobile-readability/after-375x667.png",
     "metrics": {
       "viewport": {
         "width": 375,
@@ -2357,7 +2357,7 @@
         "restPickerValue": "rgb(227, 168, 59)",
         "modalSubContrast": 8.69300070033934,
         "setGhostContrast": 7.088056251648137,
-        "setNumContrast": 7.561888685307599,
+        "setNumContrast": 7.088056251648137,
         "timerLabelContrast": 6.179338741063544
       }
     },
@@ -2380,7 +2380,7 @@
   },
   {
     "name": "390x844",
-    "screenshotPath": "/Volumes/Sanctum/Boman/reptrack-canonical-integration/docs/design-qa/mobile-readability/after-390x844.png",
+    "screenshotPath": "docs/design-qa/mobile-readability/after-390x844.png",
     "metrics": {
       "viewport": {
         "width": 390,
@@ -3150,7 +3150,7 @@
         "restPickerValue": "rgb(227, 168, 59)",
         "modalSubContrast": 8.69300070033934,
         "setGhostContrast": 7.088056251648137,
-        "setNumContrast": 7.561888685307599,
+        "setNumContrast": 7.088056251648137,
         "timerLabelContrast": 6.179338741063544
       }
     },
@@ -3173,7 +3173,7 @@
   },
   {
     "name": "393x852",
-    "screenshotPath": "/Volumes/Sanctum/Boman/reptrack-canonical-integration/docs/design-qa/mobile-readability/after-393x852.png",
+    "screenshotPath": "docs/design-qa/mobile-readability/after-393x852.png",
     "metrics": {
       "viewport": {
         "width": 393,
@@ -3943,7 +3943,7 @@
         "restPickerValue": "rgb(227, 168, 59)",
         "modalSubContrast": 8.69300070033934,
         "setGhostContrast": 7.088056251648137,
-        "setNumContrast": 7.561888685307599,
+        "setNumContrast": 7.088056251648137,
         "timerLabelContrast": 6.179338741063544
       }
     },
@@ -3966,7 +3966,7 @@
   },
   {
     "name": "430x932",
-    "screenshotPath": "/Volumes/Sanctum/Boman/reptrack-canonical-integration/docs/design-qa/mobile-readability/after-430x932.png",
+    "screenshotPath": "docs/design-qa/mobile-readability/after-430x932.png",
     "metrics": {
       "viewport": {
         "width": 430,
@@ -4736,7 +4736,7 @@
         "restPickerValue": "rgb(227, 168, 59)",
         "modalSubContrast": 8.69300070033934,
         "setGhostContrast": 7.088056251648137,
-        "setNumContrast": 7.561888685307599,
+        "setNumContrast": 7.088056251648137,
         "timerLabelContrast": 6.179338741063544
       }
     },
@@ -4759,7 +4759,7 @@
   },
   {
     "name": "430x390-short",
-    "screenshotPath": "/Volumes/Sanctum/Boman/reptrack-canonical-integration/docs/design-qa/mobile-readability/after-430x390-short.png",
+    "screenshotPath": "docs/design-qa/mobile-readability/after-430x390-short.png",
     "metrics": {
       "viewport": {
         "width": 430,
@@ -5529,7 +5529,7 @@
         "restPickerValue": "rgb(227, 168, 59)",
         "modalSubContrast": 8.69300070033934,
         "setGhostContrast": 7.088056251648137,
-        "setNumContrast": 7.561888685307599,
+        "setNumContrast": 7.088056251648137,
         "timerLabelContrast": 6.179338741063544
       }
     },

@@ -219,9 +219,10 @@ try {
         captureBeyondViewport: false,
       });
       const screenshotPath = path.join(outputDir, `after-${name}.png`);
+      const screenshotReportPath = path.posix.join('docs', 'design-qa', 'mobile-readability', `after-${name}.png`);
       await writeFile(screenshotPath, Buffer.from(screenshot.data, 'base64'));
       const verdict = verdictFor(metrics);
-      results.push({ name, screenshotPath, metrics, verdict });
+      results.push({ name, screenshotPath: screenshotReportPath, metrics, verdict });
     } finally {
       client.close();
       await fetch(`http://127.0.0.1:${port}/json/close/${target.id}`).catch(() => {});
