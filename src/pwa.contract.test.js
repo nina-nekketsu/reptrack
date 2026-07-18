@@ -38,4 +38,25 @@ describe('RepTrack PWA identity contract', () => {
     expect(html).toContain('apple-mobile-web-app-capable');
     expect(html).toContain('%PUBLIC_URL%/reptrack-192.png');
   });
+
+  test('service worker uses a GitHub Pages safe cache policy', () => {
+    const source = fs.readFileSync(path.join(publicDir, 'service-worker.js'), 'utf8');
+
+    expect(source).toMatch(/reptrack-static-v/);
+    expect(source).toMatch(/reptrack-pages-v/);
+    expect(source).toMatch(/isHashedAssetRequest/);
+    expect(source).toMatch(/cacheFirst/);
+    expect(source).toMatch(/networkFirst/);
+    expect(source).toMatch(/build-info\.json/);
+    expect(source).toMatch(/event\.request\.mode === ['"]navigate['"]/);
+    expect(source).toMatch(/Content-Type[\s\S]*text\/html/);
+    expect(source).toMatch(/deleteOldCaches/);
+    expect(source).toMatch(/REPTRACK_SW_KILL_SWITCH/);
+    expect(source).toMatch(/registration\.unregister\(\)/);
+    expect(source).toMatch(/isApiRequest/);
+    expect(source).toMatch(/supabase/);
+    expect(source).toMatch(/\/auth\/v1\//);
+    expect(source).toMatch(/\/rest\/v1\//);
+    expect(source).toMatch(/\/functions\/v1\//);
+  });
 });

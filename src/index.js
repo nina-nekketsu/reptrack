@@ -5,9 +5,11 @@ import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 import { installGlobalDiagnostics } from './lib/clientDiagnostics';
 import { clientDiagnostics } from './lib/clientDiagnosticsRuntime';
+import { registerPwaUpdateController } from './lib/pwaUpdateController';
 import reportWebVitals from './reportWebVitals';
 
 installGlobalDiagnostics(window, clientDiagnostics);
+registerPwaUpdateController();
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
