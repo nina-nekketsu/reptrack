@@ -238,6 +238,7 @@ Each implementation slice follows:
 - Deployment job is environment-protected and requires configured repository secrets.
 - Build metadata contains a commit reachable from origin/main.
 - Diagnostics remain local and redact sensitive payloads.
+- Dependency audit is triaged against the shipped browser bundle; CRA/tooling packages are moved to development scope or replaced, and no unaccepted critical/high runtime advisory remains.
 
 **Approval gate:** configuring secrets, pushing workflow, merging and triggering Pages requires explicit approval.
 

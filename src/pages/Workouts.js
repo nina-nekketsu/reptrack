@@ -7,6 +7,7 @@ import {
   getStoredVisibleActiveWorkoutSession,
   saveActiveWorkoutSession,
 } from '../lib/activeWorkoutSession';
+import Sheet from '../components/Sheet';
 import './Page.css';
 import './Workouts.css';
 
@@ -387,6 +388,7 @@ export default function Workouts() {
   const [editingPlanEx, setEditingPlanEx] = useState(null); // { planExIndex }
   const [showAddExercise, setShowAddExercise] = useState(false);
   const [showNewPlan, setShowNewPlan] = useState(false);
+  const [showSessionConflict, setShowSessionConflict] = useState(false);
   const [editMode, setEditMode] = useState(false);
 
   // Current plan
@@ -403,12 +405,8 @@ export default function Workouts() {
   }, [activeSession]);
 
   // ── Start session ──
-  function handleStart() {
-    if (activeSession && activeSession.planId === currentPlan.id) {
-      // Already active for this plan — navigate to active workout
-      navigate(`/workout/${currentPlan.id}`);
-      return;
-    }
+  function startCurrentPlan() {
+    if (!currentPlan) return;
     const now = new Date().toISOString();
     const session = saveActiveWorkoutSession({
       action: 'start',
@@ -419,6 +417,34 @@ export default function Workouts() {
     pushActiveWorkoutSession(user?.id);
     setActiveSession(session);
     navigate(`/workout/${currentPlan.id}`);
+  }
+
+  function handleStart() {
+    if (activeSession && activeSession.planId === currentPlan.id) {
+      // Already active for this plan — navigate to active workout
+      navigate(`/workout/${currentPlan.id}`);
+      return;
+    }
+    if (activeSession) {
+      setShowSessionConflict(true);
+      return;
+    }
+    startCurrentPlan();
+  }
+
+  function handleResumeExisting() {
+    if (!activeSession) return;
+    setShowSessionConflict(false);
+    navigate(`/workout/${activeSession.planId}`);
+  }
+
+  function handleEndAndStartNew() {
+    if (!activeSession) return;
+    timer.stopAll();
+    saveActiveWorkoutSession({ action: 'end', now: new Date().toISOString() });
+    pushActiveWorkoutSession(user?.id);
+    setShowSessionConflict(false);
+    startCurrentPlan();
   }
 
   // ── End session ──
@@ -723,6 +749,22 @@ export default function Workouts() {
           onClose={() => setShowNewPlan(false)}
         />
       )}
+
+      <Sheet
+        open={showSessionConflict}
+        onClose={() => setShowSessionConflict(false)}
+        title="Workout already active"
+        swipeToDismiss={false}
+      >
+        <p className="sheet-copy">
+          {activeSession?.planName || 'Another workout'} is still active. Resume it, or end it before starting {currentPlan?.name || 'this plan'}.
+        </p>
+        <div className="sheet-actions">
+          <button type="button" className="btn-primary" onClick={handleResumeExisting}>Resume existing</button>
+          <button type="button" className="btn-danger" onClick={handleEndAndStartNew}>End &amp; start new</button>
+          <button type="button" className="btn-secondary" onClick={() => setShowSessionConflict(false)}>Cancel</button>
+        </div>
+      </Sheet>
     </div>
   );
 }

@@ -48,6 +48,18 @@
   color: var(--c-text);
   font-size: 1.5rem;
 }
+.sheet-copy {
+  margin: 0 0 1rem;
+  color: var(--ink-mid);
+  line-height: 1.5;
+}
+.sheet-actions {
+  display: grid;
+  gap: 0.75rem;
+}
+.sheet-actions > button {
+  width: 100%;
+}
 .edge-fade-scroll {
   mask-image: linear-gradient(to bottom, transparent 0, black 1rem, black calc(100% - 1rem), transparent 100%);
 }
