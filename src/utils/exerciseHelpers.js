@@ -1,6 +1,7 @@
 // src/utils/exerciseHelpers.js — localStorage helpers + Supabase sync via src/lib/sync.js
 
 import { pushExercise, pushSession, deleteRemoteSession, deleteRemoteExercise } from '../lib/sync';
+import { reportBackgroundFailure } from '../lib/clientDiagnosticsRuntime';
 import { STORAGE_AVAILABLE } from './storageCheck';
 
 const defaultExercises = [
@@ -15,6 +16,10 @@ const defaultExercises = [
 ];
 
 export { defaultExercises };
+
+function reportSyncFailure(error) {
+  reportBackgroundFailure(error, { source: 'sync', category: 'unknown' });
+}
 
 // ── LocalStorage ─────────────────────────────────────────────────────────
 
@@ -187,9 +192,7 @@ export function deleteSession(exerciseId, sessionDate, userId) {
 
   // Fire-and-forget Supabase delete
   if (userId && target?.remoteId) {
-    deleteRemoteSession(target.remoteId).catch((err) =>
-      console.warn('[sync] deleteSession failed:', err)
-    );
+    deleteRemoteSession(target.remoteId, userId).catch(reportSyncFailure);
   }
 
   return updated;
@@ -213,9 +216,7 @@ export function deleteExerciseWithSessions(exerciseId, userId) {
 
   // Fire-and-forget Supabase delete
   if (userId) {
-    deleteRemoteExercise(exerciseId, userId).catch((err) =>
-      console.warn('[sync] deleteExercise failed:', err)
-    );
+    deleteRemoteExercise(exerciseId, userId).catch(reportSyncFailure);
   }
 
   return { updatedExercises, updatedLogs: remainingLogs };

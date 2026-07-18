@@ -71,6 +71,10 @@ export default function SyncIndicator() {
       ? `Offline — ${countLabel(unsyncedCount, 'change')} not synced`
       : 'Offline';
     state = 'offline';
+  } else if (snapshot.authExpired || snapshot.pausedReason === 'auth-expired') {
+    icon = '⚠';
+    label = 'Sign in again to sync';
+    state = 'error';
   } else if (snapshot.failedCount > 0 || snapshot.status === 'error') {
     icon = '⚠';
     label = snapshot.failedCount > 0

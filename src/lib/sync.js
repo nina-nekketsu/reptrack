@@ -16,7 +16,9 @@ import { clientDiagnostics } from './clientDiagnosticsRuntime';
 
 let _mutationOutbox = null;
 let _snapshotListeners = [];
+let _flushPendingMutationsPromise = null;
 const LAST_SUCCESS_STORAGE_KEY = 'reptrackLastSuccessfulSyncAt';
+const AUTH_EXPIRED_PAUSE = 'auth-expired';
 
 function readLastSuccessfulSyncAt() {
   if (typeof localStorage === 'undefined') return null;
@@ -28,6 +30,7 @@ function readLastSuccessfulSyncAt() {
 }
 
 let _lastSuccessfulSyncAt = readLastSuccessfulSyncAt();
+let _pausedReason = null;
 
 function notifySyncSnapshot() {
   const snapshot = getSyncSnapshot();
@@ -67,6 +70,58 @@ async function executePendingMutation(operation) {
     return;
   }
 
+  if (operation.kind === 'exercise/delete') {
+    const { exercise_id: exerciseId, user_id: userId } = operation.payload;
+    const { error: logsError } = await supabase
+      .from('exercise_logs')
+      .delete()
+      .eq('exercise_id', exerciseId)
+      .eq('user_id', userId);
+    if (logsError) throw logsError;
+    const { error: exerciseError } = await supabase
+      .from('exercises')
+      .delete()
+      .eq('id', exerciseId)
+      .eq('user_id', userId);
+    if (exerciseError) throw exerciseError;
+    return;
+  }
+
+  if (operation.kind === 'plan/update') {
+    const { error } = await supabase
+      .from('workout_plans')
+      .upsert(operation.payload, { onConflict: 'id,user_id' });
+    if (error) throw error;
+    return;
+  }
+
+  if (operation.kind === 'settings/update') {
+    const { error } = await supabase
+      .from('user_settings')
+      .upsert(operation.payload, { onConflict: 'user_id' });
+    if (error) throw error;
+    return;
+  }
+
+  if (operation.kind === 'coach_state/update') {
+    const { error } = await supabase
+      .from('coach_state')
+      .upsert(operation.payload, { onConflict: 'user_id,key' });
+    if (error) throw error;
+    return;
+  }
+
+  if (operation.kind === 'session/insert') {
+    const { data, error } = await supabase
+      .from('exercise_logs')
+      .insert(operation.payload)
+      .select()
+      .single();
+    if (error) throw error;
+    attachRemoteSessionId(operation.payload, data?.id);
+    return;
+  }
+
   if (operation.kind === 'session/update') {
     const {
       remote_id: remoteId,
@@ -84,7 +139,39 @@ async function executePendingMutation(operation) {
     return;
   }
 
+  if (operation.kind === 'session/delete') {
+    const { remote_id: remoteId, user_id: userId } = operation.payload;
+    let query = supabase
+      .from('exercise_logs')
+      .delete()
+      .eq('id', remoteId);
+    if (userId) query = query.eq('user_id', userId);
+    const { error } = await query;
+    if (error) throw error;
+    return;
+  }
+
   throw Object.assign(new Error('Unsupported mutation kind'), { code: 'UNSUPPORTED_KIND' });
+}
+
+function attachRemoteSessionId(payload, remoteId) {
+  if (!remoteId || typeof localStorage === 'undefined') return;
+  const logs = safeParseJSON(localStorage.getItem('exerciseLogs'), {});
+  const sessions = logs[payload.exercise_id] || [];
+  let changed = false;
+  const nextSessions = sessions.map((session) => {
+    if (session.remoteId || session.date !== payload.date) return session;
+    changed = true;
+    return { ...session, remoteId };
+  });
+  if (!changed) return;
+  localStorage.setItem('exerciseLogs', JSON.stringify({
+    ...logs,
+    [payload.exercise_id]: nextSessions,
+  }));
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('exerciseLogged'));
+  }
 }
 
 export function listPendingMutations() {
@@ -92,6 +179,7 @@ export function listPendingMutations() {
 }
 
 export function retryPendingMutation(operationId) {
+  _pausedReason = null;
   return getMutationOutbox().retry(operationId);
 }
 
@@ -104,6 +192,8 @@ export function getSyncSnapshot() {
     syncingCount: operations.filter((operation) => operation.status === 'syncing').length,
     lastSuccessfulSyncAt: _lastSuccessfulSyncAt,
     operations,
+    authExpired: _pausedReason === AUTH_EXPIRED_PAUSE,
+    pausedReason: _pausedReason,
   };
 }
 
@@ -133,7 +223,15 @@ function classifySyncFailure(error = {}) {
   return 'unknown';
 }
 
-export async function flushPendingMutations() {
+function recordClassifiedSyncFailure(error, category = classifySyncFailure(error)) {
+  clientDiagnostics.incrementSyncFailure(category);
+  if (clientDiagnostics.recordError) {
+    clientDiagnostics.recordError(error, { source: 'sync', category });
+  }
+  return category;
+}
+
+async function runPendingMutationFlush() {
   const outbox = getMutationOutbox();
   if (!supabase) {
     return {
@@ -143,6 +241,15 @@ export async function flushPendingMutations() {
       pending: outbox.pendingCount(),
     };
   }
+  if (_pausedReason === AUTH_EXPIRED_PAUSE) {
+    return {
+      processed: 0,
+      succeeded: 0,
+      failed: 0,
+      pending: outbox.pendingCount(),
+      paused: AUTH_EXPIRED_PAUSE,
+    };
+  }
 
   const totals = { processed: 0, succeeded: 0, failed: 0, pending: outbox.pendingCount() };
   do {
@@ -150,21 +257,38 @@ export async function flushPendingMutations() {
       outbox.listPending().map((operation) => [operation.id, operation.attempts])
     );
     const result = await outbox.flush(executePendingMutation);
-    outbox.listPending()
-      .filter((operation) => (
-        operation.status === 'failed'
-        && operation.attempts > (attemptsBefore.get(operation.id) || 0)
-      ))
-      .forEach((operation) => {
-        clientDiagnostics.incrementSyncFailure(classifySyncFailure(operation.lastError));
-      });
+    const newlyFailed = outbox.listPending().filter((operation) => (
+      operation.status === 'failed'
+      && operation.attempts > (attemptsBefore.get(operation.id) || 0)
+    ));
+    for (const operation of newlyFailed) {
+      const category = classifySyncFailure(operation.lastError);
+      clientDiagnostics.incrementSyncFailure(category);
+      if (clientDiagnostics.recordError) {
+        clientDiagnostics.recordError(
+          Object.assign(new Error(operation.lastError?.message || 'Sync failed'), {
+            code: operation.lastError?.code,
+          }),
+          { source: 'sync', category }
+        );
+      }
+      if (category === AUTH_EXPIRED_PAUSE) _pausedReason = AUTH_EXPIRED_PAUSE;
+    }
     totals.processed += result.processed;
     totals.succeeded += result.succeeded;
     totals.failed += result.failed;
     totals.pending = outbox.pendingCount();
-  } while (outbox.listPending().some((operation) => operation.status === 'pending'));
+  } while (!_pausedReason && outbox.listPending().some((operation) => operation.status === 'pending'));
   if (totals.succeeded > 0 && outbox.pendingCount() === 0) markSuccessfulSync();
   return totals;
+}
+
+export function flushPendingMutations() {
+  if (_flushPendingMutationsPromise) return _flushPendingMutationsPromise;
+  _flushPendingMutationsPromise = runPendingMutationFlush().finally(() => {
+    _flushPendingMutationsPromise = null;
+  });
+  return _flushPendingMutationsPromise;
 }
 
 // ─── Status tracking ────────────────────────────────────────────────────
@@ -305,7 +429,7 @@ export async function pullAll(userId) {
 
     setSuccessfulStatus();
   } catch (err) {
-    clientDiagnostics.incrementSyncFailure(classifySyncFailure(err));
+    recordClassifiedSyncFailure(err);
     console.error('[sync] pullAll failed:', err);
     setStatus('error');
     throw err;
@@ -347,12 +471,24 @@ export async function pushPlans(userId) {
   const plans = safeParseJSON(localStorage.getItem('workoutPlans'), []);
   if (plans.length === 0) return;
 
-  const rows = plans.map(p => ({
-    id: String(p.id),
-    user_id: userId,
-    name: p.name,
-    exercises: p.exercises || [],
-  }));
+  const queuedPlanIds = new Set(
+    getMutationOutbox().listPending()
+      .filter((operation) => (
+        operation.kind === 'plan/update'
+        && operation.payload?.user_id === userId
+      ))
+      .map((operation) => String(operation.entityId))
+  );
+  const rows = plans
+    .filter((plan) => !queuedPlanIds.has(String(plan.id)))
+    .map(p => ({
+      id: String(p.id),
+      user_id: userId,
+      name: p.name,
+      exercises: p.exercises || [],
+    }));
+
+  if (rows.length === 0) return;
 
   const { error } = await supabase.from('workout_plans').upsert(rows, { onConflict: 'id,user_id' });
   if (error) throw error;
@@ -362,11 +498,20 @@ export async function pushLogs(userId) {
   if (!supabase || !userId) return;
   const logs = safeParseJSON(localStorage.getItem('exerciseLogs'), {});
 
+  const queuedSessionKeys = new Set(
+    getMutationOutbox().listPending()
+      .filter((operation) => (
+        operation.kind === 'session/insert'
+        && operation.payload?.user_id === userId
+      ))
+      .map((operation) => `${operation.payload.exercise_id}:${operation.payload.date}`)
+  );
   const rows = [];
   for (const [exerciseId, sessions] of Object.entries(logs)) {
     for (const session of sessions) {
       // Skip sessions that already have a remoteId (already pushed)
       if (session.remoteId) continue;
+      if (queuedSessionKeys.has(`${String(exerciseId)}:${session.date}`)) continue;
       rows.push({
         user_id: userId,
         exercise_id: String(exerciseId),
@@ -399,41 +544,12 @@ export async function pushLogs(userId) {
   }
 }
 
-export async function pushSettings(userId) {
-  if (!supabase || !userId) return;
-
-  // Collect all settings into a single JSON blob
-  const settings = {};
-
-  // currentPlanId
-  const currentPlanId = localStorage.getItem('currentPlanId');
-  if (currentPlanId) settings.currentPlanId = currentPlanId;
-
-  // timerAutoStart (boolean stored as 'true'/'false' string)
-  const autoStart = localStorage.getItem('timerAutoStart');
-  if (autoStart !== null) {
-    settings.timerAutoStart = autoStart === 'true';
-  }
-
-  // timerRestDefaults (single JSON map: { exerciseId: seconds, ... })
-  const restDefaults = safeParseJSON(localStorage.getItem('timerRestDefaults'), null);
-  if (restDefaults && Object.keys(restDefaults).length > 0) {
-    settings.timerRestDefaults = restDefaults;
-  }
-
-  const { error } = await supabase.from('user_settings').upsert({
-    user_id: userId,
-    settings,
-  }, { onConflict: 'user_id' });
-
-  if (error) throw error;
-}
-
 export async function pushActiveWorkoutSession(userId) {
   if (!supabase || !userId) return;
   try {
     return await pushDedicatedActiveWorkoutSession(supabase, userId);
   } catch (error) {
+    recordClassifiedSyncFailure(error);
     console.error('[sync] pushActiveWorkoutSession:', error);
     return null;
   }
@@ -443,6 +559,7 @@ export async function pushAll(userId) {
   if (!supabase || !userId) return;
   setStatus('syncing');
   try {
+    await flushPendingMutations();
     await Promise.all([
       pushExercises(userId),
       pushPlans(userId),
@@ -450,9 +567,13 @@ export async function pushAll(userId) {
       pushSettings(userId),
       pushDedicatedActiveWorkoutSession(supabase, userId),
     ]);
+    if (getMutationOutbox().pendingCount() > 0) {
+      setStatus('error');
+      return;
+    }
     setSuccessfulStatus();
   } catch (err) {
-    clientDiagnostics.incrementSyncFailure(classifySyncFailure(err));
+    recordClassifiedSyncFailure(err);
     console.error('[sync] pushAll failed:', err);
     setStatus('error');
   }
@@ -464,13 +585,18 @@ export async function pushAll(userId) {
  * Delete a session from Supabase by its remote id.
  * The exercise_logs table is flat (one row = one session).
  */
-export async function deleteRemoteSession(remoteId) {
+export async function deleteRemoteSession(remoteId, userId = null) {
   if (!supabase || !remoteId) return;
-  const { error } = await supabase
-    .from('exercise_logs')
-    .delete()
-    .eq('id', remoteId);
-  if (error) console.error('[sync] deleteRemoteSession:', error);
+  getMutationOutbox().enqueue({
+    kind: 'session/delete',
+    entityId: String(remoteId),
+    idempotencyKey: `${userId || 'unknown-user'}:session-delete:${remoteId}`,
+    payload: {
+      remote_id: String(remoteId),
+      user_id: userId || null,
+    },
+  });
+  return flushPendingMutations();
 }
 
 /**
@@ -478,21 +604,16 @@ export async function deleteRemoteSession(remoteId) {
  */
 export async function deleteRemoteExercise(exerciseId, userId) {
   if (!supabase || !userId) return;
-  // Delete all sessions for this exercise first
-  const { error: logsErr } = await supabase
-    .from('exercise_logs')
-    .delete()
-    .eq('exercise_id', String(exerciseId))
-    .eq('user_id', userId);
-  if (logsErr) console.error('[sync] deleteRemoteExercise logs:', logsErr);
-
-  // Delete the exercise itself
-  const { error: exErr } = await supabase
-    .from('exercises')
-    .delete()
-    .eq('id', String(exerciseId))
-    .eq('user_id', userId);
-  if (exErr) console.error('[sync] deleteRemoteExercise:', exErr);
+  getMutationOutbox().enqueue({
+    kind: 'exercise/delete',
+    entityId: String(exerciseId),
+    idempotencyKey: `${userId}:exercise-delete:${exerciseId}`,
+    payload: {
+      exercise_id: String(exerciseId),
+      user_id: userId,
+    },
+  });
+  return flushPendingMutations();
 }
 
 // ─── Single-entity push helpers (fire-and-forget after local write) ────
@@ -516,33 +637,42 @@ export async function pushExercise(exercise, userId) {
 }
 
 export async function pushPlan(plan, userId) {
-  if (!supabase || !userId) return;
-  const { error } = await supabase.from('workout_plans').upsert({
-    id: String(plan.id),
-    user_id: userId,
-    name: plan.name,
-    exercises: plan.exercises || [],
-  }, { onConflict: 'id,user_id' });
-  if (error) console.error('[sync] pushPlan:', error);
+  if (!plan?.id || !userId) return undefined;
+  getMutationOutbox().enqueue({
+    kind: 'plan/update',
+    entityId: String(plan.id),
+    idempotencyKey: `${userId}:plan:${plan.id}`,
+    payload: {
+      id: String(plan.id),
+      user_id: userId,
+      name: plan.name,
+      exercises: plan.exercises || [],
+    },
+  });
+  return flushPendingMutations();
 }
 
 export async function pushSession(exerciseId, session, userId) {
-  if (!supabase || !userId) return null;
-  const { data, error } = await supabase.from('exercise_logs').insert({
-    user_id: userId,
-    exercise_id: String(exerciseId),
-    date: session.date,
-    sets: session.sets,
-    best_set: session.bestSet || null,
-    total_reps: session.totalReps || 0,
-    total_volume: session.totalVolume || 0,
-  }).select().single();
-
-  if (error) {
-    console.error('[sync] pushSession:', error);
-    return null;
-  }
-  return data?.id || null;
+  if (!exerciseId || !session?.date || !userId) return null;
+  getMutationOutbox().enqueue({
+    kind: 'session/insert',
+    entityId: `${exerciseId}:${session.date}`,
+    idempotencyKey: `${userId}:session-insert:${exerciseId}:${session.date}`,
+    payload: {
+      user_id: userId,
+      exercise_id: String(exerciseId),
+      date: session.date,
+      sets: session.sets,
+      best_set: session.bestSet || null,
+      total_reps: session.totalReps || 0,
+      total_volume: session.totalVolume || 0,
+    },
+  });
+  await flushPendingMutations();
+  const latestLogs = safeParseJSON(localStorage.getItem('exerciseLogs'), {});
+  const matched = (latestLogs[String(exerciseId)] || latestLogs[exerciseId] || [])
+    .find((candidate) => candidate.date === session.date);
+  return matched?.remoteId || null;
 }
 
 export async function updateRemoteSession(remoteId, exerciseId, session, userId) {
@@ -559,6 +689,48 @@ export async function updateRemoteSession(remoteId, exerciseId, session, userId)
       best_set: session.bestSet || null,
       total_reps: session.totalReps || 0,
       total_volume: session.totalVolume || 0,
+    },
+  });
+  return flushPendingMutations();
+}
+
+export async function pushSettings(userId) {
+  if (!userId) return undefined;
+
+  const settings = {};
+  const currentPlanId = localStorage.getItem('currentPlanId');
+  if (currentPlanId) settings.currentPlanId = currentPlanId;
+  const autoStart = localStorage.getItem('timerAutoStart');
+  if (autoStart !== null) {
+    settings.timerAutoStart = autoStart === 'true';
+  }
+  const restDefaults = safeParseJSON(localStorage.getItem('timerRestDefaults'), null);
+  if (restDefaults && Object.keys(restDefaults).length > 0) {
+    settings.timerRestDefaults = restDefaults;
+  }
+
+  getMutationOutbox().enqueue({
+    kind: 'settings/update',
+    entityId: userId,
+    idempotencyKey: `${userId}:settings`,
+    payload: {
+      user_id: userId,
+      settings,
+    },
+  });
+  return flushPendingMutations();
+}
+
+export async function pushCoachState(key, state, userId) {
+  if (!key || !userId) return undefined;
+  getMutationOutbox().enqueue({
+    kind: 'coach_state/update',
+    entityId: String(key),
+    idempotencyKey: `${userId}:coach-state:${key}`,
+    payload: {
+      user_id: userId,
+      key: String(key),
+      state,
     },
   });
   return flushPendingMutations();

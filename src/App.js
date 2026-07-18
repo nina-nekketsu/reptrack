@@ -22,13 +22,6 @@ import UpdateBanner from './components/UpdateBanner'
 import { useState } from 'react'
 import './App.css'
 
-function SyncBar() {
-  const { syncing, syncError } = useAuth();
-  if (syncing) return <div className="sync-bar">⟳ Syncing data…</div>;
-  if (syncError) return <div className="sync-bar sync-bar--error">⚠ Sync error: {syncError}</div>;
-  return null;
-}
-
 function AppContent() {
   const { user, loading, isConfigured } = useAuth();
   const [skippedSetup, setSkippedSetup] = useState(false);
@@ -63,7 +56,6 @@ function AppContent() {
       <CoachProvider>
         <div className="app">
           <UpdateBanner />
-          <SyncBar />
           <SyncIndicator />
           <main className="app-main">
             <Routes>

@@ -19,6 +19,7 @@ import {
   upsertSession,
 } from '../utils/exerciseHelpers';
 import { updateRemoteSession } from '../lib/sync';
+import { reportBackgroundFailure } from '../lib/clientDiagnosticsRuntime';
 import { getStoredVisibleActiveWorkoutSession } from '../lib/activeWorkoutSession';
 import { useAuth } from '../context/AuthContext';
 import { useCoach } from '../context/CoachContext';
@@ -28,6 +29,10 @@ import './CoachComponents.css';
 
 const EMPTY_SET_ROW = { reps: '', weight: '', setType: 'normal', done: false };
 const DROPSET_CHILD_COUNT = 2;
+
+function reportSessionSyncFailure(error) {
+  reportBackgroundFailure(error, { source: 'sync', category: 'unknown' });
+}
 
 export function isDropsetChild(set = {}) {
   return set.dropSetChild === true || set.setType === 'dropset_child';
@@ -577,7 +582,7 @@ export default function ExerciseLogModal({
             if (onSaved) onSaved(updatedLogs);
           }
         } catch (err) {
-          console.warn('[Supabase] session sync failed:', err);
+          reportSessionSyncFailure(err);
         } finally {
           if (mountedRef.current) setIsSaving(false);
         }
@@ -588,9 +593,7 @@ export default function ExerciseLogModal({
     if (syncPromise) {
       syncPromise
         .then((remoteResult) => persistReturnedRemoteId(remoteResult))
-        .catch((err) =>
-          console.warn('[Supabase] session sync failed:', err)
-        );
+        .catch(reportSessionSyncFailure);
     }
     closeModal();
   }

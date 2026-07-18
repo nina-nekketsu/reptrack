@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTimer } from '../context/TimerContext';
 import { pushPlan, pushExercise, pushSettings, pushActiveWorkoutSession } from '../lib/sync';
+import { reportBackgroundFailure } from '../lib/clientDiagnosticsRuntime';
 import {
   getStoredVisibleActiveWorkoutSession,
   saveActiveWorkoutSession,
@@ -29,6 +30,10 @@ function thumbEmoji(muscleGroup) {
 // ── Seed plans ──
 const SEED_PLAN_ID = 'legs-biceps-day';
 const SEED_PLAN_UB_ID = 'upper-body-day';
+
+function reportSyncFailure(error) {
+  reportBackgroundFailure(error, { source: 'sync', category: 'unknown' });
+}
 
 const SEED_PLAN = {
   id: SEED_PLAN_ID,
@@ -461,7 +466,7 @@ export default function Workouts() {
     setCurrentPlanId(id);
     saveCurrentPlanId(id);
     setEditMode(false);
-    if (user) pushSettings(user.id).catch(console.warn);
+    if (user) pushSettings(user.id).catch(reportSyncFailure);
   }
 
   // ── Create new plan ──
@@ -479,7 +484,7 @@ export default function Workouts() {
     saveCurrentPlanId(plan.id);
     setShowNewPlan(false);
     setEditMode(true);
-    if (user) pushPlan(plan, user.id).catch(console.warn);
+    if (user) pushPlan(plan, user.id).catch(reportSyncFailure);
   }
 
   // ── Edit exercise prescription ──
@@ -495,7 +500,7 @@ export default function Workouts() {
     savePlans(updated);
     setEditingPlanEx(null);
     const changedPlan = updated.find(p => p.id === currentPlanId);
-    if (user && changedPlan) pushPlan(changedPlan, user.id).catch(console.warn);
+    if (user && changedPlan) pushPlan(changedPlan, user.id).catch(reportSyncFailure);
   }
 
   function handleMoveExercise(index, direction) {
@@ -510,7 +515,7 @@ export default function Workouts() {
     setPlans(updated);
     savePlans(updated);
     const changedPlan = updated.find((plan) => plan.id === currentPlanId);
-    if (user && changedPlan) pushPlan(changedPlan, user.id).catch(console.warn);
+    if (user && changedPlan) pushPlan(changedPlan, user.id).catch(reportSyncFailure);
   }
 
   // ── Remove exercise from plan ──
@@ -522,7 +527,7 @@ export default function Workouts() {
     setPlans(updated);
     savePlans(updated);
     const changedPlan = updated.find(p => p.id === currentPlanId);
-    if (user && changedPlan) pushPlan(changedPlan, user.id).catch(console.warn);
+    if (user && changedPlan) pushPlan(changedPlan, user.id).catch(reportSyncFailure);
   }
 
   // ── Add exercise to plan ──
@@ -532,7 +537,7 @@ export default function Workouts() {
       const updatedEx = [...allExercises, ex];
       setAllExercises(updatedEx);
       saveExercises(updatedEx);
-      if (user) pushExercise(ex, user.id).catch(console.warn);
+      if (user) pushExercise(ex, user.id).catch(reportSyncFailure);
     }
 
     const planEntry = {
@@ -549,7 +554,7 @@ export default function Workouts() {
     savePlans(updated);
     setShowAddExercise(false);
     const changedPlan = updated.find(p => p.id === currentPlanId);
-    if (user && changedPlan) pushPlan(changedPlan, user.id).catch(console.warn);
+    if (user && changedPlan) pushPlan(changedPlan, user.id).catch(reportSyncFailure);
   }
 
   // ── Helpers ──

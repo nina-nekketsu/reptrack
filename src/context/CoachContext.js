@@ -3,6 +3,9 @@
 // All persisted to localStorage with coach_ prefix.
 
 import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
+import { useAuth } from './AuthContext';
+import { pushCoachState } from '../lib/sync';
+import { reportBackgroundFailure } from '../lib/clientDiagnosticsRuntime';
 
 const CoachContext = createContext(null);
 
@@ -10,6 +13,10 @@ const CoachContext = createContext(null);
 const LS_PROFILE   = 'coach_profile';
 const LS_METADATA  = 'coach_metadata';
 const LS_CARDIO    = 'coach_cardio';
+
+function reportCoachSyncFailure(error) {
+  reportBackgroundFailure(error, { source: 'sync', category: 'unknown' });
+}
 
 // ── Defaults ────────────────────────────────────────────────────────────
 function defaultProfile() {
@@ -116,12 +123,22 @@ function coachReducer(state, action) {
 
 // ── Provider ────────────────────────────────────────────────────────────
 export function CoachProvider({ children }) {
+  const { user } = useAuth();
   const [state, dispatch] = useReducer(coachReducer, null, buildInitialState);
 
   // Persist on changes
-  useEffect(() => { saveJSON(LS_PROFILE, state.profile); }, [state.profile]);
-  useEffect(() => { saveJSON(LS_METADATA, state.metadata); }, [state.metadata]);
-  useEffect(() => { saveJSON(LS_CARDIO, state.cardio); }, [state.cardio]);
+  useEffect(() => {
+    saveJSON(LS_PROFILE, state.profile);
+    if (user?.id) pushCoachState('profile', state.profile, user.id).catch(reportCoachSyncFailure);
+  }, [state.profile, user?.id]);
+  useEffect(() => {
+    saveJSON(LS_METADATA, state.metadata);
+    if (user?.id) pushCoachState('metadata', state.metadata, user.id).catch(reportCoachSyncFailure);
+  }, [state.metadata, user?.id]);
+  useEffect(() => {
+    saveJSON(LS_CARDIO, state.cardio);
+    if (user?.id) pushCoachState('cardio', state.cardio, user.id).catch(reportCoachSyncFailure);
+  }, [state.cardio, user?.id]);
 
   // ── Actions ─────────────────────────────────────────────────────────
   const updateProfile = useCallback((updates) => {
