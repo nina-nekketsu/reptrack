@@ -21,6 +21,7 @@
     "lint": "eslint \"src/**/*.{js,jsx}\" --ignore-pattern \"**/*.test.js\" --max-warnings=0",
     "test:prd": "node --test scripts/check-clean.test.js scripts/check-prd-static-contracts.test.js scripts/qa/release-contracts.test.js scripts/validate-build-metadata.test.js scripts/validate-schema.test.js",
     "test": "react-scripts test",
+    "qa:done-button-readability": "node scripts/qa-done-button-readability.mjs",
     "qa:mobile-readability": "node scripts/qa-mobile-readability.mjs",
     "qa:mobile-readability:static": "node scripts/qa-mobile-readability-static.mjs",
     "eject": "react-scripts eject",

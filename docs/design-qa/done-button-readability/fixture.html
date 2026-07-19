@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>RepTrack Done Button Readability Fixture</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="../../../src/index.css" />
+    <link rel="stylesheet" href="../../../src/App.css" />
+    <link rel="stylesheet" href="../../../src/pages/Exercises.css" />
+    <style>
+      body {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 12px;
+      }
+
+      .qa-result { display: none; }
+
+      .modal--log {
+        width: min(100%, 430px);
+      }
+
+      .log-scroll-body {
+        min-height: 420px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="modal-overlay">
+      <div class="modal modal--log" role="dialog" aria-modal="true" aria-labelledby="exercise-log-title">
+        <div class="log-sticky-top">
+          <div class="log-timer-zone">
+            <div class="log-header-text">
+              <div class="log-header-title-row">
+                <h3 class="modal-title" id="exercise-log-title">Leg Press</h3>
+                <span class="build-id-tag build-id-tag--modal">Build: qa</span>
+              </div>
+              <p class="modal-sub">Legs - Log your sets</p>
+            </div>
+          </div>
+          <div class="log-tabs-wrapper">
+            <div class="log-tabs" role="tablist" aria-label="Exercise tabs">
+              <button type="button" class="log-tab active" role="tab" aria-selected="true">Log</button>
+              <button type="button" class="log-tab" role="tab" aria-selected="false">Overview</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="log-scroll-body">
+          <div class="modal-divider"></div>
+          <div class="set-row">
+            <span class="set-num">1</span>
+            <div class="set-stepper set-stepper--reps"><span class="set-stepper__label">Reps</span><button class="set-stepper__button">-</button><input class="set-input" value="" placeholder="0" /><button class="set-stepper__button">+</button></div>
+            <div class="set-stepper set-stepper--weight"><span class="set-stepper__label">Weight (kg)</span><button class="set-stepper__button">-</button><input class="set-input" value="" placeholder="0" /><button class="set-stepper__button">+</button></div>
+            <div class="set-row-actions">
+              <select class="set-input"><option>N</option></select>
+              <button class="set-done-btn" disabled>o</button>
+              <button class="remove-set-btn">x</button>
+            </div>
+            <div class="set-ghost">Last: 10 reps - 120 kg</div>
+          </div>
+        </div>
+
+        <div class="log-actions">
+          <button type="button" class="btn-primary" id="done-button" disabled>Done</button>
+          <button type="button" class="btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+    <pre id="qa-result" class="qa-result"></pre>
+    <script>
+      const state = new URLSearchParams(window.location.search).get('state') || 'disabled';
+      const expectedWidth = Number(new URLSearchParams(window.location.search).get('width')) || window.innerWidth;
+      const expectedHeight = Number(new URLSearchParams(window.location.search).get('height')) || window.innerHeight;
+      const doneButton = document.getElementById('done-button');
+      if (state === 'enabled') doneButton.removeAttribute('disabled');
+
+      function rgb(color) {
+        const match = color.match(/rgba?\(([^)]+)\)/);
+        if (!match) return [0, 0, 0];
+        return match[1].split(',').slice(0, 3).map((part) => Number.parseFloat(part));
+      }
+
+      function luminance(color) {
+        return rgb(color).map((value) => {
+          const channel = value / 255;
+          return channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+        }).reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0);
+      }
+
+      function contrast(fg, bg) {
+        const a = luminance(fg);
+        const b = luminance(bg);
+        return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+      }
+
+      function rect(selector) {
+        const r = document.querySelector(selector).getBoundingClientRect();
+        return { top: r.top, left: r.left, right: r.right, bottom: r.bottom, width: r.width, height: r.height };
+      }
+
+      function style(selector) {
+        return getComputedStyle(document.querySelector(selector));
+      }
+
+      function cssVar(name) {
+        return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      }
+
+      function cssColor(value, property = 'color') {
+        const probe = document.createElement('span');
+        probe.style[property] = value;
+        document.body.appendChild(probe);
+        const resolved = getComputedStyle(probe)[property];
+        probe.remove();
+        return resolved;
+      }
+
+      window.addEventListener('load', () => {
+        const doneStyle = style('#done-button');
+        const cancelStyle = style('.log-actions .btn-secondary');
+        const resourceFailures = performance.getEntriesByType('resource')
+          .filter((entry) => entry.transferSize === 0 && entry.decodedBodySize === 0)
+          .map((entry) => entry.name);
+        const metrics = {
+          state,
+          expectedViewport: { width: expectedWidth, height: expectedHeight },
+          viewport: { width: window.innerWidth, height: window.innerHeight },
+          stylesheets: Array.from(document.styleSheets).map((sheet) => ({
+            href: sheet.href ? new URL(sheet.href).pathname : null,
+            ruleCount: (() => {
+              try { return sheet.cssRules.length; } catch (error) { return null; }
+            })(),
+          })),
+          resourceFailures,
+          cssVars: {
+            bg1: cssVar('--bg-1'),
+            bg1Rgb: cssColor('var(--bg-1)', 'backgroundColor'),
+            go: cssVar('--go'),
+            goRgb: cssColor('var(--go)', 'backgroundColor'),
+            inkMid: cssVar('--ink-mid'),
+            inkMidRgb: cssColor('var(--ink-mid)'),
+            inkOnAccent: cssVar('--ink-on-accent'),
+            inkOnAccentRgb: cssColor('var(--ink-on-accent)'),
+          },
+          documentOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+          modalOverflow: document.querySelector('.modal--log').scrollWidth - document.querySelector('.modal--log').clientWidth,
+          footer: rect('.log-actions'),
+          done: {
+            disabled: doneButton.disabled,
+            rect: rect('#done-button'),
+            color: doneStyle.color,
+            background: doneStyle.backgroundColor,
+            contrast: contrast(doneStyle.color, doneStyle.backgroundColor),
+            cursor: doneStyle.cursor,
+          },
+          cancel: {
+            rect: rect('.log-actions .btn-secondary'),
+            color: cancelStyle.color,
+            background: cancelStyle.backgroundColor,
+            contrast: contrast(cancelStyle.color, cancelStyle.backgroundColor),
+          },
+        };
+        document.getElementById('qa-result').textContent = JSON.stringify(metrics, null, 2);
+      });
+    </script>
+  </body>
+</html>

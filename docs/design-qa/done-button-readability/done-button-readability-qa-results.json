@@ -1,0 +1,394 @@
+[
+  {
+    "name": "disabled-320x568",
+    "screenshotPath": "docs/design-qa/done-button-readability/after-disabled-320x568.png",
+    "metrics": {
+      "state": "disabled",
+      "expectedViewport": {
+        "width": 320,
+        "height": 568
+      },
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "stylesheets": [
+        {
+          "href": "/src/index.css",
+          "ruleCount": 14
+        },
+        {
+          "href": "/src/App.css",
+          "ruleCount": 114
+        },
+        {
+          "href": "/src/pages/Exercises.css",
+          "ruleCount": 337
+        },
+        {
+          "href": null,
+          "ruleCount": 4
+        }
+      ],
+      "resourceFailures": [],
+      "cssVars": {
+        "bg1": "#161B22",
+        "bg1Rgb": "rgb(22, 27, 34)",
+        "go": "#3BD07F",
+        "goRgb": "rgb(59, 208, 127)",
+        "inkMid": "#BCC3CC",
+        "inkMidRgb": "rgb(188, 195, 204)",
+        "inkOnAccent": "#0F1216",
+        "inkOnAccentRgb": "rgb(15, 18, 22)"
+      },
+      "documentOverflow": 0,
+      "modalOverflow": 0,
+      "footer": {
+        "top": 473.296875,
+        "left": 1,
+        "right": 319,
+        "bottom": 528.296875,
+        "width": 318,
+        "height": 55
+      },
+      "done": {
+        "disabled": true,
+        "rect": {
+          "top": 479.296875,
+          "left": 13,
+          "right": 156,
+          "bottom": 523.296875,
+          "width": 143,
+          "height": 44
+        },
+        "color": "rgb(188, 195, 204)",
+        "background": "rgb(22, 27, 34)",
+        "contrast": 9.733422150941545,
+        "cursor": "not-allowed"
+      },
+      "cancel": {
+        "rect": {
+          "top": 479.296875,
+          "left": 164,
+          "right": 307,
+          "bottom": 523.296875,
+          "width": 143,
+          "height": 44
+        },
+        "color": "rgb(243, 239, 230)",
+        "background": "rgb(30, 37, 46)",
+        "contrast": 13.463113113751506
+      }
+    },
+    "verdict": {
+      "viewportApplied": true,
+      "stylesheetsLoaded": true,
+      "keyCssVarsResolved": true,
+      "stateMatches": true,
+      "disabledCursor": true,
+      "doneContrast": true,
+      "cancelContrast": true,
+      "enabledPrimary": true,
+      "disabledDistinct": true,
+      "doneTouchTarget": true,
+      "cancelTouchTarget": true,
+      "noDocumentOverflow": true,
+      "noModalOverflow": true,
+      "footerVisible": true
+    }
+  },
+  {
+    "name": "enabled-320x568",
+    "screenshotPath": "docs/design-qa/done-button-readability/after-enabled-320x568.png",
+    "metrics": {
+      "state": "enabled",
+      "expectedViewport": {
+        "width": 320,
+        "height": 568
+      },
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "stylesheets": [
+        {
+          "href": "/src/index.css",
+          "ruleCount": 14
+        },
+        {
+          "href": "/src/App.css",
+          "ruleCount": 114
+        },
+        {
+          "href": "/src/pages/Exercises.css",
+          "ruleCount": 337
+        },
+        {
+          "href": null,
+          "ruleCount": 4
+        }
+      ],
+      "resourceFailures": [],
+      "cssVars": {
+        "bg1": "#161B22",
+        "bg1Rgb": "rgb(22, 27, 34)",
+        "go": "#3BD07F",
+        "goRgb": "rgb(59, 208, 127)",
+        "inkMid": "#BCC3CC",
+        "inkMidRgb": "rgb(188, 195, 204)",
+        "inkOnAccent": "#0F1216",
+        "inkOnAccentRgb": "rgb(15, 18, 22)"
+      },
+      "documentOverflow": 0,
+      "modalOverflow": 0,
+      "footer": {
+        "top": 473.296875,
+        "left": 1,
+        "right": 319,
+        "bottom": 528.296875,
+        "width": 318,
+        "height": 55
+      },
+      "done": {
+        "disabled": false,
+        "rect": {
+          "top": 479.296875,
+          "left": 13,
+          "right": 156,
+          "bottom": 523.296875,
+          "width": 143,
+          "height": 44
+        },
+        "color": "rgb(15, 18, 22)",
+        "background": "rgb(59, 208, 127)",
+        "contrast": 9.401455942613758,
+        "cursor": "pointer"
+      },
+      "cancel": {
+        "rect": {
+          "top": 479.296875,
+          "left": 164,
+          "right": 307,
+          "bottom": 523.296875,
+          "width": 143,
+          "height": 44
+        },
+        "color": "rgb(243, 239, 230)",
+        "background": "rgb(30, 37, 46)",
+        "contrast": 13.463113113751506
+      }
+    },
+    "verdict": {
+      "viewportApplied": true,
+      "stylesheetsLoaded": true,
+      "keyCssVarsResolved": true,
+      "stateMatches": true,
+      "disabledCursor": true,
+      "doneContrast": true,
+      "cancelContrast": true,
+      "enabledPrimary": true,
+      "disabledDistinct": true,
+      "doneTouchTarget": true,
+      "cancelTouchTarget": true,
+      "noDocumentOverflow": true,
+      "noModalOverflow": true,
+      "footerVisible": true
+    }
+  },
+  {
+    "name": "disabled-390x844",
+    "screenshotPath": "docs/design-qa/done-button-readability/after-disabled-390x844.png",
+    "metrics": {
+      "state": "disabled",
+      "expectedViewport": {
+        "width": 390,
+        "height": 844
+      },
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "stylesheets": [
+        {
+          "href": "/src/index.css",
+          "ruleCount": 14
+        },
+        {
+          "href": "/src/App.css",
+          "ruleCount": 114
+        },
+        {
+          "href": "/src/pages/Exercises.css",
+          "ruleCount": 337
+        },
+        {
+          "href": null,
+          "ruleCount": 4
+        }
+      ],
+      "resourceFailures": [],
+      "cssVars": {
+        "bg1": "#161B22",
+        "bg1Rgb": "rgb(22, 27, 34)",
+        "go": "#3BD07F",
+        "goRgb": "rgb(59, 208, 127)",
+        "inkMid": "#BCC3CC",
+        "inkMidRgb": "rgb(188, 195, 204)",
+        "inkOnAccent": "#0F1216",
+        "inkOnAccentRgb": "rgb(15, 18, 22)"
+      },
+      "documentOverflow": 0,
+      "modalOverflow": 0,
+      "footer": {
+        "top": 610.796875,
+        "left": 1,
+        "right": 389,
+        "bottom": 665.796875,
+        "width": 388,
+        "height": 55
+      },
+      "done": {
+        "disabled": true,
+        "rect": {
+          "top": 616.796875,
+          "left": 13,
+          "right": 191,
+          "bottom": 660.796875,
+          "width": 178,
+          "height": 44
+        },
+        "color": "rgb(188, 195, 204)",
+        "background": "rgb(22, 27, 34)",
+        "contrast": 9.733422150941545,
+        "cursor": "not-allowed"
+      },
+      "cancel": {
+        "rect": {
+          "top": 616.796875,
+          "left": 199,
+          "right": 377,
+          "bottom": 660.796875,
+          "width": 178,
+          "height": 44
+        },
+        "color": "rgb(243, 239, 230)",
+        "background": "rgb(30, 37, 46)",
+        "contrast": 13.463113113751506
+      }
+    },
+    "verdict": {
+      "viewportApplied": true,
+      "stylesheetsLoaded": true,
+      "keyCssVarsResolved": true,
+      "stateMatches": true,
+      "disabledCursor": true,
+      "doneContrast": true,
+      "cancelContrast": true,
+      "enabledPrimary": true,
+      "disabledDistinct": true,
+      "doneTouchTarget": true,
+      "cancelTouchTarget": true,
+      "noDocumentOverflow": true,
+      "noModalOverflow": true,
+      "footerVisible": true
+    }
+  },
+  {
+    "name": "enabled-390x844",
+    "screenshotPath": "docs/design-qa/done-button-readability/after-enabled-390x844.png",
+    "metrics": {
+      "state": "enabled",
+      "expectedViewport": {
+        "width": 390,
+        "height": 844
+      },
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "stylesheets": [
+        {
+          "href": "/src/index.css",
+          "ruleCount": 14
+        },
+        {
+          "href": "/src/App.css",
+          "ruleCount": 114
+        },
+        {
+          "href": "/src/pages/Exercises.css",
+          "ruleCount": 337
+        },
+        {
+          "href": null,
+          "ruleCount": 4
+        }
+      ],
+      "resourceFailures": [],
+      "cssVars": {
+        "bg1": "#161B22",
+        "bg1Rgb": "rgb(22, 27, 34)",
+        "go": "#3BD07F",
+        "goRgb": "rgb(59, 208, 127)",
+        "inkMid": "#BCC3CC",
+        "inkMidRgb": "rgb(188, 195, 204)",
+        "inkOnAccent": "#0F1216",
+        "inkOnAccentRgb": "rgb(15, 18, 22)"
+      },
+      "documentOverflow": 0,
+      "modalOverflow": 0,
+      "footer": {
+        "top": 610.796875,
+        "left": 1,
+        "right": 389,
+        "bottom": 665.796875,
+        "width": 388,
+        "height": 55
+      },
+      "done": {
+        "disabled": false,
+        "rect": {
+          "top": 616.796875,
+          "left": 13,
+          "right": 191,
+          "bottom": 660.796875,
+          "width": 178,
+          "height": 44
+        },
+        "color": "rgb(15, 18, 22)",
+        "background": "rgb(59, 208, 127)",
+        "contrast": 9.401455942613758,
+        "cursor": "pointer"
+      },
+      "cancel": {
+        "rect": {
+          "top": 616.796875,
+          "left": 199,
+          "right": 377,
+          "bottom": 660.796875,
+          "width": 178,
+          "height": 44
+        },
+        "color": "rgb(243, 239, 230)",
+        "background": "rgb(30, 37, 46)",
+        "contrast": 13.463113113751506
+      }
+    },
+    "verdict": {
+      "viewportApplied": true,
+      "stylesheetsLoaded": true,
+      "keyCssVarsResolved": true,
+      "stateMatches": true,
+      "disabledCursor": true,
+      "doneContrast": true,
+      "cancelContrast": true,
+      "enabledPrimary": true,
+      "disabledDistinct": true,
+      "doneTouchTarget": true,
+      "cancelTouchTarget": true,
+      "noDocumentOverflow": true,
+      "noModalOverflow": true,
+      "footerVisible": true
+    }
+  }
+]
