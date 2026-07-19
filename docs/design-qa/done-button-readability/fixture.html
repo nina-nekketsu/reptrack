@@ -121,6 +121,7 @@
       window.addEventListener('load', () => {
         const doneStyle = style('#done-button');
         const cancelStyle = style('.log-actions .btn-secondary');
+        const setTypeStyle = style('.set-row-actions select.set-input');
         const resourceFailures = performance.getEntriesByType('resource')
           .filter((entry) => entry.transferSize === 0 && entry.decodedBodySize === 0)
           .map((entry) => entry.name);
@@ -161,6 +162,12 @@
             color: cancelStyle.color,
             background: cancelStyle.backgroundColor,
             contrast: contrast(cancelStyle.color, cancelStyle.backgroundColor),
+          },
+          setType: {
+            rect: rect('.set-row-actions select.set-input'),
+            fontSize: setTypeStyle.fontSize,
+            fontWeight: setTypeStyle.fontWeight,
+            textAlign: setTypeStyle.textAlign,
           },
         };
         document.getElementById('qa-result').textContent = JSON.stringify(metrics, null, 2);
