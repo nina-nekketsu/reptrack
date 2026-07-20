@@ -7,6 +7,7 @@
   justify-content: center;
   padding: 16px;
   background: var(--scrim);
+  animation: ui-dialog-backdrop-in 160ms var(--motion-ease-standard) both;
 }
 
 .ui-dialog-panel {
@@ -18,6 +19,17 @@
   background: var(--bg-2);
   color: var(--ink-hi);
   box-shadow: var(--shadow-e2);
+  animation: ui-dialog-panel-in 180ms var(--motion-ease-enter) both;
+}
+
+@keyframes ui-dialog-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes ui-dialog-panel-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .ui-dialog-header {
@@ -138,4 +150,17 @@
 
 .ui-row--interactive {
   cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-dialog-backdrop {
+    animation: none;
+    opacity: 1;
+  }
+
+  .ui-dialog-panel {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }

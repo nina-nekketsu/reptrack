@@ -11,7 +11,7 @@
 .active-workout-page{gap:12px}.aw-header{position:sticky;top:0;z-index:20;margin:-24px -16px 4px;padding:max(16px,env(safe-area-inset-top)) 16px 14px;background:var(--bg-2);border:0;border-bottom:1px solid var(--line);border-radius:0;color:var(--ink-hi);box-shadow:var(--shadow-e1);overflow:visible}.aw-header::after{display:none}
 .aw-header__label{color:var(--go);opacity:1;font-size:11px;line-height:16px;letter-spacing:.06em}.aw-header__name{font-size:20px;line-height:26px}.aw-end-btn{min-height:44px;background:transparent;border-color:var(--danger);color:var(--danger);padding:8px 12px}
 .aw-header__stats{gap:8px}.aw-stat{background:var(--bg-3);padding:8px 12px;border:1px solid var(--line)}.aw-stat__icon{color:var(--ink-mid)}.aw-stat__value{color:var(--ink-hi);font-family:inherit;font-variant-numeric:tabular-nums;font-feature-settings:"tnum";letter-spacing:0}.aw-stat__label{color:var(--ink-mid);opacity:1}
-.aw-progress-bar{width:100%;height:8px;appearance:none;border:0;border-radius:var(--r-full);background:var(--bg-3);overflow:hidden}.aw-progress-bar::-webkit-progress-bar{background:var(--bg-3)}.aw-progress-bar::-webkit-progress-value{background:var(--go);transition:width var(--motion-reveal) var(--ease-standard)}.aw-progress-bar::-moz-progress-bar{background:var(--go)}
+.aw-progress-bar{width:100%;height:8px;min-width:0;border-radius:var(--r-full);background:var(--bg-3);overflow:hidden}.aw-progress-bar__fill{background:var(--go)}
 .aw-exercise-row{min-height:72px;background:var(--bg-1);border-color:var(--line);border-width:1px;color:var(--ink-hi);border-radius:var(--r-md);padding:12px;}.aw-exercise-row:hover{background:var(--bg-3);box-shadow:none}.aw-exercise-row--done{background:var(--go-dim);border-color:var(--go)}.aw-exercise-row--almost,.aw-exercise-row--ready{background:var(--rest-dim);border-color:var(--rest)}.aw-exercise-row--partial{background:var(--bg-2);border-color:var(--line-strong)}
 .aw-number{background:var(--bg-3);color:var(--ink-mid)}.aw-check{background:var(--go);color:var(--ink-on-accent)}.aw-exercise-thumb,.aw-exercise-row--done .aw-exercise-thumb{background:var(--bg-3)}.aw-exercise-name{color:var(--ink-hi);font-size:17px;line-height:24px}.aw-exercise-name--done{color:var(--go)}.aw-exercise-meta{color:var(--ink-mid)}.aw-log-btn{min-height:44px;display:inline-flex;align-items:center;background:var(--go);color:var(--ink-on-accent);padding:8px 14px}.aw-logged-badge{background:var(--go-dim);color:var(--go)}
 .aw-end-overlay{background:rgba(6,8,10,.72)}.aw-end-confirm{background:var(--bg-2);color:var(--ink-hi);border:1px solid var(--line);box-shadow:var(--shadow-e2)}.aw-end-confirm__title{color:var(--ink-hi)}.aw-end-confirm__subtitle{color:var(--ink-mid)}
@@ -124,6 +124,8 @@
 
 /* ── Progress bar ── */
 .aw-progress-bar {
+  width: 100%;
+  min-width: 0;
   height: 6px;
   background: rgba(255, 255, 255, 0.2);
   border-radius: 3px;
@@ -131,11 +133,15 @@
 }
 
 .aw-progress-bar__fill {
+  display: block;
+  width: 100%;
   height: 100%;
+  min-width: 0;
   background: var(--ink-hi);
   border-radius: 3px;
-  transition: width 0.4s ease;
-  min-width: 0;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 220ms var(--motion-ease-standard);
 }
 
 /* ── Exercise list ── */
@@ -153,8 +159,9 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  position: relative;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  transition: background-color 180ms var(--motion-ease-standard), border-color 180ms var(--motion-ease-standard);
 }
 
 .aw-exercise-row:hover {
@@ -216,6 +223,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.aw-exercise-row--ack .aw-check {
+  animation: aw-exercise-check-ack 180ms var(--motion-ease-enter) 1 both;
+}
+
+@keyframes aw-exercise-check-ack {
+  from {
+    opacity: 0;
+    transform: scale(var(--motion-scale-pop-start));
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .aw-number {
@@ -409,13 +431,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  animation: aw-fade-in 0.2s ease;
   padding: 24px;
-}
-
-@keyframes aw-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
 }
 
 @keyframes aw-check-pop {
@@ -446,8 +462,21 @@
   align-items: center;
   justify-content: center;
   margin: 0 auto 16px;
-  animation: aw-check-pop 0.4s ease 0.1s both;
+  animation: aw-check-pop var(--motion-duration-celebration) var(--motion-ease-enter) 100ms both;
   box-shadow: 0 6px 20px rgba(0, 204, 85, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aw-end-overlay {
+    animation: none;
+    opacity: 1;
+  }
+
+  .aw-end-confirm__check {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .aw-end-confirm__title {
@@ -510,9 +539,18 @@
   white-space: nowrap;
 }
 
-.aw-exercise-row--next {
+.aw-exercise-next-outline {
+  position: absolute;
+  inset: -1px;
   border: 1.5px solid var(--go);
-  box-shadow: 0 0 0 1px var(--go-dim);
+  border-radius: inherit;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms var(--motion-ease-standard);
+}
+
+.aw-exercise-row--next .aw-exercise-next-outline {
+  opacity: 1;
 }
 
 .aw-exercise-next-label {
@@ -658,3 +696,23 @@
 
 .aw-exercise-row--superset { border-left: 3px solid var(--info); }
 .aw-exercise-row--superset + .aw-exercise-row--superset { margin-top: -5px; border-top-left-radius: 0; border-top-right-radius: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .aw-exercise-row {
+    transition: none;
+  }
+
+  .aw-exercise-row--ack .aw-check {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .aw-exercise-next-outline {
+    transition: none;
+  }
+
+  .aw-progress-bar__fill {
+    transition: none;
+  }
+}

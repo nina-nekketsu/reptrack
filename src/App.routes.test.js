@@ -49,4 +49,22 @@ describe('App route truthfulness', () => {
     expect(syncSource).toContain("state === 'error' ? 'alert' : 'status'");
     expect(syncSource).toContain('Sync error');
   });
+
+  test('keeps global chrome stable around the pathname-keyed route content entry', () => {
+    const source = appSource();
+    const syncIndex = source.indexOf('<SyncIndicator />');
+    const mainIndex = source.indexOf('<main className="app-main">');
+    const transitionOpenIndex = source.indexOf('<RouteContentTransition>');
+    const routesIndex = source.indexOf('<Routes>', transitionOpenIndex);
+    const transitionCloseIndex = source.indexOf('</RouteContentTransition>');
+    const bottomNavIndex = source.indexOf('<BottomNav />');
+
+    expect(source).toContain("import RouteContentTransition from './components/RouteContentTransition'");
+    expect(syncIndex).toBeGreaterThan(-1);
+    expect(syncIndex).toBeLessThan(mainIndex);
+    expect(transitionOpenIndex).toBeGreaterThan(mainIndex);
+    expect(routesIndex).toBeGreaterThan(transitionOpenIndex);
+    expect(transitionCloseIndex).toBeGreaterThan(routesIndex);
+    expect(bottomNavIndex).toBeGreaterThan(transitionCloseIndex);
+  });
 });

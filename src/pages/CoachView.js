@@ -113,7 +113,7 @@ export default function CoachView() {
       <div className="cv-screen">
         <div className="cv-card cv-card--centered">
           <div className="cv-logo" aria-hidden="true"><DumbbellIcon /></div>
-          <p className="cv-muted">Loading athlete data…</p>
+          <p className="cv-muted loading-feedback" role="status">Loading athlete data…</p>
         </div>
       </div>
     );
@@ -123,7 +123,7 @@ export default function CoachView() {
   if (error) {
     return (
       <div className="cv-screen">
-        <div className="cv-card cv-card--centered">
+        <div className="cv-card cv-card--centered error-feedback" role="alert">
           <div className="cv-logo" aria-hidden="true"><LockIcon /></div>
           <h2 className="cv-title">Access Denied</h2>
           <p className="cv-muted">{error}</p>

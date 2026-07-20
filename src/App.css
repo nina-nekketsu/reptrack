@@ -19,6 +19,21 @@
   width: 100%;
 }
 
+.route-content {
+  animation: route-content-enter 170ms var(--motion-ease-enter) 1 both;
+}
+
+@keyframes route-content-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .update-banner {
   margin: 0.85rem 1rem 0;
   background: var(--bg-2);
@@ -107,6 +122,7 @@ button:disabled { opacity:.4; cursor:not-allowed; }
 }
 
 .auth-card {
+  box-sizing: border-box;
   background: var(--bg-1);
   border: 1px solid var(--line);
   border-radius: 20px;
@@ -378,7 +394,6 @@ button:disabled { opacity:.4; cursor:not-allowed; }
   background: rgba(124, 106, 247, 0.15);
   color: var(--go);
   border: 1.5px solid rgba(124, 106, 247, 0.3);
-  animation: sync-spin 1s linear infinite;
 }
 
 .sync-indicator--error {
@@ -391,11 +406,6 @@ button:disabled { opacity:.4; cursor:not-allowed; }
   background: rgba(234, 179, 8, 0.15);
   color: var(--rest);
   border: 1.5px solid rgba(234, 179, 8, 0.3);
-}
-
-@keyframes sync-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
 }
 
 /* ── Coach sharing section (Profile page) ──────────────────────── */
@@ -629,7 +639,7 @@ button:disabled { opacity:.4; cursor:not-allowed; }
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background-color var(--motion-duration-control) var(--motion-ease-standard), color var(--motion-duration-control) var(--motion-ease-standard), border-color var(--motion-duration-control) var(--motion-ease-standard);
 }
 
 .profile-rest-btn:hover {
@@ -688,3 +698,51 @@ button:disabled { opacity:.4; cursor:not-allowed; }
 /* Final Gym Floor app-shell cascade */
 .auth-screen{min-height:100dvh;background:var(--bg-0);padding:16px;overflow:hidden}.auth-card{width:min(100%,400px);max-width:100%;min-width:0;background:var(--bg-1);border-color:var(--line);overflow-wrap:anywhere}.auth-title{color:var(--ink-hi)}.auth-subtitle,.setup-info,.setup-steps{color:var(--ink-mid)}.setup-code{max-width:100%;overflow-wrap:anywhere;word-break:break-word}.auth-input{min-height:48px;background:var(--bg-2);border-color:var(--line-strong);color:var(--ink-hi);font-size:16px}.auth-submit{min-height:52px;background:var(--go);color:var(--ink-on-accent)}.auth-toggle{min-height:44px;color:var(--go)}
 .btn-primary{min-height:52px;background:var(--go);color:var(--ink-on-accent)}.btn-secondary{min-height:48px;background:var(--bg-2);border-color:var(--line-strong);color:var(--ink-hi)}.btn-danger{min-height:48px;background:var(--danger);color:var(--ink-on-accent)}
+
+.loading-feedback {
+  animation: loading-feedback-enter var(--motion-duration-control) var(--motion-ease-enter) 1 both;
+}
+
+.error-feedback {
+  animation: error-feedback-enter 180ms var(--motion-ease-enter) 1 both;
+}
+
+@keyframes loading-feedback-enter {
+  from {
+    opacity: var(--motion-opacity-muted);
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes error-feedback-enter {
+  from {
+    opacity: var(--motion-opacity-muted);
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-content {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .loading-feedback {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .error-feedback {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}

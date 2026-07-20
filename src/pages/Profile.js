@@ -223,7 +223,7 @@ export default function Profile() {
           <p className="profile-user-email">Signed in as <strong>{user.email}</strong></p>
 
           <div className="profile-sync-status">
-            {syncing && <><RepeatIcon /> Syncing...</>}
+            {syncing && <><RepeatIcon /> Syncing…</>}
             {!syncing && syncError && <span className="error"><WarningIcon /> Last sync failed: {syncError}</span>}
             {!syncing && !syncError && isConfigured && <><CheckIcon /> Cloud sync active</>}
           </div>
@@ -233,8 +233,9 @@ export default function Profile() {
               className="profile-sync-now-btn"
               onClick={handleSyncNow}
               disabled={syncing}
+              aria-busy={syncing}
             >
-              {syncing ? 'Syncing...' : <><RepeatIcon /> Sync now</>}
+              {syncing ? 'Syncing…' : <><RepeatIcon /> Sync now</>}
             </button>
           )}
 
@@ -259,9 +260,10 @@ export default function Profile() {
                   className={`coach-toggle-btn ${shareEnabled ? 'active' : ''}`}
                   onClick={() => handleToggleShare(!shareEnabled)}
                   disabled={shareLoading}
+                  aria-busy={shareLoading}
                   aria-pressed={shareEnabled}
                 >
-                  {shareLoading ? '…' : shareEnabled ? 'ON' : 'OFF'}
+                  {shareLoading ? 'Saving…' : shareEnabled ? 'ON' : 'OFF'}
                 </button>
               </div>
 

@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getStoredVisibleActiveWorkoutSession } from '../lib/activeWorkoutSession'
 import './BottomNav.css'
 
@@ -40,25 +40,61 @@ const formatVolume = value => value >= 1000 ? `${(value / 1000).toFixed(1)}t` : 
 export default function BottomNav() {
   const location = useLocation()
   const [status, setStatus] = useState(readStatus)
+  const activeStatusRef = useRef(status.active)
+  const [activeCue, setActiveCue] = useState({ sequence: 0, playing: false })
+
   useEffect(() => {
-    const refresh = () => setStatus(readStatus())
+    const refresh = () => {
+      const nextStatus = readStatus()
+      const wasActive = activeStatusRef.current
+      activeStatusRef.current = nextStatus.active
+
+      if (!wasActive && nextStatus.active) {
+        setActiveCue(cue => ({ sequence: cue.sequence + 1, playing: true }))
+      } else if (!nextStatus.active) {
+        setActiveCue(cue => cue.playing ? { ...cue, playing: false } : cue)
+      }
+
+      setStatus(nextStatus)
+    }
     window.addEventListener('storage', refresh)
     window.addEventListener('exerciseLogged', refresh)
     window.addEventListener('activeWorkoutSessionChanged', refresh)
     return () => ['storage', 'exerciseLogged', 'activeWorkoutSessionChanged'].forEach(type => window.removeEventListener(type, refresh))
   }, [])
 
+  useEffect(() => {
+    if (!activeCue.playing) return undefined
+    const sequence = activeCue.sequence
+    const timeout = window.setTimeout(() => {
+      setActiveCue(cue => cue.sequence === sequence ? { ...cue, playing: false } : cue)
+    }, 700)
+    return () => window.clearTimeout(timeout)
+  }, [activeCue.playing, activeCue.sequence])
+
   if (/^\/workout\/[^/]+$/.test(location.pathname)) return null
 
   return <nav className="bottom-nav" aria-label="Main">
-    {tabs.map(tab => <NavLink key={tab.to} to={tab.to} end={tab.end}
-      aria-label={tab.to === '/exercises' && status.volume ? `Exercises, ${formatVolume(status.volume)} logged today` : tab.label}
-      className={({ isActive }) => `nav-tab ${isActive ? 'active' : ''}`}>
-      <span className="nav-indicator" aria-hidden="true" />
-      <span className="nav-icon"><NavIcon name={tab.icon} /></span>
-      <span className="nav-label">{tab.label}</span>
-      {tab.to === '/workouts' && status.active && <span className="nav-active-dot" aria-label="Workout active" />}
-      {tab.to === '/exercises' && status.volume > 0 && <span className="nav-badge">{formatVolume(status.volume)}</span>}
-    </NavLink>)}
+    {tabs.map(tab => {
+      const ariaLabel = tab.to === '/exercises' && status.volume
+        ? `Exercises, ${formatVolume(status.volume)} logged today`
+        : tab.to === '/workouts' && status.active
+          ? 'Workouts, workout active'
+          : tab.label
+
+      return <NavLink key={tab.to} to={tab.to} end={tab.end}
+        aria-label={ariaLabel}
+        className={({ isActive }) => `nav-tab ${isActive ? 'active' : ''}`}>
+        <span className="nav-indicator" aria-hidden="true" />
+        <span className="nav-icon"><NavIcon name={tab.icon} /></span>
+        <span className="nav-label">{tab.label}</span>
+        {tab.to === '/workouts' && status.active && <span
+          key={activeCue.sequence}
+          className={`nav-active-dot ${activeCue.playing ? 'nav-active-dot--new' : ''}`}
+          aria-hidden="true"
+        />}
+        {tab.to === '/exercises' && status.volume > 0 && <span className="nav-badge">{formatVolume(status.volume)}</span>}
+      </NavLink>
+    })}
   </nav>
 }

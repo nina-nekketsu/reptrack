@@ -142,13 +142,21 @@
   height: 10px;
   border-radius: 50%;
   background: var(--ink-hi);
-  animation: pulse 1.2s ease-in-out infinite;
+  animation: workouts-active-session-cue 600ms var(--motion-ease-standard) 3;
   flex-shrink: 0;
 }
 
-@keyframes pulse {
+@keyframes workouts-active-session-cue {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: 0.5; transform: scale(1.3); }
+  50% { opacity: var(--motion-opacity-muted); transform: scale(var(--motion-scale-pop-overshoot)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .active-session-banner .active-dot {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .active-session-banner .end-session-btn {

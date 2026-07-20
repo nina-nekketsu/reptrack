@@ -39,6 +39,7 @@ describe('ErrorBoundary', () => {
 
     const alert = screen.getByRole('alert');
     expect(alert).toHaveAccessibleName('RepTrack needs a restart');
+    expect(alert.querySelector('.error-boundary__card')).toHaveClass('error-feedback');
     expect(screen.getByRole('heading', { name: 'RepTrack needs a restart' })).toHaveFocus();
     expect(alert).toHaveTextContent('Your locally saved workout data has not been deleted.');
     expect(alert).not.toHaveTextContent('student@example.com');

@@ -43,10 +43,15 @@ export function loadLogs() {
   }
 }
 
-/** Write logs directly (used by sync pull) */
+/** Write logs directly (used by sync pull). Returns true only after a durable write. */
 export function saveLogs(logs) {
-  if (!STORAGE_AVAILABLE) return;
-  localStorage.setItem('exerciseLogs', JSON.stringify(logs));
+  if (!STORAGE_AVAILABLE) return false;
+  try {
+    localStorage.setItem('exerciseLogs', JSON.stringify(logs));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /** Write exercises directly (used by sync pull and Exercises page) */

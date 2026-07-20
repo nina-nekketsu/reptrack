@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTimer } from '../context/TimerContext';
@@ -395,6 +395,8 @@ export default function Workouts() {
   const [showNewPlan, setShowNewPlan] = useState(false);
   const [showSessionConflict, setShowSessionConflict] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
+  const startingRef = useRef(false);
 
   // Current plan
   const currentPlan = plans.find(p => p.id === currentPlanId) || plans[0];
@@ -410,23 +412,48 @@ export default function Workouts() {
   }, [activeSession]);
 
   // ── Start session ──
-  function startCurrentPlan() {
-    if (!currentPlan) return;
-    const now = new Date().toISOString();
-    const session = saveActiveWorkoutSession({
-      action: 'start',
-      planId: currentPlan.id,
-      planName: currentPlan.name,
-      now,
-    });
-    pushActiveWorkoutSession(user?.id);
-    setActiveSession(session);
-    navigate(`/workout/${currentPlan.id}`);
+  function claimStartAction() {
+    if (startingRef.current) return false;
+    startingRef.current = true;
+    setIsStarting(true);
+    return true;
+  }
+
+  function releaseStartAction() {
+    startingRef.current = false;
+    setIsStarting(false);
+  }
+
+  function startCurrentPlan({ alreadyClaimed = false, now = new Date().toISOString() } = {}) {
+    if (!currentPlan) {
+      if (alreadyClaimed) releaseStartAction();
+      return null;
+    }
+    if (!alreadyClaimed && !claimStartAction()) return null;
+    try {
+      const session = saveActiveWorkoutSession({
+        action: 'start',
+        planId: currentPlan.id,
+        planName: currentPlan.name,
+        now,
+      });
+      if (!session) {
+        releaseStartAction();
+        return null;
+      }
+      pushActiveWorkoutSession(user?.id);
+      navigate(`/workout/${currentPlan.id}`);
+      return session;
+    } catch {
+      releaseStartAction();
+      return null;
+    }
   }
 
   function handleStart() {
     if (activeSession && activeSession.planId === currentPlan.id) {
-      // Already active for this plan — navigate to active workout
+      // Already active for this plan — claim once, then navigate to it.
+      if (!claimStartAction()) return;
       navigate(`/workout/${currentPlan.id}`);
       return;
     }
@@ -438,18 +465,29 @@ export default function Workouts() {
   }
 
   function handleResumeExisting() {
-    if (!activeSession) return;
+    if (!activeSession || !claimStartAction()) return;
     setShowSessionConflict(false);
     navigate(`/workout/${activeSession.planId}`);
   }
 
   function handleEndAndStartNew() {
-    if (!activeSession) return;
-    timer.stopAll();
-    saveActiveWorkoutSession({ action: 'end', now: new Date().toISOString() });
-    pushActiveWorkoutSession(user?.id);
-    setShowSessionConflict(false);
-    startCurrentPlan();
+    if (!activeSession || !claimStartAction()) return;
+    const endedAt = new Date().toISOString();
+    try {
+      const endedSession = saveActiveWorkoutSession({ action: 'end', now: endedAt });
+      if (!endedSession) {
+        releaseStartAction();
+        return;
+      }
+      timer.stopAll();
+      pushActiveWorkoutSession(user?.id);
+      const replacementTime = Math.max(Date.now(), Date.parse(endedAt) + 1);
+      const replacementStartedAt = new Date(replacementTime).toISOString();
+      setShowSessionConflict(false);
+      startCurrentPlan({ alreadyClaimed: true, now: replacementStartedAt });
+    } catch {
+      releaseStartAction();
+    }
   }
 
   // ── End session ──
@@ -629,8 +667,10 @@ export default function Workouts() {
             <button
               className={`plan-start-btn${isActive ? ' active' : ''}`}
               onClick={handleStart}
+              disabled={isStarting}
+              aria-busy={isStarting}
             >
-              {isActive ? <><CheckIcon /> In Progress</> : 'Start'}
+              {isStarting ? 'Starting…' : (isActive ? <><CheckIcon /> In Progress</> : 'Start')}
             </button>
             <button
               className="plan-edit-btn"
@@ -755,7 +795,9 @@ export default function Workouts() {
 
       <Sheet
         open={showSessionConflict}
-        onClose={() => setShowSessionConflict(false)}
+        onClose={() => {
+          if (!startingRef.current) setShowSessionConflict(false);
+        }}
         title="Workout already active"
         swipeToDismiss={false}
       >
@@ -763,9 +805,11 @@ export default function Workouts() {
           {activeSession?.planName || 'Another workout'} is still active. Resume it, or end it before starting {currentPlan?.name || 'this plan'}.
         </p>
         <div className="sheet-actions">
-          <button type="button" className="btn-primary" onClick={handleResumeExisting}>Resume existing</button>
-          <button type="button" className="btn-danger" onClick={handleEndAndStartNew}>End &amp; start new</button>
-          <button type="button" className="btn-secondary" onClick={() => setShowSessionConflict(false)}>Cancel</button>
+          <button type="button" className="btn-primary" onClick={handleResumeExisting} disabled={isStarting}>Resume existing</button>
+          <button type="button" className="btn-danger" onClick={handleEndAndStartNew} disabled={isStarting} aria-busy={isStarting}>
+            {isStarting ? 'Starting…' : 'End & start new'}
+          </button>
+          <button type="button" className="btn-secondary" onClick={() => setShowSessionConflict(false)} disabled={isStarting}>Cancel</button>
         </div>
       </Sheet>
     </div>

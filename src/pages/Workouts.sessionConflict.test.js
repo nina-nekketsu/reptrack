@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import Workouts from './Workouts';
 import { pushActiveWorkoutSession } from '../lib/sync';
 
@@ -96,5 +96,96 @@ describe('Workouts cross-plan session protection', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/workout/upper-body-day');
 
     Storage.prototype.setItem.mockRestore();
+  });
+
+  test('replacement start is strictly newer than the tombstone when time is frozen', () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-07-20T12:00:00.000Z'));
+    const writes = [];
+    const originalSetItem = Storage.prototype.setItem;
+    jest.spyOn(Storage.prototype, 'setItem').mockImplementation(function setItem(key, value) {
+      if (key === 'activeWorkoutSession') writes.push(JSON.parse(value));
+      return originalSetItem.call(this, key, value);
+    });
+
+    try {
+      render(<Workouts />);
+      fireEvent.click(screen.getByRole('button', { name: /start/i }));
+      fireEvent.click(screen.getByRole('button', { name: 'End & start new' }));
+
+      const endedWrites = writes.filter(
+        (session) => session.planId === 'legs-biceps-day' && session.status === 'ended'
+      );
+      const replacementWrites = writes.filter(
+        (session) => session.planId === 'upper-body-day' && session.status === 'active'
+      );
+
+      expect(endedWrites).toHaveLength(1);
+      expect(replacementWrites).toHaveLength(1);
+      expect(Date.parse(replacementWrites[0].updatedAt)).toBeGreaterThan(
+        Date.parse(endedWrites[0].updatedAt)
+      );
+      expect(pushActiveWorkoutSession).toHaveBeenCalledTimes(2);
+      expect(mockStopAll).toHaveBeenCalledTimes(1);
+      expect(mockNavigate).toHaveBeenCalledTimes(1);
+      expect(mockNavigate).toHaveBeenCalledWith('/workout/upper-body-day');
+    } finally {
+      Storage.prototype.setItem.mockRestore();
+      jest.useRealTimers();
+    }
+  });
+
+  test('a failed end write releases the guard so retry mutates once', async () => {
+    const writes = [];
+    const originalSetItem = Storage.prototype.setItem;
+    let shouldFail = true;
+    jest.spyOn(Storage.prototype, 'setItem').mockImplementation(function setItem(key, value) {
+      if (key === 'activeWorkoutSession' && shouldFail) {
+        shouldFail = false;
+        throw new Error('storage blocked');
+      }
+      if (key === 'activeWorkoutSession') writes.push(JSON.parse(value));
+      return originalSetItem.call(this, key, value);
+    });
+
+    try {
+      render(<Workouts />);
+      fireEvent.click(screen.getByRole('button', { name: /start/i }));
+      fireEvent.click(screen.getByRole('button', { name: 'End & start new' }));
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'End & start new' })).toBeEnabled();
+      });
+      expect(mockStopAll).not.toHaveBeenCalled();
+      expect(pushActiveWorkoutSession).not.toHaveBeenCalled();
+      expect(mockNavigate).not.toHaveBeenCalled();
+      expect(JSON.parse(localStorage.getItem('activeWorkoutSession'))).toEqual(activeLegs);
+
+      fireEvent.click(screen.getByRole('button', { name: 'End & start new' }));
+
+      expect(writes.filter((session) => session.status === 'ended')).toHaveLength(1);
+      expect(writes.filter((session) => session.status === 'active')).toHaveLength(1);
+      expect(mockStopAll).toHaveBeenCalledTimes(1);
+      expect(pushActiveWorkoutSession).toHaveBeenCalledTimes(2);
+      expect(mockNavigate).toHaveBeenCalledTimes(1);
+      expect(mockNavigate).toHaveBeenCalledWith('/workout/upper-body-day');
+    } finally {
+      Storage.prototype.setItem.mockRestore();
+    }
+  });
+
+  test('same-frame conflict replacement ends and starts exactly once', () => {
+    render(<Workouts />);
+    fireEvent.click(screen.getByRole('button', { name: /start/i }));
+    const replaceButton = screen.getByRole('button', { name: 'End & start new' });
+
+    act(() => {
+      fireEvent.click(replaceButton, { detail: 1 });
+      fireEvent.click(replaceButton, { detail: 0 });
+    });
+
+    expect(mockStopAll).toHaveBeenCalledTimes(1);
+    expect(pushActiveWorkoutSession).toHaveBeenCalledTimes(2);
+    expect(mockNavigate).toHaveBeenCalledTimes(1);
+    expect(mockNavigate).toHaveBeenCalledWith('/workout/upper-body-day');
   });
 });

@@ -525,6 +525,145 @@ describe('active workout exercise session integrity', () => {
     );
   });
 
+  test('a failed local save tells the truth and releases the guard for one successful retry', async () => {
+    mockUser = { id: 'user-1' };
+    mockPushSession.mockResolvedValue(null);
+    localStorage.setItem('activeWorkoutSession', JSON.stringify(activeWorkout));
+    localStorage.setItem('exerciseLogs', JSON.stringify({}));
+    const onSaved = jest.fn();
+    const onCompletionChange = jest.fn();
+    const originalSetItem = Storage.prototype.setItem;
+    const writes = [];
+    let shouldFail = true;
+    jest.spyOn(Storage.prototype, 'setItem').mockImplementation(function setItem(key, value) {
+      if (key === 'exerciseLogs' && shouldFail) {
+        shouldFail = false;
+        throw new Error('storage blocked');
+      }
+      if (key === 'exerciseLogs') writes.push(JSON.parse(value));
+      return originalSetItem.call(this, key, value);
+    });
+
+    try {
+      render(
+        <ExerciseLogModal
+          exercise={exercise}
+          logs={{}}
+          onSaved={onSaved}
+          onClose={jest.fn()}
+          onCompletionChange={onCompletionChange}
+          prescribedSets={1}
+          stayOpenOnSave
+        />
+      );
+
+      fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 reps' }), { target: { value: '5' } });
+      fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 weight' }), { target: { value: '80' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Mark set 1 done' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+
+      expect(await screen.findByText("Couldn't save on this device. Try again.")).toHaveAttribute('role', 'status');
+      expect(screen.queryByText('Saved on this device')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Done' })).toBeEnabled();
+      expect(onSaved).not.toHaveBeenCalled();
+      expect(onCompletionChange).not.toHaveBeenCalled();
+      expect(mockPushSession).not.toHaveBeenCalled();
+      expect(JSON.parse(localStorage.getItem('exerciseLogs'))).toEqual({});
+
+      fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+
+      await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
+      expect(onCompletionChange).toHaveBeenCalledTimes(1);
+      expect(onCompletionChange).toHaveBeenCalledWith(true);
+      expect(mockPushSession).toHaveBeenCalledTimes(1);
+      expect(writes).toHaveLength(1);
+      expect(writes[0][exercise.id]).toHaveLength(1);
+    } finally {
+      Storage.prototype.setItem.mockRestore();
+    }
+  });
+
+  test('a completing save leaves ActiveWorkout handoff as the only status region', async () => {
+    function CompletionHarness() {
+      const [done, setDone] = React.useState(false);
+      return (
+        <>
+          {done && (
+            <p role="status" aria-live="polite">
+              Exercise complete. All exercises complete.
+            </p>
+          )}
+          <ExerciseLogModal
+            exercise={exercise}
+            logs={{}}
+            onSaved={jest.fn()}
+            onClose={jest.fn()}
+            onCompletionChange={setDone}
+            isExerciseDone={done}
+            prescribedSets={1}
+            stayOpenOnSave
+          />
+        </>
+      );
+    }
+
+    localStorage.setItem('activeWorkoutSession', JSON.stringify(activeWorkout));
+    localStorage.setItem('exerciseLogs', JSON.stringify({}));
+    render(<CompletionHarness />);
+
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 reps' }), { target: { value: '5' } });
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 weight' }), { target: { value: '80' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Mark set 1 done' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+
+    await screen.findByText('Exercise complete. All exercises complete.');
+    const statuses = screen.getAllByRole('status');
+    expect(statuses).toHaveLength(1);
+    expect(statuses[0]).toHaveTextContent('Exercise complete. All exercises complete.');
+    expect(screen.getByText('Exercise complete').closest('.set-completion-summary')).not.toHaveAttribute('role');
+    expect(screen.queryByText('Saved on this device')).not.toBeInTheDocument();
+  });
+
+  test('same-frame pointer and keyboard save activations persist and sync once', async () => {
+    mockUser = { id: 'user-1' };
+    let resolveInsert;
+    mockPushSession.mockReturnValue(new Promise((resolve) => {
+      resolveInsert = resolve;
+    }));
+    localStorage.setItem('activeWorkoutSession', JSON.stringify(activeWorkout));
+    localStorage.setItem('exerciseLogs', JSON.stringify({}));
+    const onSaved = jest.fn();
+
+    render(
+      <ExerciseLogModal
+        exercise={exercise}
+        logs={{}}
+        onSaved={onSaved}
+        onClose={jest.fn()}
+        stayOpenOnSave
+      />
+    );
+
+    const inputs = screen.getAllByRole('spinbutton');
+    fireEvent.change(inputs[0], { target: { value: '5' } });
+    fireEvent.change(inputs[1], { target: { value: '80' } });
+    const doneButton = screen.getByRole('button', { name: 'Done' });
+
+    act(() => {
+      fireEvent.click(doneButton, { detail: 1 });
+      fireEvent.click(doneButton, { detail: 0 });
+    });
+
+    expect(onSaved).toHaveBeenCalledTimes(1);
+    expect(mockPushSession).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(localStorage.getItem('exerciseLogs'))[exercise.id]).toHaveLength(1);
+    expect(screen.getByRole('button', { name: 'Saving…' })).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByRole('button', { name: 'Saving…' })).toBeDisabled();
+
+    await act(async () => resolveInsert('remote-single'));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Done' })).toBeEnabled());
+  });
+
   test('a pending stay-open insert can finish after unmount without losing its remote id', async () => {
     mockUser = { id: 'user-1' };
     let resolveInsert;

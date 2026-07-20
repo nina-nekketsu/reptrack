@@ -39,7 +39,7 @@ class ErrorBoundary extends React.Component {
         role="alert"
         aria-labelledby="error-boundary-title"
       >
-        <section className="error-boundary__card">
+        <section className="error-boundary__card error-feedback">
           <p className="error-boundary__eyebrow">Recovery mode</p>
           <h1
             id="error-boundary-title"
