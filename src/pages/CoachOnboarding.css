@@ -20,7 +20,6 @@
   height: 100%;
   background: var(--c-accent);
   border-radius: 2px;
-  transition: width 0.3s ease;
 }
 
 /* Content area */
@@ -70,7 +69,7 @@
   padding: 1rem 1.1rem;
   text-align: left;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: background-color var(--motion-duration-control) var(--motion-ease-standard), border-color var(--motion-duration-control) var(--motion-ease-standard);
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -210,7 +209,7 @@
   font-weight: 700;
   cursor: pointer;
   border: none;
-  transition: all 0.15s;
+  transition: background-color var(--motion-duration-control) var(--motion-ease-standard), color var(--motion-duration-control) var(--motion-ease-standard), filter var(--motion-duration-control) var(--motion-ease-standard), opacity var(--motion-duration-control) var(--motion-ease-standard);
 }
 
 .co-nav-btn--back {

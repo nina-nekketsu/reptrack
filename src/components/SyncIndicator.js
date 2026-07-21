@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
   flushPendingMutations,
@@ -26,10 +26,58 @@ function isReconnectableFailure(operation) {
     || message === 'load failed';
 }
 
+function getSyncPresentation(snapshot, online) {
+  const unsyncedCount = snapshot.pendingCount + snapshot.failedCount + snapshot.syncingCount;
+
+  if (!online) {
+    return {
+      Icon: BoltIcon,
+      label: unsyncedCount > 0
+        ? `Offline — ${countLabel(unsyncedCount, 'change')} not synced`
+        : 'Offline',
+      state: 'offline',
+    };
+  }
+
+  if (snapshot.authExpired || snapshot.pausedReason === 'auth-expired') {
+    return { Icon: WarningIcon, label: 'Sign in again to sync', state: 'error' };
+  }
+
+  if (snapshot.failedCount > 0 || snapshot.status === 'error') {
+    return {
+      Icon: WarningIcon,
+      label: snapshot.failedCount > 0
+        ? `${countLabel(snapshot.failedCount, 'change')} failed to sync`
+        : 'Sync error',
+      state: 'error',
+    };
+  }
+
+  if (snapshot.syncingCount > 0 || snapshot.status === 'syncing') {
+    return { Icon: RepeatIcon, label: 'Syncing changes', state: 'syncing' };
+  }
+
+  if (snapshot.pendingCount > 0) {
+    return {
+      Icon: null,
+      label: `${countLabel(snapshot.pendingCount, 'change')} pending`,
+      state: 'pending',
+    };
+  }
+
+  if (snapshot.lastSuccessfulSyncAt) {
+    return { Icon: CheckIcon, label: 'Synced', state: 'synced' };
+  }
+
+  return { Icon: null, label: 'Not synced yet', state: 'unknown' };
+}
+
 export default function SyncIndicator() {
   const { user, isConfigured } = useAuth();
   const [snapshot, setSnapshot] = useState(() => getSyncSnapshot());
   const [online, setOnline] = useState(navigator.onLine);
+  const [retrying, setRetrying] = useState(false);
+  const retryingRef = useRef(false);
 
   useEffect(() => {
     const unsubscribe = onSyncSnapshotChange(setSnapshot);
@@ -59,44 +107,20 @@ export default function SyncIndicator() {
     };
   }, [isConfigured, user]);
 
+  const { Icon, label, state } = getSyncPresentation(snapshot, online);
+  const previousStateRef = useRef(state);
+  const stateChanged = previousStateRef.current !== state;
+
+  useEffect(() => {
+    previousStateRef.current = state;
+  }, [state]);
+
   if (!isConfigured || !user) return null;
 
-  const unsyncedCount = snapshot.pendingCount + snapshot.failedCount + snapshot.syncingCount;
-  let Icon = null;
-  let label = 'Not synced yet';
-  let state = 'unknown';
-
-  if (!online) {
-    Icon = BoltIcon;
-    label = unsyncedCount > 0
-      ? `Offline — ${countLabel(unsyncedCount, 'change')} not synced`
-      : 'Offline';
-    state = 'offline';
-  } else if (snapshot.authExpired || snapshot.pausedReason === 'auth-expired') {
-    Icon = WarningIcon;
-    label = 'Sign in again to sync';
-    state = 'error';
-  } else if (snapshot.failedCount > 0 || snapshot.status === 'error') {
-    Icon = WarningIcon;
-    label = snapshot.failedCount > 0
-      ? `${countLabel(snapshot.failedCount, 'change')} failed to sync`
-      : 'Sync error';
-    state = 'error';
-  } else if (snapshot.syncingCount > 0 || snapshot.status === 'syncing') {
-    Icon = RepeatIcon;
-    label = 'Syncing changes';
-    state = 'syncing';
-  } else if (snapshot.pendingCount > 0) {
-    Icon = null;
-    label = `${countLabel(snapshot.pendingCount, 'change')} pending`;
-    state = 'pending';
-  } else if (snapshot.lastSuccessfulSyncAt) {
-    Icon = CheckIcon;
-    label = 'Synced';
-    state = 'synced';
-  }
-
   async function retryFailed() {
+    if (retryingRef.current) return;
+    retryingRef.current = true;
+    setRetrying(true);
     try {
       snapshot.operations
         .filter((operation) => operation.status === 'failed')
@@ -104,6 +128,9 @@ export default function SyncIndicator() {
       await flushPendingMutations();
     } catch {
       // The retained failed operation keeps the UI truthful for another retry.
+    } finally {
+      retryingRef.current = false;
+      setRetrying(false);
     }
   }
 
@@ -114,16 +141,24 @@ export default function SyncIndicator() {
       aria-label={label}
       title={label}
     >
-      <span className="sync-indicator__icon" aria-hidden="true">{Icon ? <Icon /> : '...'}</span>
+      <span
+        key={state}
+        className={`sync-indicator__icon ${stateChanged ? 'sync-indicator__icon--state-change' : ''}`.trim()}
+        aria-hidden="true"
+      >
+        {Icon ? <Icon /> : '...'}
+      </span>
       <span className="sync-indicator__label">{label}</span>
       {state === 'error' && snapshot.failedCount > 0 && (
         <button
           className="sync-indicator__retry"
           type="button"
           onClick={retryFailed}
-          aria-label="Retry failed sync"
+          disabled={retrying}
+          aria-busy={retrying}
+          aria-label={retrying ? 'Retrying failed sync' : 'Retry failed sync'}
         >
-          Retry
+          {retrying ? 'Retrying…' : 'Retry'}
         </button>
       )}
     </div>

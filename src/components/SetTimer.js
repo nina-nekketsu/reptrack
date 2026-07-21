@@ -61,12 +61,17 @@ export default function SetTimer({ exerciseId }) {
       <p className="sr-only" aria-live="polite">Rest started, {restSeconds} seconds</p>
 
       <div
-        className={`timer-phase timer-phase--active ${activePhaseClass} ${timer.isAlert ? 'timer-phase--pulse' : ''}`}
+        className={`timer-phase timer-phase--active ${activePhaseClass} ${timer.isAlert ? 'timer-phase--alert-feedback timer-phase--pulse' : ''}`}
         data-testid="timer-active-phase"
       >
         <span className="timer-phase__label">{activeLabel}</span>
         <strong className="timer-phase__display">{activeDisplay}</strong>
-        {timer.isAlert && <span className="timer-phase__hint">Get ready</span>}
+        {timer.isAlert && (
+          <span className="timer-phase__alert">
+            <span className="timer-phase__alert-icon" aria-hidden="true">!</span>
+            <span className="timer-phase__alert-text">Get ready</span>
+          </span>
+        )}
       </div>
 
       <div className={`timer-phase timer-phase--inactive ${inactivePhaseClass}`} data-testid="timer-inactive-phase">

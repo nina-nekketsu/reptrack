@@ -42,8 +42,33 @@
   --touch-target: 44px; --workout-touch-target: 48px;
   --shadow-e1: 0 1px 2px rgba(0, 0, 0, .4);
   --shadow-e2: 0 12px 32px rgba(0, 0, 0, .5);
-  --motion-fast: 120ms; --motion-reveal: 180ms; --motion-sheet: 240ms;
-  --ease-standard: cubic-bezier(.2, 0, 0, 1);
+  --motion-duration-instant: 90ms;
+  --motion-duration-fast: 120ms;
+  --motion-duration-control: 160ms;
+  --motion-duration-reveal: 200ms;
+  --motion-duration-sheet: 240ms;
+  --motion-duration-celebration: 560ms;
+  --motion-ease-standard: cubic-bezier(.2, 0, 0, 1);
+  --motion-ease-enter: cubic-bezier(.16, 1, .3, 1);
+  --motion-ease-exit: cubic-bezier(.4, 0, 1, 1);
+  --motion-ease-linear: linear;
+  --motion-distance-press: 1px;
+  --motion-distance-inline: 4px;
+  --motion-distance-reveal: 8px;
+  --motion-distance-sheet: 20px;
+  --motion-scale-press: .97;
+  --motion-scale-pop-start: .94;
+  --motion-scale-pop-overshoot: 1.03;
+  --motion-opacity-hidden: 0;
+  --motion-opacity-muted: .64;
+  --motion-stagger-tight: 35ms;
+  --motion-stagger-standard: 55ms;
+
+  /* Backward-compatible aliases for existing component CSS. */
+  --motion-fast: var(--motion-duration-fast);
+  --motion-reveal: var(--motion-duration-reveal);
+  --motion-sheet: var(--motion-duration-sheet);
+  --ease-standard: var(--motion-ease-standard);
 }
 
 * { box-sizing: border-box; }
@@ -91,6 +116,7 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: .01ms !important;
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: .01ms !important;

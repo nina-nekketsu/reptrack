@@ -1,5 +1,11 @@
 import React from 'react';
 
+function getDatasetIdentity(sessions) {
+  return sessions
+    .map((session) => `${session.date || ''}:${Number(session.totalVolume) || 0}`)
+    .join('|');
+}
+
 export default function VolumeGraph({ sessions }) {
   if (!sessions || sessions.length < 2) {
     return (
@@ -31,10 +37,12 @@ export default function VolumeGraph({ sessions }) {
   const formatKg = (v) => v >= 1000 ? `${(v / 1000).toFixed(1)}t` : `${Math.round(v)}`;
   const fmtDate = (iso) =>
     new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+  const datasetIdentity = getDatasetIdentity(sessions);
+  const graphLabel = `Volume over time, ${sessions.length} sessions, ${Math.round(volumes[0]).toLocaleString()} kg to ${Math.round(volumes[volumes.length - 1]).toLocaleString()} kg`;
 
   return (
     <div className="graph-wrap">
-      <svg viewBox={`0 0 ${W} ${H}`} className="volume-graph">
+      <svg viewBox={`0 0 ${W} ${H}`} className="volume-graph" role="img" aria-label={graphLabel}>
         <defs>
           <linearGradient id="volGrad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="var(--go)" stopOpacity="0.25" />
@@ -45,11 +53,13 @@ export default function VolumeGraph({ sessions }) {
           <line key={i} x1={PAD.left} y1={toY(v)} x2={PAD.left + innerW} y2={toY(v)}
             stroke="var(--line)" strokeWidth="1" strokeDasharray="3 3" />
         ))}
-        <path d={areaPath} fill="url(#volGrad)" />
-        <path d={linePath} fill="none" stroke="var(--go)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-        {points.map((p, i) => (
-          <circle key={i} cx={p.x} cy={p.y} r="3.5" fill="var(--go)" stroke="var(--ink-hi)" strokeWidth="1.5" />
-        ))}
+        <g key={datasetIdentity} className="volume-graph__plot" data-testid="volume-graph-plot">
+          <path className="volume-graph__area" d={areaPath} fill="url(#volGrad)" />
+          <path className="volume-graph__line" d={linePath} fill="none" stroke="var(--go)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+          {points.map((p, i) => (
+            <circle className="volume-graph__point" key={i} cx={p.x} cy={p.y} r="3.5" fill="var(--go)" stroke="var(--ink-hi)" strokeWidth="1.5" />
+          ))}
+        </g>
         {yTicks.map((v, i) => (
           <text key={i} x={PAD.left - 4} y={toY(v) + 4} textAnchor="end" fontSize="9" fill="var(--ink-low)">
             {formatKg(v)}

@@ -1,0 +1,148 @@
+/* Unified press acknowledgement for high-frequency controls. */
+:is(
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger,
+  .plan-start-btn,
+  .timer-btn,
+  .timer-action-btn,
+  .timer-rest-picker,
+  .timer-settings-toggle,
+  .timer-toggle,
+  .timer-rest-option,
+  .set-done-btn,
+  .aw-bottom-bar__next,
+  .sheet-actions > button,
+  .sheet-close,
+  .nav-tab
+) {
+  transition-property: transform;
+  transition-duration: var(--motion-duration-fast);
+  transition-timing-function: var(--motion-ease-standard);
+}
+
+:is(
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger,
+  .plan-start-btn,
+  .timer-btn,
+  .timer-action-btn,
+  .timer-rest-picker,
+  .timer-settings-toggle,
+  .timer-toggle,
+  .timer-rest-option,
+  .set-done-btn,
+  .aw-bottom-bar__next,
+  .sheet-actions > button,
+  .sheet-close,
+  .nav-tab
+):active:not(:disabled):not([aria-busy="true"]) {
+  transition-duration: var(--motion-duration-instant);
+  transform: translateY(var(--motion-distance-press)) scale(var(--motion-scale-press));
+}
+
+:is(
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger,
+  .plan-start-btn,
+  .timer-btn,
+  .timer-action-btn,
+  .timer-rest-picker,
+  .timer-settings-toggle,
+  .timer-toggle,
+  .timer-rest-option,
+  .set-done-btn,
+  .aw-bottom-bar__next,
+  .sheet-actions > button,
+  .sheet-close,
+  .nav-tab
+):disabled,
+:is(
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger,
+  .plan-start-btn,
+  .timer-btn,
+  .timer-action-btn,
+  .timer-rest-picker,
+  .timer-settings-toggle,
+  .timer-toggle,
+  .timer-rest-option,
+  .set-done-btn,
+  .aw-bottom-bar__next,
+  .sheet-actions > button,
+  .sheet-close,
+  .nav-tab
+)[aria-busy="true"] {
+  transform: none;
+}
+
+:is(
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger,
+  .plan-start-btn,
+  .timer-btn,
+  .timer-action-btn,
+  .timer-rest-picker,
+  .timer-settings-toggle,
+  .timer-toggle,
+  .timer-rest-option,
+  .set-done-btn,
+  .aw-bottom-bar__next,
+  .sheet-actions > button,
+  .sheet-close,
+  .nav-tab
+):is(:disabled, [aria-busy="true"]):active {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(
+    .btn-primary,
+    .btn-secondary,
+    .btn-danger,
+    .plan-start-btn,
+    .timer-btn,
+    .timer-action-btn,
+    .timer-rest-picker,
+    .timer-settings-toggle,
+    .timer-toggle,
+    .timer-rest-option,
+    .set-done-btn,
+    .aw-bottom-bar__next,
+    .sheet-actions > button,
+    .sheet-close,
+    .nav-tab
+  ) {
+    transition-property: background-color, border-color, color;
+  }
+
+  :is(
+    .btn-primary,
+    .btn-secondary,
+    .btn-danger,
+    .plan-start-btn,
+    .timer-btn,
+    .timer-action-btn,
+    .timer-rest-picker,
+    .timer-settings-toggle,
+    .timer-toggle,
+    .timer-rest-option,
+    .set-done-btn,
+    .aw-bottom-bar__next,
+    .sheet-actions > button,
+    .sheet-close,
+    .nav-tab
+  ):active:not(:disabled):not([aria-busy="true"]) {
+    transform: none;
+  }
+
+  .sync-indicator__retry,
+  .error-boundary__secondary {
+    transition: none;
+    transform: none;
+  }
+}

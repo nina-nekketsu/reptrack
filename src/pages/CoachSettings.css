@@ -54,7 +54,7 @@
   border: 1.5px solid var(--c-border);
   background: transparent;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: background-color var(--motion-duration-control) var(--motion-ease-standard), border-color var(--motion-duration-control) var(--motion-ease-standard);
   text-align: left;
 }
 
@@ -95,7 +95,7 @@
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: background-color var(--motion-duration-control) var(--motion-ease-standard), border-color var(--motion-duration-control) var(--motion-ease-standard), color var(--motion-duration-control) var(--motion-ease-standard);
   text-transform: capitalize;
 }
 

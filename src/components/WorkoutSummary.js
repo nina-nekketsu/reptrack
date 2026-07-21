@@ -1,7 +1,9 @@
 // src/components/WorkoutSummary.js — Post-workout summary modal
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { vibrate } from '../utils/timer';
 import { getPlanById } from '../data/trainingPlans';
+import { CheckIcon } from './icons';
+import Dialog from './ui/Dialog';
 
 // Motivational closing messages — PRD Section 6.2 key phrases
 const CLOSING_MESSAGES = [
@@ -25,6 +27,7 @@ export function buildWorkoutSummaryText(summary, cardioMinutes = 0) {
 
 export default function WorkoutSummary({ summary, planId, cardioMinutes, onClose }) {
   const [shareLabel, setShareLabel] = useState('Share as text');
+  const closeButtonRef = useRef(null);
   useEffect(() => {
     if (summary?.improvements?.length > 0) vibrate([30, 60, 30]);
   }, [summary]);
@@ -57,11 +60,23 @@ export default function WorkoutSummary({ summary, planId, cardioMinutes, onClose
   }
 
   return (
-    <div className="workout-summary-overlay" onClick={onClose}>
-      <div className="workout-summary" onClick={e => e.stopPropagation()}>
+    <Dialog
+      open
+      onClose={onClose}
+      title="Workout complete"
+      className="workout-summary-overlay"
+      panelClassName="workout-summary"
+      labelledBy="workout-summary-title"
+      describedBy="workout-summary-description"
+      initialFocusRef={closeButtonRef}
+      renderHeader={false}
+    >
+        <div className="ws-complete-check" aria-hidden="true"><CheckIcon /></div>
         <div className="ws-header">
-          <h2 className="ws-title">Workout Complete</h2>
-          <p className="ws-subtitle">{summary.exerciseCount} exercises logged</p>
+          <h2 id="workout-summary-title" className="ws-title">Workout Complete</h2>
+          <p id="workout-summary-description" className="ws-subtitle">
+            {summary.exerciseCount} exercises logged
+          </p>
         </div>
 
         <div className="ws-stats">
@@ -151,9 +166,8 @@ export default function WorkoutSummary({ summary, planId, cardioMinutes, onClose
 
         <div className="ws-actions">
           <button type="button" className="ws-share-btn" onClick={handleShare}>{shareLabel}</button>
-          <button className="ws-close-btn" onClick={onClose}>Done</button>
+          <button ref={closeButtonRef} type="button" className="ws-close-btn" onClick={onClose}>Done</button>
         </div>
-      </div>
-    </div>
+    </Dialog>
   );
 }

@@ -43,4 +43,49 @@ describe('active workout preserved completion affordances', () => {
 
     expect(css).toMatch(/\.aw-stat\s*\{[^}]*min-width:\s*0/s);
   });
+
+  test('claims the workout end action synchronously before persistence and exposes a busy confirm state', () => {
+    const source = readActiveWorkoutSource();
+    const handler = source.slice(
+      source.indexOf('function handleEndWorkout()'),
+      source.indexOf('function handleCloseSummary()')
+    );
+
+    expect(source).toContain('const endingRef = useRef(false)');
+    expect(handler).toMatch(/if \(endingRef\.current\) return;\s*endingRef\.current = true;\s*setIsEnding\(true\)/s);
+    expect(handler.indexOf("saveActiveWorkoutSession({ action: 'end'")).toBeLessThan(handler.indexOf('timer.stopAll()'));
+    expect(handler).toContain('releaseEndAction()');
+    expect(source).toContain('disabled={isEnding}');
+    expect(source).toContain('aria-busy={isEnding}');
+    expect(source).toContain("{isEnding ? 'Ending…' : 'End & Save'}");
+  });
+
+  test('keeps one end mutation and writes the local tombstone before opening the summary', () => {
+    const source = readActiveWorkoutSource();
+    const handler = source.slice(
+      source.indexOf('function handleEndWorkout()'),
+      source.indexOf('function handleCloseSummary()')
+    );
+    const localEnd = handler.indexOf("saveActiveWorkoutSession({ action: 'end'");
+    const remotePush = handler.indexOf('pushActiveWorkoutSession(user?.id)');
+    const summaryData = handler.indexOf('setSummaryData(summary)');
+    const summaryOpen = handler.indexOf('setShowSummary(true)');
+
+    expect(handler.match(/endCoachWorkout\(/g)).toHaveLength(1);
+    expect(localEnd).toBeGreaterThan(-1);
+    expect(remotePush).toBeGreaterThan(localEnd);
+    expect(summaryData).toBeGreaterThan(remotePush);
+    expect(summaryOpen).toBeGreaterThan(summaryData);
+  });
+
+  test('closes the summary and navigates immediately without timeout choreography', () => {
+    const source = readActiveWorkoutSource();
+    const handler = source.slice(
+      source.indexOf('function handleCloseSummary()'),
+      source.indexOf('function handleLogSaved(')
+    );
+
+    expect(handler).toMatch(/setShowSummary\(false\);\s*setSummaryData\(null\);\s*navigate\('\/workouts', \{ replace: true \}\)/s);
+    expect(handler).not.toMatch(/setTimeout|animationend|transitionend/i);
+  });
 });

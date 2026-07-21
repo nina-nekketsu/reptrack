@@ -9,8 +9,43 @@
   background: var(--surface-raised);
   color: var(--text-primary);
   box-shadow: var(--shadow-e1);
+  transition:
+    color var(--motion-duration-fast) var(--motion-ease-standard),
+    background-color var(--motion-duration-fast) var(--motion-ease-standard),
+    border-color var(--motion-duration-fast) var(--motion-ease-standard);
   pointer-events: auto;
-  animation: none;
+}
+
+.sync-indicator__icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  opacity: 1;
+  transform: none;
+  transform-origin: center;
+}
+
+.sync-indicator__icon .rt-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.sync-indicator__icon--state-change {
+  animation: sync-indicator-state-change var(--motion-duration-control) var(--motion-ease-enter) 1 both;
+}
+
+@keyframes sync-indicator-state-change {
+  from {
+    opacity: var(--motion-opacity-muted);
+    transform: scale(var(--motion-scale-pop-start));
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .sync-indicator__label {
@@ -54,6 +89,18 @@
 .sync-indicator__retry:focus-visible {
   outline: var(--focus-ring);
   outline-offset: var(--focus-ring-offset);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sync-indicator.sync-indicator--truthful {
+    transition: none;
+  }
+
+  .sync-indicator__icon--state-change {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @media (max-width: 360px) {

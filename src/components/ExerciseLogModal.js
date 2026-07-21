@@ -242,6 +242,10 @@ export default function ExerciseLogModal({
   const [previousSessionSets, setPreviousSessionSets] = useState([]);
   const [undoRemoval, setUndoRemoval] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [localSaveStatus, setLocalSaveStatus] = useState('');
+  const [showExerciseCompleteCue, setShowExerciseCompleteCue] = useState(false);
+  const saveInFlightRef = useRef(false);
+  const previousExerciseDoneRef = useRef(isExerciseDone);
   const logScrollRef = useRef(null);
   const weightInputRefs = useRef([]);
   const mountedRef = useRef(true);
@@ -255,6 +259,12 @@ export default function ExerciseLogModal({
     const timeoutId = window.setTimeout(() => setUndoRemoval(null), 4000);
     return () => window.clearTimeout(timeoutId);
   }, [undoRemoval]);
+
+  useEffect(() => {
+    const becameComplete = !previousExerciseDoneRef.current && isExerciseDone;
+    previousExerciseDoneRef.current = isExerciseDone;
+    setShowExerciseCompleteCue(becameComplete);
+  }, [isExerciseDone]);
 
   // Coach-related derived data
   const isCoachActive = coach.isOnboarded && coach.coachActive;
@@ -271,6 +281,7 @@ export default function ExerciseLogModal({
     setSavedSetFeedback([]);
     setPreviousSessionSets([]);
     setLastSavedCoachContext(null);
+    setLocalSaveStatus('');
 
     // Check if this exercise was already logged during the current active workout session
     let initialSets = [emptySetRow()];
@@ -344,11 +355,13 @@ export default function ExerciseLogModal({
 
   function updateSet(index, field, value) {
     setSavedSetFeedback([]);
+    setLocalSaveStatus('');
     setSets((prev) => applySetUpdate(prev, index, field, value));
   }
 
   function stepSetValue(index, field, delta) {
     setSavedSetFeedback([]);
+    setLocalSaveStatus('');
     setSets((prev) => {
       const rawValue = prev[index]?.[field];
       if ((rawValue === '' || rawValue === null || rawValue === undefined) && delta < 0) return prev;
@@ -361,16 +374,19 @@ export default function ExerciseLogModal({
 
   function addSet() {
     setSavedSetFeedback([]);
+    setLocalSaveStatus('');
     setSets((prev) => [...prev, emptySetRow()]);
   }
 
   function addSameAsLastSet() {
     setSavedSetFeedback([]);
+    setLocalSaveStatus('');
     setSets((prev) => appendSameAsLastSet(prev));
   }
 
   function removeSet(index) {
     setSavedSetFeedback([]);
+    setLocalSaveStatus('');
     const target = sets[index];
     if (!target) return;
     let endIndex = index + 1;
@@ -385,6 +401,7 @@ export default function ExerciseLogModal({
 
   function undoRemoveSet() {
     if (!undoRemoval) return;
+    setLocalSaveStatus('');
     setSets((current) => {
       const insertionIndex = Math.min(undoRemoval.index, current.length);
       return [
@@ -406,6 +423,7 @@ export default function ExerciseLogModal({
     setActiveTab('log');
     setSavedSetFeedback([]);
     setLastSavedCoachContext(null);
+    setLocalSaveStatus('');
     onClose();
   }
 
@@ -419,6 +437,7 @@ export default function ExerciseLogModal({
     setSets(normalizedSets);
     setEditingSession({ ...session });
     setSavedSetFeedback(getSessionRepFeedback(logs, exercise.id, session));
+    setLocalSaveStatus('');
     setActiveTab('log');
     scrollToTop();
   }
@@ -427,6 +446,7 @@ export default function ExerciseLogModal({
     setEditingSession(null);
     setSets([emptySetRow()]);
     setSavedSetFeedback([]);
+    setLocalSaveStatus('');
     scrollToTop();
   }
 
@@ -451,10 +471,15 @@ export default function ExerciseLogModal({
   }
 
   async function saveSession() {
-    if (isSaving) return;
+    if (saveInFlightRef.current) return;
     if (sets.some((set, index) => getSetValidation(set, index + 1))) return;
     const validSets = sets.filter((s) => s.reps !== '' || s.weight !== '');
     if (validSets.length === 0) return;
+
+    // React state is not synchronous. Claim this mutation before any local write,
+    // await, or rerender so pointer/keyboard repeats in the same frame are inert.
+    saveInFlightRef.current = true;
+    setIsSaving(true);
 
     // Preserve stable set identity across local edits, remote upserts, and coach messages.
     const enrichedSets = normalizeSetIdentities(validSets).map((set, index) => {
@@ -510,7 +535,12 @@ export default function ExerciseLogModal({
     }
 
     // Local-first: make the completed set/session durable before waiting on the network.
-    saveLogs(updatedLogs);
+    if (!saveLogs(updatedLogs)) {
+      saveInFlightRef.current = false;
+      setIsSaving(false);
+      setLocalSaveStatus("Couldn't save on this device. Try again.");
+      return;
+    }
     window.dispatchEvent(new Event('exerciseLogged'));
     if (onSaved) onSaved(updatedLogs);
     const meaningfulParentSets = enrichedSets.filter(
@@ -518,6 +548,9 @@ export default function ExerciseLogModal({
     );
     const completedAfterSave = meaningfulParentSets.length > 0
       && meaningfulParentSets.every((set) => set.done === true);
+    // ActiveWorkout owns the completion handoff announcement. Keep durability
+    // feedback for non-completing saves so assistive technology hears one event.
+    setLocalSaveStatus(onCompletionChange && completedAfterSave ? '' : 'Saved on this device');
     if (onCompletionChange) onCompletionChange(completedAfterSave);
 
     const syncPromise = user
@@ -570,7 +603,6 @@ export default function ExerciseLogModal({
       scrollToTop();
 
       if (syncPromise) {
-        setIsSaving(true);
         try {
           const remoteResult = await syncPromise;
           const attachedRemoteId = persistReturnedRemoteId(remoteResult);
@@ -585,8 +617,16 @@ export default function ExerciseLogModal({
         } catch (err) {
           reportSessionSyncFailure(err);
         } finally {
+          saveInFlightRef.current = false;
           if (mountedRef.current) setIsSaving(false);
         }
+      } else {
+        // Keep the synchronous guard through the current task, then allow the
+        // next deliberate save when there is no remote operation to await.
+        Promise.resolve().then(() => {
+          saveInFlightRef.current = false;
+          if (mountedRef.current) setIsSaving(false);
+        });
       }
       return;
     }
@@ -685,7 +725,7 @@ export default function ExerciseLogModal({
                 const describedBy = [feedbackId, validationId].filter(Boolean).join(' ') || undefined;
                 return (
                   <React.Fragment key={s.clientSetId || i}>
-                    <div className={`set-row ${feedback ? `set-row--${feedback.state}` : ''} ${isWarmupRow(s) ? 'set-row--warmup' : ''} ${isParentDropset(s) ? 'set-row--dropset' : ''} ${childRow ? 'set-row--dropset-child' : ''}`}>
+                    <div className={`set-row ${s.done ? 'set-row--checked' : ''} ${feedback ? `set-row--${feedback.state}` : ''} ${isWarmupRow(s) ? 'set-row--warmup' : ''} ${isParentDropset(s) ? 'set-row--dropset' : ''} ${childRow ? 'set-row--dropset-child' : ''}`}>
                       <span className={`set-num ${childRow ? 'set-num--dropset-child' : ''}`}>{getSetLabel(sets, i)}</span>
                       <div className="set-stepper set-stepper--reps">
                         <span className="set-stepper__label" aria-hidden="true">Reps</span>
@@ -756,7 +796,11 @@ export default function ExerciseLogModal({
                           aria-pressed={Boolean(s.done)}
                           aria-label={`Mark set ${getSetLabel(sets, i)} ${s.done ? 'not done' : 'done'}`}
                         >
-                          {s.done ? <CheckIcon /> : <span aria-hidden="true">o</span>}
+                          {s.done ? (
+                            <span className="set-done-btn__check" aria-hidden="true"><CheckIcon /></span>
+                          ) : (
+                            <span aria-hidden="true">o</span>
+                          )}
                         </button>
                         <button className="remove-set-btn" aria-label={`Remove set ${i + 1}`} onClick={() => removeSet(i)} disabled={sets.length === 1}>x</button>
                       </div>
@@ -767,7 +811,11 @@ export default function ExerciseLogModal({
                       )}
                     </div>
                     {feedback && (
-                      <div id={feedbackId} className={`set-feedback set-feedback--${feedback.state}`} role="status">
+                      <div
+                        id={feedbackId}
+                        className={`set-feedback set-feedback--${feedback.state}`}
+                        role={isExerciseDone ? undefined : 'status'}
+                      >
                         <span className="set-feedback__icon" aria-hidden="true">{feedback.icon}</span>
                         <span className="set-feedback__text">{feedback.label}</span>
                       </div>
@@ -796,10 +844,18 @@ export default function ExerciseLogModal({
               </div>
 
               {(completedSetCount > 0 || isExerciseDone) && (
-                <div className="set-completion-summary" role="status">
+                <div
+                  className={`set-completion-summary ${isExerciseDone && showExerciseCompleteCue ? 'set-completion-summary--cue' : ''}`}
+                >
                   {isExerciseDone
                     ? 'Exercise complete'
                     : `${completedSetCount}/${completionTarget} full sets checked`}
+                </div>
+              )}
+
+              {localSaveStatus && (
+                <div className="local-save-status" role="status" aria-live="polite">
+                  {localSaveStatus}
                 </div>
               )}
 
@@ -990,6 +1046,7 @@ export default function ExerciseLogModal({
                 className="btn-primary"
                 onClick={saveSession}
                 disabled={isSaving || (liveTotals.totalReps === 0 && liveTotals.totalVolume === 0)}
+                aria-busy={isSaving}
               >
                 {isSaving ? 'Saving…' : 'Done'}
               </button>
@@ -1009,9 +1066,12 @@ export default function ExerciseLogModal({
           )}
         </div>
       </div>
-      {undoRemoval && (
-        <Toast message="Set removed" actionLabel="Undo" onAction={undoRemoveSet} />
-      )}
+      <Toast
+        open={Boolean(undoRemoval)}
+        message="Set removed"
+        actionLabel="Undo"
+        onAction={undoRemoveSet}
+      />
       {confirmDeleteDate && (
         <div className="confirm-overlay" onClick={handleCancelDelete}>
           <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>

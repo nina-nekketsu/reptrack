@@ -1,7 +1,7 @@
 // src/components/AuthScreen.js
 // Shown when: Supabase is configured but user is not logged in.
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { DumbbellIcon } from './icons';
 
@@ -11,13 +11,28 @@ export default function AuthScreen() {
   const [password, setPassword] = useState('');
   const [error, setError]     = useState(null);
   const [info, setInfo]       = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
+  const pendingActionRef = useRef(null);
+  const loading = pendingAction !== null;
+
+  function beginPendingAction(action) {
+    if (pendingActionRef.current) return false;
+    pendingActionRef.current = action;
+    setPendingAction(action);
+    return true;
+  }
+
+  function endPendingAction() {
+    pendingActionRef.current = null;
+    setPendingAction(null);
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
+    const action = mode === 'signup' ? 'signup' : 'signin';
+    if (!beginPendingAction(action)) return;
     setError(null);
     setInfo(null);
-    setLoading(true);
 
     try {
       if (mode === 'signup') {
@@ -32,7 +47,7 @@ export default function AuthScreen() {
     } catch (err) {
       setError(err.message || 'Something went wrong');
     } finally {
-      setLoading(false);
+      endPendingAction();
     }
   }
 
@@ -45,7 +60,7 @@ export default function AuthScreen() {
       return;
     }
 
-    setLoading(true);
+    if (!beginPendingAction('reset')) return;
     try {
       const redirectTo = `${window.location.origin}${window.location.pathname}`;
       const { error: err } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
@@ -54,7 +69,7 @@ export default function AuthScreen() {
     } catch (err) {
       setError(err.message || 'Could not send reset email.');
     } finally {
-      setLoading(false);
+      endPendingAction();
     }
   }
 
@@ -97,13 +112,20 @@ export default function AuthScreen() {
             />
           </div>
 
-          {error && <div className="auth-error">{error}</div>}
+          {error && <div className="auth-error error-feedback" role="alert">{error}</div>}
           {info  && <div className="auth-info">{info}</div>}
 
-          <button className="auth-submit" type="submit" disabled={loading}>
-            {loading
-              ? 'Please wait…'
-              : mode === 'signin' ? 'Sign In' : 'Create Account'}
+          <button
+            className="auth-submit"
+            type="submit"
+            disabled={loading}
+            aria-busy={pendingAction === 'signin' || pendingAction === 'signup'}
+          >
+            {pendingAction === 'signin'
+              ? 'Signing in…'
+              : pendingAction === 'signup'
+                ? 'Creating account…'
+                : mode === 'signin' ? 'Sign In' : 'Create Account'}
           </button>
 
           {mode === 'signin' && (
@@ -112,8 +134,9 @@ export default function AuthScreen() {
               className="auth-toggle"
               onClick={handleForgotPassword}
               disabled={loading}
+              aria-busy={pendingAction === 'reset'}
             >
-              Forgot password?
+              {pendingAction === 'reset' ? 'Sending reset…' : 'Forgot password?'}
             </button>
           )}
         </form>

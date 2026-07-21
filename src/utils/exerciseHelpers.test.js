@@ -1,4 +1,30 @@
-import { getSetRepFeedback, getSessionRepFeedback } from './exerciseHelpers';
+import { getSetRepFeedback, getSessionRepFeedback, saveLogs } from './exerciseHelpers';
+
+describe('saveLogs', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  test('returns true only after logs are durably written', () => {
+    const logs = { squat: [{ date: '2026-07-20T12:00:00.000Z', sets: [] }] };
+
+    expect(saveLogs(logs)).toBe(true);
+    expect(JSON.parse(localStorage.getItem('exerciseLogs'))).toEqual(logs);
+  });
+
+  test('returns false instead of throwing when storage rejects the write', () => {
+    jest.spyOn(Storage.prototype, 'setItem').mockImplementationOnce(() => {
+      throw new Error('storage blocked');
+    });
+
+    try {
+      expect(saveLogs({ squat: [] })).toBe(false);
+      expect(localStorage.getItem('exerciseLogs')).toBeNull();
+    } finally {
+      Storage.prototype.setItem.mockRestore();
+    }
+  });
+});
 
 describe('getSetRepFeedback', () => {
   test.each([

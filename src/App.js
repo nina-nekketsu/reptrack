@@ -17,6 +17,7 @@ import Coach from './pages/Coach'
 import CoachSettings from './pages/CoachSettings'
 import SyncIndicator from './components/SyncIndicator'
 import UpdateBanner from './components/UpdateBanner'
+import RouteContentTransition from './components/RouteContentTransition'
 import { useState } from 'react'
 import './App.css'
 
@@ -56,20 +57,22 @@ function AppContent() {
           <UpdateBanner />
           <SyncIndicator />
           <main className="app-main">
-            <Routes>
-              <Route path="/"              element={<Dashboard />} />
-              <Route path="/today"         element={<Dashboard />} />
-              <Route path="/home"          element={<Navigate to="/today" replace />} />
-              <Route path="/workout"       element={<Navigate to="/workouts" replace />} />
-              <Route path="/workout/:planId" element={<ActiveWorkout />} />
-              <Route path="/workouts"      element={<Workouts />} />
-              <Route path="/exercises"     element={<Exercises />} />
-              <Route path="/history"       element={<History />} />
-              <Route path="/progress"      element={<Progress />} />
-              <Route path="/profile"       element={<Profile />} />
-              <Route path="/coach"         element={<Coach />} />
-              <Route path="/coach/settings" element={<CoachSettings />} />
-            </Routes>
+            <RouteContentTransition>
+              <Routes>
+                <Route path="/"              element={<Dashboard />} />
+                <Route path="/today"         element={<Dashboard />} />
+                <Route path="/home"          element={<Navigate to="/today" replace />} />
+                <Route path="/workout"       element={<Navigate to="/workouts" replace />} />
+                <Route path="/workout/:planId" element={<ActiveWorkout />} />
+                <Route path="/workouts"      element={<Workouts />} />
+                <Route path="/exercises"     element={<Exercises />} />
+                <Route path="/history"       element={<History />} />
+                <Route path="/progress"      element={<Progress />} />
+                <Route path="/profile"       element={<Profile />} />
+                <Route path="/coach"         element={<Coach />} />
+                <Route path="/coach/settings" element={<CoachSettings />} />
+              </Routes>
+            </RouteContentTransition>
           </main>
           <BottomNav />
         </div>

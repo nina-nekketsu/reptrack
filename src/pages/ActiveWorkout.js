@@ -105,7 +105,14 @@ export default function ActiveWorkout() {
   const [warmupDismissed, setWarmupDismissed] = useState(false);
   const [showWorkoutMenu, setShowWorkoutMenu] = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const [isEnding, setIsEnding] = useState(false);
+  const [completionAnnouncement, setCompletionAnnouncement] = useState('');
+  const [acknowledgedExerciseId, setAcknowledgedExerciseId] = useState(null);
   const startedCoachSessionRef = useRef(null);
+  const endingRef = useRef(false);
+  const workoutEndedRef = useRef(false);
+  const completedExerciseIdsRef = useRef(completedExerciseIds);
+  completedExerciseIdsRef.current = completedExerciseIds;
 
   const plan = plans.find((p) => p.id === planId);
 
@@ -134,6 +141,7 @@ export default function ActiveWorkout() {
       navigate('/workouts', { replace: true });
       return;
     }
+    if (workoutEndedRef.current) return;
 
     // If there's no active session or it's for a different plan, create one
     if (!activeSession || activeSession.planId !== planId) {
@@ -146,7 +154,8 @@ export default function ActiveWorkout() {
       });
       pushActiveWorkoutSession(user?.id);
       setActiveSession(session);
-      setCompletedExerciseIds(session.completedExerciseIds || []);
+      completedExerciseIdsRef.current = session.completedExerciseIds || [];
+      setCompletedExerciseIds(completedExerciseIdsRef.current);
     }
   }, [plan, planId, activeSession, navigate, user?.id]);
 
@@ -210,17 +219,49 @@ export default function ActiveWorkout() {
   );
   const nextExercise = nextExerciseIndex >= 0 ? exerciseProgress[nextExerciseIndex] : null;
   const restRecommendation = getRestRecommendation(nextExercise?.planExercise);
+  const progressScale = totalExercises > 0 ? completedCount / totalExercises : 0;
+
+  function getCompletionAnnouncement(nextCompletedExerciseIds) {
+    const projectedProgress = plan.exercises.map((planExercise) => {
+      const exercise = getExercise(planExercise.exerciseId);
+      const targetSets = planExercise.prescribedSets || 1;
+      const done = nextCompletedExerciseIds.includes(planExercise.exerciseId)
+        || getSetsLoggedThisSession(planExercise.exerciseId) >= targetSets;
+      return { done, exercise };
+    });
+    const projectedCompletedCount = projectedProgress.filter(({ done }) => done).length;
+
+    if (projectedCompletedCount === projectedProgress.length && projectedProgress.length > 0) {
+      return 'Exercise complete. All exercises complete.';
+    }
+
+    const projectedNextIndex = getNextIncompleteIndex(
+      projectedProgress.map(({ done, exercise }) => done || !exercise)
+    );
+    const projectedNext = projectedNextIndex >= 0
+      ? projectedProgress[projectedNextIndex].exercise
+      : null;
+
+    return projectedNext
+      ? `Exercise complete. Next: ${projectedNext.name}`
+      : 'Exercise complete.';
+  }
+
+  function releaseEndAction() {
+    endingRef.current = false;
+    setIsEnding(false);
+  }
 
   function handleEndWorkout() {
-    timer.stopAll();
-    endCoachWorkout(activeSession, {
-      status: 'ended',
-      completedExerciseIds,
-    }).catch((error) => {
-      console.warn('[coach] cloud workout end failed:', error);
-    });
+    if (endingRef.current) return;
+    endingRef.current = true;
+    setIsEnding(true);
 
-    // Generate workout summary if coach is active
+    let summary = null;
+    let coachMetadataPatch = null;
+
+    // Prepare the summary without mutating state. The local ended tombstone must
+    // succeed before timers, coach state, remote sync, or navigation change.
     if (coach.isOnboarded && plan && activeSession) {
       const currentLogs = loadLogs();
       const sessionStart = new Date(activeSession.startedAt);
@@ -248,31 +289,46 @@ export default function ActiveWorkout() {
 
       if (exerciseResults.length > 0) {
         const duration = Date.now() - sessionStart.getTime();
-        const summary = generateSessionSummary(exerciseResults, duration, coach.profile.goal);
-        setSummaryData(summary);
-        setShowSummary(true);
-
-        // Update coaching metadata
+        summary = generateSessionSummary(exerciseResults, duration, coach.profile.goal);
         const fatigueAdj = calculateFatigueAdjustment(exerciseResults.map(r => r.overload));
-        coach.updateMetadata({
+        coachMetadataPatch = {
           fatigueScore: Math.max(0, Math.min(100, coach.metadata.fatigueScore + fatigueAdj)),
           totalSessions: coach.metadata.totalSessions + 1,
           lastSessionDate: new Date().toISOString(),
-        });
-
-        coach.deactivateCoach();
-        saveActiveWorkoutSession({ action: 'end', now: new Date().toISOString() });
-        pushActiveWorkoutSession(user?.id);
-        setActiveSession(null);
-        return; // Don't navigate yet — show summary first
+        };
       }
     }
 
-    coach.deactivateCoach();
-    saveActiveWorkoutSession({ action: 'end', now: new Date().toISOString() });
-    pushActiveWorkoutSession(user?.id);
-    setActiveSession(null);
-    navigate('/workouts', { replace: true });
+    try {
+      const endedSession = saveActiveWorkoutSession({ action: 'end', now: new Date().toISOString() });
+      if (!endedSession) {
+        releaseEndAction();
+        return;
+      }
+
+      timer.stopAll();
+      Promise.resolve(endCoachWorkout(activeSession, {
+        status: 'ended',
+        completedExerciseIds,
+      })).catch((error) => {
+        console.warn('[coach] cloud workout end failed:', error);
+      });
+      if (coachMetadataPatch) coach.updateMetadata(coachMetadataPatch);
+      coach.deactivateCoach();
+      pushActiveWorkoutSession(user?.id);
+      workoutEndedRef.current = true;
+      setActiveSession(null);
+      setShowEndConfirm(false);
+
+      if (summary) {
+        setSummaryData(summary);
+        setShowSummary(true);
+        return;
+      }
+      navigate('/workouts', { replace: true });
+    } catch {
+      releaseEndAction();
+    }
   }
 
   function handleCloseSummary() {
@@ -296,16 +352,30 @@ export default function ActiveWorkout() {
   }
 
   function handleExerciseCompletion(exerciseId, done) {
+    const current = completedExerciseIdsRef.current;
+    const isAlreadyComplete = current.includes(exerciseId);
+    if (done === isAlreadyComplete) return;
+
     const next = done
-      ? [...new Set([...completedExerciseIds, exerciseId])]
-      : completedExerciseIds.filter((id) => id !== exerciseId);
-    setCompletedExerciseIds(next);
+      ? [...new Set([...current, exerciseId])]
+      : current.filter((id) => id !== exerciseId);
     const updatedSession = saveActiveWorkoutSession({
       action: 'update',
       patch: { completedExerciseIds: next },
       now: new Date().toISOString(),
     });
-    if (updatedSession) setActiveSession(updatedSession);
+    if (!updatedSession) return;
+
+    completedExerciseIdsRef.current = next;
+    setCompletedExerciseIds(next);
+    setActiveSession(updatedSession);
+    if (done) {
+      setAcknowledgedExerciseId(exerciseId);
+      setCompletionAnnouncement(getCompletionAnnouncement(next));
+    } else {
+      setAcknowledgedExerciseId(null);
+      setCompletionAnnouncement('');
+    }
     pushActiveWorkoutSession(user?.id);
   }
 
@@ -337,13 +407,28 @@ export default function ActiveWorkout() {
         </div>
 
         {/* Progress bar */}
-        <progress
+        <div
           className="aw-progress-bar"
-          value={completedCount}
-          max={totalExercises || 1}
+          role="progressbar"
           aria-label="Workout completion"
-        />
+          aria-valuenow={completedCount}
+          aria-valuemin={0}
+          aria-valuemax={totalExercises}
+          aria-valuetext={`${completedCount} of ${totalExercises} exercises complete`}
+        >
+          <span
+            className="aw-progress-bar__fill"
+            style={{ transform: `scaleX(${progressScale})` }}
+            aria-hidden="true"
+          />
+        </div>
       </div>
+
+      {completionAnnouncement && (
+        <p className="sr-only" role="status" aria-live="polite">
+          {completionAnnouncement}
+        </p>
+      )}
 
       {/* Warm-up prompt — PRD Section 5.4.3 */}
       {coach.isOnboarded && !warmupDismissed && completedCount === 0 && (
@@ -414,9 +499,10 @@ export default function ActiveWorkout() {
           return (
             <div
               key={`${planEx.exerciseId}-${i}`}
-              className={`aw-exercise-row aw-exercise-row--${progressState} ${planEx.superset ? 'aw-exercise-row--superset' : ''} ${isNext ? 'aw-exercise-row--next' : ''}`}
+              className={`aw-exercise-row aw-exercise-row--${progressState} ${planEx.superset ? 'aw-exercise-row--superset' : ''} ${isNext ? 'aw-exercise-row--next' : ''} ${acknowledgedExerciseId === planEx.exerciseId ? 'aw-exercise-row--ack' : ''}`}
               onClick={() => openExerciseLog(ex, planEx)}
             >
+              <span className="aw-exercise-next-outline" aria-hidden="true" />
               <div className="aw-exercise-status">
                 {done ? (
                   <span className="aw-check" aria-label={`${ex.name} completed`}><CheckIcon /></span>
@@ -547,7 +633,9 @@ export default function ActiveWorkout() {
       {/* End workout confirmation overlay */}
       <Dialog
         open={showEndConfirm}
-        onClose={() => setShowEndConfirm(false)}
+        onClose={() => {
+          if (!endingRef.current) setShowEndConfirm(false);
+        }}
         title="End Workout?"
         className="aw-end-overlay"
         panelClassName="aw-end-confirm"
@@ -568,17 +656,17 @@ export default function ActiveWorkout() {
               <button
                 className="aw-end-confirm__btn aw-end-confirm__btn--cancel"
                 onClick={() => setShowEndConfirm(false)}
+                disabled={isEnding}
               >
                 Keep Going
               </button>
               <button
                 className="aw-end-confirm__btn aw-end-confirm__btn--confirm"
-                onClick={() => {
-                  setShowEndConfirm(false);
-                  handleEndWorkout();
-                }}
+                onClick={handleEndWorkout}
+                disabled={isEnding}
+                aria-busy={isEnding}
               >
-                End & Save
+                {isEnding ? 'Ending…' : 'End & Save'}
               </button>
             </div>
       </Dialog>
