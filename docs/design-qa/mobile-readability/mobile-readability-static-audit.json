@@ -4,32 +4,32 @@
   "digitClampPx": [
     {
       "width": 320,
-      "activeDigitPx": 28,
+      "activeDigitPx": 24,
       "inactiveDigitPx": 14.4
     },
     {
       "width": 360,
-      "activeDigitPx": 28,
+      "activeDigitPx": 24,
       "inactiveDigitPx": 14.4
     },
     {
       "width": 375,
-      "activeDigitPx": 28.125,
+      "activeDigitPx": 24,
       "inactiveDigitPx": 14.4
     },
     {
       "width": 390,
-      "activeDigitPx": 29.25,
+      "activeDigitPx": 24.96,
       "inactiveDigitPx": 14.4
     },
     {
       "width": 393,
-      "activeDigitPx": 29.474999999999998,
+      "activeDigitPx": 25.152,
       "inactiveDigitPx": 14.4
     },
     {
       "width": 430,
-      "activeDigitPx": 32.25,
+      "activeDigitPx": 27.52,
       "inactiveDigitPx": 14.4
     }
   ],

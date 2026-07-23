@@ -1,4 +1,5 @@
 import React, { useLayoutEffect, useId, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import './ui.css';
 
 export const FOCUSABLE_SELECTOR = [
@@ -83,7 +84,7 @@ export default function Dialog({
   const resolvedLabelledBy = labelledBy || titleId;
   const resolvedDescribedBy = describedBy || (description ? descriptionId : undefined);
 
-  return (
+  return createPortal(
     <div
       className={`ui-dialog-backdrop ${className}`}
       onMouseDown={(event) => {
@@ -112,6 +113,7 @@ export default function Dialog({
         )}
         {children}
       </section>
-    </div>
+    </div>,
+    document.body
   );
 }

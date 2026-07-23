@@ -2241,9 +2241,9 @@
 .set-timer--ds11 {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px;
-  padding: clamp(8px, 2.5vw, 12px);
+  grid-template-columns: minmax(0, 1fr) minmax(72px, 86px) 44px;
+  gap: 6px;
+  padding: 6px;
   border: 1px solid var(--line);
   border-radius: var(--r-md);
   background: var(--bg-1);
@@ -2264,8 +2264,8 @@
   grid-row: 1;
   display: grid;
   align-content: center;
-  min-height: clamp(48px, 14vw, 60px);
-  padding: 8px 12px;
+  min-height: 50px;
+  padding: 6px 10px;
   border-color: var(--go);
   background: var(--go-dim);
   transition: background-color 170ms var(--motion-ease-standard), border-color 170ms var(--motion-ease-standard);
@@ -2291,8 +2291,8 @@
   grid-row: 1;
   display: grid;
   place-content: center;
-  min-width: 72px;
-  padding: 6px 8px;
+  min-width: 0;
+  padding: 4px 6px;
   color: var(--ink-low);
   background: var(--bg-2);
   text-align: center;
@@ -2308,7 +2308,7 @@
 
 .timer-phase__display {
   color: var(--ink-hi);
-  font-size: clamp(1.75rem, 7.5vw, 2.375rem);
+  font-size: clamp(1.5rem, 6.4vw, 2rem);
   line-height: 1;
   letter-spacing: 0;
 }
@@ -2368,6 +2368,59 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
+}
+
+.timer-panel-toggle {
+  grid-column: 3;
+  grid-row: 1;
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--ink-mid);
+  background: var(--bg-2);
+}
+
+.timer-panel-toggle__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.timer-panel-toggle__chevron {
+  display: block;
+  font-size: 1.35rem;
+  line-height: 1;
+  transform: translateY(-2px) rotate(0deg);
+  transition: transform 160ms var(--motion-ease-standard);
+}
+
+.timer-panel-toggle[aria-expanded="true"] .timer-panel-toggle__chevron {
+  transform: translateY(2px) rotate(180deg);
+}
+
+.timer-control-panel {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  padding-top: 2px;
+}
+
+.timer-control-panel[hidden] {
+  display: none;
+}
+
+.timer-control-panel .timer-controls--ds11,
+.timer-control-panel .timer-settings--expanded {
+  grid-column: 1 / -1;
 }
 
 .timer-controls--ds11 .timer-btn {
@@ -2467,47 +2520,10 @@
   margin-top: 10px;
 }
 
-/* Primary mobile target: use the PRD's compact two-row timer bar. */
-@media (min-width: 375px) and (max-width: 600px) {
-  .set-timer--ds11 {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 72px 44px;
-  }
-
-  .timer-phase--active {
-    grid-column: 1 / 3;
-    grid-row: 1;
-  }
-
-  .timer-phase--inactive {
-    grid-column: 3;
-    grid-row: 1;
-    min-width: 0;
-  }
-
-  .timer-controls--ds11 {
-    grid-column: 1 / 3;
-    grid-row: 2;
-  }
-
-  .timer-rest-picker {
-    grid-column: 3 / 5;
-    grid-row: 2;
-  }
-
-  .timer-settings-toggle {
-    grid-column: 4;
-    grid-row: 1;
-    width: 44px;
-    min-width: 44px;
-    padding: 0;
-    font-size: 0;
-  }
-
-  .timer-settings-toggle::before {
-    content: "⚙";
-    font-size: 1.125rem;
-    line-height: 1;
-  }
+/* Primary mobile target: one compact summary row; controls disclose downward. */
+@media (max-width: 600px) {
+  .timer-phase__label { font-size: 0.625rem; }
+  .timer-phase__display--small { font-size: 0.875rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2525,15 +2541,27 @@
     opacity: 1;
     transform: none;
   }
+
+  .timer-panel-toggle__chevron {
+    transition: none;
+  }
 }
 
 @media (max-width: 360px) {
-  .set-timer--ds11 { padding: 10px; gap: 8px; }
-  .timer-phase--inactive { min-width: 72px; }
+  .set-timer--ds11 {
+    grid-template-columns: minmax(0, 1fr) 68px 44px;
+    padding: 5px;
+    gap: 5px;
+  }
+  .timer-phase--active { padding-inline: 7px; }
   .timer-rest-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-.set-row--warmup { border-left: 3px solid var(--info); background: var(--info-dim); }
+.set-row--warmup {
+  border-left: 0;
+  background: var(--info-dim);
+  box-shadow: inset 3px 0 var(--info);
+}
 .set-row--warmup .set-num { color: var(--info); font-weight: 900; }
 
 /* P1.2 set, local-save, completion, and Undo feedback. */
