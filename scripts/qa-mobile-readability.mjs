@@ -180,7 +180,7 @@ function verdictFor(metrics) {
     noSetControlOverlaps: metrics.rowLayouts.every((row) => row.controlOverlaps.length === 0),
     setContentContained: metrics.rowLayouts.every((row) => !row.contentEscapesRow),
     noSetFlowOverlaps: metrics.rowLayouts.every((row) => !row.flowOverlap),
-    digitClamp: metrics.activeDigitFontSize >= 28 && metrics.activeDigitFontSize <= 38,
+    digitClamp: metrics.activeDigitFontSize >= 24 && metrics.activeDigitFontSize <= 32,
     inputFontSize: metrics.inputFontSize >= 16,
     touchTargets: metrics.minControlSize >= 44,
     srOnlyHidden: metrics.srOnly.position === 'absolute'

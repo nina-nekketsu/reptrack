@@ -16,6 +16,7 @@ export default function SetTimer({ exerciseId }) {
   const [restSeconds, setRestSeconds] = useState(() => loadRestDefault(exerciseId));
   const [autoStart, setAutoStart] = useState(loadAutoStart);
   const [restSheetOpen, setRestSheetOpen] = useState(false);
+  const [controlsOpen, setControlsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
@@ -42,6 +43,13 @@ export default function SetTimer({ exerciseId }) {
     const next = !autoStart;
     setAutoStart(next);
     saveAutoStart(next);
+  }
+
+  function toggleControls() {
+    setControlsOpen((open) => {
+      if (open) setSettingsOpen(false);
+      return !open;
+    });
   }
 
   const activeIsRest = timer.isResting || timer.isAlert;
@@ -79,77 +87,93 @@ export default function SetTimer({ exerciseId }) {
         <span className="timer-phase__display timer-phase__display--small">{inactiveDisplay}</span>
       </div>
 
-      <div className="timer-controls timer-controls--ds11">
-        <button
-          type="button"
-          className={`timer-btn timer-btn--start ${timer.isExercising ? 'timer-btn--active' : ''}`}
-          onClick={() => timer.startExercise(exerciseId)}
-        >
-          {timer.isExercising ? 'Running' : timer.isResting ? 'Start set' : 'Start'}
-        </button>
-        <button
-          type="button"
-          className={`timer-btn timer-btn--rest ${timer.isResting ? 'timer-btn--active' : ''}`}
-          onClick={() => !timer.isResting && timer.startRest(restSeconds * 1000)}
-          disabled={timer.isResting}
-        >
-          {timer.isResting ? 'Resting…' : 'Start rest'}
-        </button>
-        {!timer.isIdle && (
-          <button type="button" className="timer-btn timer-btn--stop" onClick={timer.reset}>Reset</button>
-        )}
-      </div>
-
       <button
         type="button"
-        className="timer-rest-picker"
-        aria-label={`Choose rest duration, current ${restSeconds} seconds`}
-        onClick={() => setRestSheetOpen(true)}
-        disabled={timer.isResting}
+        className="timer-panel-toggle"
+        aria-expanded={controlsOpen}
+        aria-controls="timer-controls-panel"
+        aria-label={`${controlsOpen ? 'Hide' : 'Show'} timer controls`}
+        onClick={toggleControls}
       >
-        <span>Rest duration</span>
-        <strong>{restSeconds}s</strong>
+        <span className="timer-panel-toggle__label">Controls</span>
+        <span className="timer-panel-toggle__chevron" aria-hidden="true">⌄</span>
       </button>
 
-      <button
-        type="button"
-        className="timer-settings-toggle"
-        aria-expanded={settingsOpen}
-        onClick={() => setSettingsOpen((open) => !open)}
-      >
-        Rest settings
-      </button>
-
-      {settingsOpen && (
-        <div className="timer-settings timer-settings--expanded">
-          <label className="timer-setting-row" htmlFor="rest-seconds">
-            <span className="timer-setting-label">Custom rest seconds</span>
-            <input
-              id="rest-seconds"
-              aria-label="Custom rest seconds"
-              className="timer-setting-input"
-              type="number"
-              min="5"
-              max="600"
-              step="5"
-              value={restSeconds}
-              onChange={(event) => updateRestSeconds(event.target.value)}
-              disabled={timer.isResting}
-            />
-          </label>
-          <div className="timer-setting-row">
-            <span className="timer-setting-label">Auto-start next set after rest</span>
+      {controlsOpen && (
+        <div id="timer-controls-panel" className="timer-control-panel">
+          <div className="timer-controls timer-controls--ds11">
             <button
               type="button"
-              className={`timer-toggle ${autoStart ? 'timer-toggle--on' : ''}`}
-              onClick={toggleAutoStart}
-              role="switch"
-              aria-label="Auto-start next set after rest"
-              aria-checked={autoStart}
+              className={`timer-btn timer-btn--start ${timer.isExercising ? 'timer-btn--active' : ''}`}
+              onClick={() => timer.startExercise(exerciseId)}
             >
-              <span className="timer-toggle-knob" aria-hidden="true" />
+              {timer.isExercising ? 'Running' : timer.isResting ? 'Start set' : 'Start'}
             </button>
+            <button
+              type="button"
+              className={`timer-btn timer-btn--rest ${timer.isResting ? 'timer-btn--active' : ''}`}
+              onClick={() => !timer.isResting && timer.startRest(restSeconds * 1000)}
+              disabled={timer.isResting}
+            >
+              {timer.isResting ? 'Resting…' : 'Start rest'}
+            </button>
+            {!timer.isIdle && (
+              <button type="button" className="timer-btn timer-btn--stop" onClick={timer.reset}>Reset</button>
+            )}
           </div>
+
+          <button
+            type="button"
+            className="timer-rest-picker"
+            aria-label={`Choose rest duration, current ${restSeconds} seconds`}
+            onClick={() => setRestSheetOpen(true)}
+            disabled={timer.isResting}
+          >
+            <span>Rest duration</span>
+            <strong>{restSeconds}s</strong>
+          </button>
+
+          <button
+            type="button"
+            className="timer-settings-toggle"
+            aria-expanded={settingsOpen}
+            onClick={() => setSettingsOpen((open) => !open)}
+          >
+            Rest settings
+          </button>
+
+          {settingsOpen && (
+            <div className="timer-settings timer-settings--expanded">
+              <label className="timer-setting-row" htmlFor="rest-seconds">
+                <span className="timer-setting-label">Custom rest seconds</span>
+                <input
+                  id="rest-seconds"
+                  aria-label="Custom rest seconds"
+                  className="timer-setting-input"
+                  type="number"
+                  min="5"
+                  max="600"
+                  step="5"
+                  value={restSeconds}
+                  onChange={(event) => updateRestSeconds(event.target.value)}
+                  disabled={timer.isResting}
+                />
+              </label>
+              <div className="timer-setting-row">
+                <span className="timer-setting-label">Auto-start next set after rest</span>
+                <button
+                  type="button"
+                  className={`timer-toggle ${autoStart ? 'timer-toggle--on' : ''}`}
+                  onClick={toggleAutoStart}
+                  role="switch"
+                  aria-label="Auto-start next set after rest"
+                  aria-checked={autoStart}
+                >
+                  <span className="timer-toggle-knob" aria-hidden="true" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

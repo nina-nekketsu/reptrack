@@ -78,6 +78,7 @@ describe('SetTimer DS-11 redesign', () => {
   test('opens a rest quick-select sheet with advisor copy and updates rest in two taps', async () => {
     const view = renderTimer();
 
+    await userEvent.click(screen.getByRole('button', { name: /timer controls/i }));
     await userEvent.click(screen.getByRole('button', { name: /choose rest duration, current 90 seconds/i }));
 
     const sheet = screen.getByRole('dialog', { name: /choose rest duration/i });
@@ -91,9 +92,30 @@ describe('SetTimer DS-11 redesign', () => {
     expect(screen.getByRole('button', { name: /choose rest duration, current 120 seconds/i })).toBeInTheDocument();
   });
 
-  test('keeps custom rest input inside expandable settings with a labeled auto-start switch', async () => {
+  test('keeps timer actions collapsed by default and reveals them from the compact summary', async () => {
     renderTimer();
 
+    const disclosure = screen.getByRole('button', { name: /timer controls/i });
+    expect(disclosure).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('button', { name: /^start$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /choose rest duration/i })).not.toBeInTheDocument();
+
+    await userEvent.click(disclosure);
+
+    expect(disclosure).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('button', { name: /^start$/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /choose rest duration, current 90 seconds/i })).toBeInTheDocument();
+
+    await userEvent.click(disclosure);
+
+    expect(disclosure).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('button', { name: /^start$/i })).not.toBeInTheDocument();
+  });
+
+  test('keeps custom rest input inside nested settings with a labeled auto-start switch', async () => {
+    renderTimer();
+
+    await userEvent.click(screen.getByRole('button', { name: /timer controls/i }));
     expect(screen.queryByLabelText('Custom rest seconds')).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /rest settings/i }));
 

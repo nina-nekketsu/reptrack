@@ -40,15 +40,21 @@
                 <span class="timer-phase__label">EXERCISE TIMER</span>
                 <span class="timer-phase__display timer-phase__display--small">0:00</span>
               </div>
-              <div class="timer-controls timer-controls--ds11">
-                <button type="button" class="timer-btn timer-btn--start">Start set</button>
-                <button type="button" class="timer-btn timer-btn--rest" disabled>Resting...</button>
-              </div>
-              <button type="button" class="timer-rest-picker" aria-label="Choose rest duration, current 90 seconds">
-                <span>Rest duration</span>
-                <strong>90s</strong>
+              <button type="button" class="timer-panel-toggle" aria-expanded="false" aria-controls="timer-controls-panel" aria-label="Show timer controls">
+                <span class="timer-panel-toggle__label">Controls</span>
+                <span class="timer-panel-toggle__chevron" aria-hidden="true">⌄</span>
               </button>
-              <button type="button" class="timer-settings-toggle" aria-expanded="false">Settings</button>
+              <div id="timer-controls-panel" class="timer-control-panel" hidden>
+                <div class="timer-controls timer-controls--ds11">
+                  <button type="button" class="timer-btn timer-btn--start">Start set</button>
+                  <button type="button" class="timer-btn timer-btn--rest" disabled>Resting...</button>
+                </div>
+                <button type="button" class="timer-rest-picker" aria-label="Choose rest duration, current 90 seconds">
+                  <span>Rest duration</span>
+                  <strong>90s</strong>
+                </button>
+                <button type="button" class="timer-settings-toggle" aria-expanded="false">Rest settings</button>
+              </div>
             </section>
           </div>
           <div class="log-tabs-wrapper">
@@ -127,6 +133,16 @@
     </div>
     <pre id="qa-result" class="qa-result"></pre>
     <script>
+      const timerPanelToggle = document.querySelector('.timer-panel-toggle');
+      const timerControlsPanel = document.getElementById('timer-controls-panel');
+      function setTimerPanel(open) {
+        timerControlsPanel.hidden = !open;
+        timerPanelToggle.setAttribute('aria-expanded', String(open));
+        timerPanelToggle.setAttribute('aria-label', `${open ? 'Hide' : 'Show'} timer controls`);
+      }
+      timerPanelToggle.addEventListener('click', () => setTimerPanel(timerPanelToggle.getAttribute('aria-expanded') !== 'true'));
+      if (new URLSearchParams(window.location.search).get('expanded') === '1') setTimerPanel(true);
+
       function rgb(color) {
         const match = color.match(/rgba?\(([^)]+)\)/);
         if (!match) return [0, 0, 0];
@@ -195,7 +211,8 @@
             flowOverlap: Boolean((ghost && !row.contains(ghost) && overlaps(rowRect, ghostRect)) || (ghostRect && nextRowRect && overlaps(ghostRect, nextRowRect))),
           };
         });
-        const controls = Array.from(document.querySelectorAll('button, select, input'));
+        const controls = Array.from(document.querySelectorAll('button, select, input'))
+          .filter((element) => element.getBoundingClientRect().width > 0 && element.getBoundingClientRect().height > 0);
         const metrics = {
           viewport: { width: window.innerWidth, height: window.innerHeight },
           documentOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,

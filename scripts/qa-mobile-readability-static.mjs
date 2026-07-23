@@ -44,7 +44,7 @@ const viewports = [320, 360, 375, 390, 393, 430];
 const rem = 16;
 const digitClampPx = viewports.map((width) => ({
   width,
-  activeDigitPx: Math.min(2.375 * rem, Math.max(1.75 * rem, width * 0.075)),
+  activeDigitPx: Math.min(2 * rem, Math.max(1.5 * rem, width * 0.064)),
   inactiveDigitPx: Math.min(1.05 * rem, Math.max(0.9 * rem, width * 0.032)),
 }));
 
@@ -72,8 +72,8 @@ const checks = {
   modalMaxHeight92: css.includes('.modal--log { max-height: min(92dvh, 720px);')
     || css.includes('.modal--log { max-height: min(92dvh, 720px); background: var(--bg-2); }'),
   no96dvhOverride: !css.includes('min(96dvh'),
-  activeDigitClamp: css.includes('font-size: clamp(1.75rem, 7.5vw, 2.375rem);')
-    && digitClampPx.every(({ activeDigitPx }) => activeDigitPx >= 28 && activeDigitPx <= 38),
+  activeDigitClamp: css.includes('font-size: clamp(1.5rem, 6.4vw, 2rem);')
+    && digitClampPx.every(({ activeDigitPx }) => activeDigitPx >= 24 && activeDigitPx <= 32),
   inactiveDigitClamp: css.includes('font-size: clamp(0.9rem, 3.2vw, 1.05rem);'),
   inputFontSize16: hasRule('.modal--log .set-input', ['font-size: 16px']),
   mobileStepperTargets44: css.includes('grid-template-columns: 44px minmax(44px, 1fr) 44px;')
