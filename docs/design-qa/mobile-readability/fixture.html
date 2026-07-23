@@ -6,6 +6,8 @@
     <title>RepTrack Mobile Readability Fixture</title>
     <link rel="stylesheet" href="../../../src/index.css" />
     <link rel="stylesheet" href="../../../src/App.css" />
+    <link rel="stylesheet" href="../../../src/components/ui/ui.css" />
+    <link rel="stylesheet" href="../../../src/components/Sheet.css" />
     <link rel="stylesheet" href="../../../src/pages/Exercises.css" />
     <style>
       body {
@@ -131,6 +133,28 @@
         </div>
       </div>
     </div>
+    <template id="rest-sheet-template">
+      <div class="ui-dialog-backdrop sheet-backdrop">
+        <section class="ui-dialog-panel sheet-panel edge-fade-scroll timer-rest-sheet" role="dialog" aria-modal="true" aria-labelledby="qa-rest-sheet-title">
+          <section class="sheet-panel__content">
+            <div class="sheet-grabber" aria-hidden="true"></div>
+            <header class="sheet-header">
+              <h2 id="qa-rest-sheet-title">Choose rest duration</h2>
+              <button type="button" class="sheet-close" aria-label="Close Choose rest duration">×</button>
+            </header>
+            <p>Suggested 2–4 min for hard hypertrophy sets. Pick what matches this set.</p>
+            <div class="timer-rest-options">
+              <button type="button" class="timer-rest-option">30s</button>
+              <button type="button" class="timer-rest-option">60s</button>
+              <button type="button" class="timer-rest-option timer-rest-option--active">90s</button>
+              <button type="button" class="timer-rest-option">120s</button>
+              <button type="button" class="timer-rest-option">180s</button>
+              <button type="button" class="timer-rest-option">240s</button>
+            </div>
+          </section>
+        </section>
+      </div>
+    </template>
     <pre id="qa-result" class="qa-result"></pre>
     <script>
       const timerPanelToggle = document.querySelector('.timer-panel-toggle');
@@ -141,7 +165,11 @@
         timerPanelToggle.setAttribute('aria-label', `${open ? 'Hide' : 'Show'} timer controls`);
       }
       timerPanelToggle.addEventListener('click', () => setTimerPanel(timerPanelToggle.getAttribute('aria-expanded') !== 'true'));
-      if (new URLSearchParams(window.location.search).get('expanded') === '1') setTimerPanel(true);
+      const fixtureParams = new URLSearchParams(window.location.search);
+      if (fixtureParams.get('expanded') === '1') setTimerPanel(true);
+      if (fixtureParams.get('restSheet') === '1') {
+        document.body.append(document.getElementById('rest-sheet-template').content.cloneNode(true));
+      }
 
       function rgb(color) {
         const match = color.match(/rgba?\(([^)]+)\)/);
@@ -175,7 +203,8 @@
           && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > tolerance;
       }
       window.addEventListener('load', () => {
-        const footerTop = document.querySelector('.log-actions').getBoundingClientRect().top;
+        window.setTimeout(() => {
+          const footerTop = document.querySelector('.log-actions').getBoundingClientRect().top;
         const rows = Array.from(document.querySelectorAll('.set-row'));
         const completeRowsVisible = Array.from(document.querySelectorAll('.set-row')).filter((row) => {
           const rowRect = row.getBoundingClientRect();
@@ -213,8 +242,21 @@
         });
         const controls = Array.from(document.querySelectorAll('button, select, input'))
           .filter((element) => element.getBoundingClientRect().width > 0 && element.getBoundingClientRect().height > 0);
+        const restSheetBackdrop = document.querySelector('.sheet-backdrop');
+        const restSheetPanel = document.querySelector('.sheet-panel.timer-rest-sheet');
+        const restSheetOptions = Array.from(document.querySelectorAll('.sheet-panel.timer-rest-sheet .timer-rest-option'));
+        const restSheet = {
+          open: Boolean(restSheetBackdrop),
+          backdropRect: restSheetBackdrop?.getBoundingClientRect().toJSON() || null,
+          panelRect: restSheetPanel?.getBoundingClientRect().toJSON() || null,
+          titleRect: document.getElementById('qa-rest-sheet-title')?.getBoundingClientRect().toJSON() || null,
+          optionRects: restSheetOptions.map((option) => option.getBoundingClientRect().toJSON()),
+          backdropZIndex: restSheetBackdrop ? Number.parseInt(getComputedStyle(restSheetBackdrop).zIndex, 10) : null,
+          footerZIndex: Number.parseInt(getComputedStyle(document.querySelector('.log-actions')).zIndex, 10),
+        };
         const metrics = {
           viewport: { width: window.innerWidth, height: window.innerHeight },
+          restSheet,
           documentOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
           modalOverflow: document.querySelector('.modal--log').scrollWidth - document.querySelector('.modal--log').clientWidth,
           scrollBodyOverflow: document.querySelector('.log-scroll-body').scrollWidth - document.querySelector('.log-scroll-body').clientWidth,
@@ -243,6 +285,7 @@
           },
         };
         document.getElementById('qa-result').textContent = JSON.stringify(metrics, null, 2);
+        }, 320);
       });
     </script>
   </body>

@@ -83,22 +83,38 @@ function ToastHarness({ onAction }) {
 describe('shared overlay motion behavior', () => {
   test('Dialog closes on backdrop immediately and invokes its callback once', () => {
     const onClose = jest.fn();
-    const { container } = render(<DialogHarness onClose={onClose} />);
+    render(<DialogHarness onClose={onClose} />);
 
-    fireEvent.mouseDown(container.querySelector('.ui-dialog-backdrop'));
+    fireEvent.mouseDown(document.querySelector('.ui-dialog-backdrop'));
 
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole('dialog', { name: 'Delete workout' })).not.toBeInTheDocument();
   });
 
-  test('Sheet keeps swipe dismissal immediate without adding a second close path', () => {
+  test('Dialog portals sheets to the document body so they escape transformed modal ancestors', () => {
     const onClose = jest.fn();
     const { container } = render(
+      <div style={{ transform: 'translateY(0)', overflow: 'hidden' }}>
+        <Sheet open onClose={onClose} title="Choose rest duration">
+          <button type="button">90 seconds</button>
+        </Sheet>
+      </div>
+    );
+
+    const backdrop = document.querySelector('.sheet-backdrop');
+    expect(backdrop).toBeInTheDocument();
+    expect(backdrop.parentElement).toBe(document.body);
+    expect(container).not.toContainElement(backdrop);
+  });
+
+  test('Sheet keeps swipe dismissal immediate without adding a second close path', () => {
+    const onClose = jest.fn();
+    render(
       <Sheet open onClose={onClose} title="Rest options">
         <button type="button">90 seconds</button>
       </Sheet>
     );
-    const content = container.querySelector('.sheet-panel__content');
+    const content = document.querySelector('.sheet-panel__content');
     Object.defineProperty(content, 'scrollTop', { configurable: true, value: 0 });
 
     fireEvent.touchStart(content, { touches: [{ clientX: 100, clientY: 100 }] });

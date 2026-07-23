@@ -50,6 +50,7 @@ const viewports = [
   { width: 360, height: 640 },
   { width: 375, height: 667 },
   { width: 390, height: 844 },
+  { width: 390, height: 844, name: '390x844-rest-sheet', query: 'restSheet=1' },
   { width: 393, height: 852 },
   { width: 430, height: 932 },
   { width: 430, height: 390, name: '430x390-short' },
@@ -192,6 +193,21 @@ function verdictFor(metrics) {
       && metrics.colors.setGhostContrast >= 4.5
       && metrics.colors.setNumContrast >= 4.5
       && metrics.colors.timerLabelContrast >= 3,
+    restSheetEscapesModal: !metrics.restSheet.open || (
+      Math.abs(metrics.restSheet.backdropRect.left) <= 1
+      && Math.abs(metrics.restSheet.backdropRect.top) <= 1
+      && Math.abs(metrics.restSheet.backdropRect.width - metrics.viewport.width) <= 1
+      && Math.abs(metrics.restSheet.backdropRect.height - metrics.viewport.height) <= 1
+      && metrics.restSheet.backdropZIndex > metrics.restSheet.footerZIndex
+    ),
+    restSheetContentVisible: !metrics.restSheet.open || (
+      metrics.restSheet.panelRect.top >= 0
+      && metrics.restSheet.panelRect.bottom <= metrics.viewport.height + 1
+      && metrics.restSheet.titleRect.top >= metrics.restSheet.panelRect.top
+      && metrics.restSheet.optionRects.length === 6
+      && metrics.restSheet.optionRects.every((rect) => rect.top >= metrics.restSheet.panelRect.top && rect.bottom <= metrics.restSheet.panelRect.bottom + 1)
+    ),
+    restSheetTouchTargets: !metrics.restSheet.open || metrics.restSheet.optionRects.every((rect) => rect.height >= 44),
   };
 }
 
@@ -225,8 +241,10 @@ try {
 
   for (const viewport of viewports) {
     const name = viewport.name || `${viewport.width}x${viewport.height}`;
+    const query = viewport.query ? `?${viewport.query}` : '';
+    const fixtureUrl = `file://${fixture}${query}`;
     const targetResponse = await fetch(
-      `http://127.0.0.1:${port}/json/new?${encodeURIComponent(`file://${fixture}`)}`,
+      `http://127.0.0.1:${port}/json/new?${encodeURIComponent(fixtureUrl)}`,
       { method: 'PUT' },
     );
     if (!targetResponse.ok) throw new Error(`Could not create Chrome target: ${targetResponse.status}`);
@@ -246,7 +264,7 @@ try {
         screenHeight: viewport.height,
       });
       const loaded = client.once('Page.loadEventFired');
-      await client.send('Page.navigate', { url: `file://${fixture}` });
+      await client.send('Page.navigate', { url: fixtureUrl });
       await loaded;
       const metrics = await waitForMetrics(client);
       const screenshot = await client.send('Page.captureScreenshot', {
