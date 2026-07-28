@@ -1,14 +1,23 @@
 import React, { useState } from 'react';
-import { getSessionsAsc, getSessionsDesc } from '../utils/exerciseHelpers';
+import { getLogsLoadError, getSessionsAsc, getSessionsDesc } from '../utils/exerciseHelpers';
 import VolumeGraph from './VolumeGraph';
+import useOnlineStatus from '../hooks/useOnlineStatus';
 
 export default function ProgressGraphBlock({ logs, exerciseId }) {
   const [open, setOpen] = useState(false);
-  const sessionsAsc = getSessionsAsc(logs, exerciseId);
-  const sessionsDesc = getSessionsDesc(logs, exerciseId);
+  const isOnline = useOnlineStatus();
+  const logsResolved = logs !== undefined && logs !== null;
+  const safeLogs = logsResolved && typeof logs === 'object' ? logs : {};
+  const rawHistory = logsResolved ? safeLogs[exerciseId] : undefined;
+  const graphError = getLogsLoadError() || (rawHistory !== undefined && !Array.isArray(rawHistory) ? 'invalid-history' : null);
+  const sessionsAsc = graphError ? [] : getSessionsAsc(safeLogs, exerciseId);
+  const sessionsDesc = graphError ? [] : getSessionsDesc(safeLogs, exerciseId);
   const last5 = sessionsDesc.slice(0, 5).reverse(); // oldest first for display
 
-  if (sessionsAsc.length === 0) return null;
+  const sessionVolume = (session) => Number(session.totalVolume) || (session.sets || []).reduce(
+    (sum, set) => sum + (Number(set.weight) || 0) * (Number(set.reps) || 0),
+    0
+  );
 
   return (
     <div className="progress-graph-block">
@@ -22,23 +31,31 @@ export default function ProgressGraphBlock({ logs, exerciseId }) {
 
       {open && (
         <div className="progress-graph-content">
-          <VolumeGraph sessions={sessionsAsc} />
+          <VolumeGraph
+            sessions={sessionsAsc}
+            exerciseId={exerciseId}
+            loading={!logsResolved}
+            offline={!isOnline}
+            error={graphError}
+          />
 
           {last5.length > 0 && (
             <div className="last5-sessions">
               <div className="last5-title">Last {last5.length} sessions</div>
               {[...last5].reverse().map((session, i) => {
                 const prev = [...last5].reverse()[i + 1];
-                const diff = prev ? session.totalVolume - prev.totalVolume : null;
+                const volume = sessionVolume(session);
+                const prevVolume = prev ? sessionVolume(prev) : null;
+                const diff = prev ? volume - prevVolume : null;
                 return (
-                  <div className="last5-row" key={session.date}>
+                  <div className="last5-row" key={session.id || session.date}>
                     <span className="last5-date">
                       {new Date(session.date).toLocaleDateString(undefined, {
                         day: 'numeric',
                         month: 'short',
                       })}
                     </span>
-                    <span className="last5-vol">{session.totalVolume.toLocaleString()} kg</span>
+                    <span className="last5-vol">{volume.toLocaleString()} kg</span>
                     {diff !== null && (
                       <span className={`pr-diff ${diff >= 0 ? 'pr-diff--up' : 'pr-diff--down'}`}>
                         {diff >= 0 ? '▲' : '▼'} {Math.abs(diff).toLocaleString()}

@@ -176,6 +176,61 @@ describe('exercise mutation outbox integration', () => {
     expect(mockUpsert).toHaveBeenCalledTimes(1);
   });
 
+  test('attaches remote ids by clientSessionId when timestamps are identical', async () => {
+    const timestamp = '2026-07-28T12:00:00.000Z';
+    const sessions = [
+      { date: timestamp, clientSessionId: 'local-a', sets: [{ reps: 5, weight: 50 }], totalReps: 5, totalVolume: 250 },
+      { date: timestamp, clientSessionId: 'local-b', sets: [{ reps: 6, weight: 60 }], totalReps: 6, totalVolume: 360 },
+    ];
+    localStorage.setItem('exerciseLogs', JSON.stringify({ bench: sessions }));
+    const insertedPayloads = [];
+    const remoteIds = ['remote-a', 'remote-b'];
+    const insert = jest.fn((payload) => {
+      insertedPayloads.push(payload);
+      const remoteId = remoteIds.shift();
+      return { select: () => ({ single: async () => ({ data: { id: remoteId }, error: null }) }) };
+    });
+    mockFrom.mockImplementation(() => ({ insert }));
+    const { pushSession } = loadSyncModule();
+
+    await pushSession('bench', sessions[0], 'user-1');
+    await pushSession('bench', sessions[1], 'user-1');
+
+    expect(insertedPayloads).toHaveLength(2);
+    expect(insertedPayloads.every((payload) => !Object.prototype.hasOwnProperty.call(payload, '_client_session_id'))).toBe(true);
+    const saved = JSON.parse(localStorage.getItem('exerciseLogs')).bench;
+    expect(saved.map((session) => [session.clientSessionId, session.remoteId])).toEqual([
+      ['local-a', 'remote-a'],
+      ['local-b', 'remote-b'],
+    ]);
+  });
+
+  test('routes same-timestamp bulk sessions through identity-safe single inserts', async () => {
+    const timestamp = '2026-07-28T12:00:00.000Z';
+    const sessions = [
+      { date: timestamp, clientSessionId: 'bulk-a', sets: [{ reps: 5, weight: 50 }], totalReps: 5, totalVolume: 250 },
+      { date: timestamp, clientSessionId: 'bulk-b', sets: [{ reps: 6, weight: 60 }], totalReps: 6, totalVolume: 360 },
+    ];
+    localStorage.setItem('exerciseLogs', JSON.stringify({ bench: sessions }));
+    const remoteIds = ['bulk-remote-a', 'bulk-remote-b'];
+    const insert = jest.fn((payload) => {
+      expect(Array.isArray(payload)).toBe(false);
+      const remoteId = remoteIds.shift();
+      return { select: () => ({ single: async () => ({ data: { id: remoteId }, error: null }) }) };
+    });
+    mockFrom.mockImplementation(() => ({ insert }));
+    const { pushLogs } = loadSyncModule();
+
+    await pushLogs('user-1');
+
+    expect(insert).toHaveBeenCalledTimes(2);
+    const saved = JSON.parse(localStorage.getItem('exerciseLogs')).bench;
+    expect(saved.map((session) => [session.clientSessionId, session.remoteId])).toEqual([
+      ['bulk-a', 'bulk-remote-a'],
+      ['bulk-b', 'bulk-remote-b'],
+    ]);
+  });
+
   test('retains and retries a failed update to an already-synced workout session', async () => {
     let updateError = Object.assign(new Error('TypeError: Failed to fetch'), { code: '' });
     const eqExercise = jest.fn(async () => ({ error: updateError }));

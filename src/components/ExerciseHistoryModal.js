@@ -6,8 +6,10 @@ import {
   getSessionsAsc,
   getSessionsDesc,
   deleteSession,
+  getLogsLoadError,
 } from '../utils/exerciseHelpers';
 import { useAuth } from '../context/AuthContext';
+import useOnlineStatus from '../hooks/useOnlineStatus';
 import { TrashIcon } from './icons';
 
 /**
@@ -22,29 +24,34 @@ import { TrashIcon } from './icons';
  */
 export default function ExerciseHistoryModal({ exercise, logs, onClose, onOpenLog, onLogsChanged }) {
   const { user } = useAuth();
-  const [confirmDate, setConfirmDate] = useState(null); // date of session pending deletion
+  const isOnline = useOnlineStatus();
+  const [confirmSession, setConfirmSession] = useState(null);
 
-  const sessionsDesc = getSessionsDesc(logs, exercise.id);
-  const sessionsAsc  = getSessionsAsc(logs, exercise.id);
+  const logsResolved = logs !== undefined && logs !== null;
+  const safeLogs = logsResolved && typeof logs === 'object' ? logs : {};
+  const rawHistory = logsResolved ? safeLogs[exercise.id] : undefined;
+  const graphError = getLogsLoadError() || (rawHistory !== undefined && !Array.isArray(rawHistory) ? 'invalid-history' : null);
+  const sessionsDesc = graphError ? [] : getSessionsDesc(safeLogs, exercise.id);
+  const sessionsAsc  = graphError ? [] : getSessionsAsc(safeLogs, exercise.id);
   const records      = getRecords(sessionsDesc);
 
-  function handleDeleteClick(e, sessionDate) {
+  function handleDeleteClick(e, session) {
     e.stopPropagation();
-    setConfirmDate(sessionDate);
+    setConfirmSession(session);
   }
 
   function handleConfirmDelete() {
-    const updated = deleteSession(exercise.id, confirmDate, user?.id);
-    setConfirmDate(null);
+    const updated = deleteSession(exercise.id, confirmSession, user?.id);
+    setConfirmSession(null);
     if (onLogsChanged) onLogsChanged(updated);
   }
 
   function handleCancelDelete() {
-    setConfirmDate(null);
+    setConfirmSession(null);
   }
 
   // Re-derive after potential deletion
-  const displaySessions = getSessionsDesc(logs, exercise.id);
+  const displaySessions = graphError ? [] : getSessionsDesc(safeLogs, exercise.id);
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -64,17 +71,23 @@ export default function ExerciseHistoryModal({ exercise, logs, onClose, onOpenLo
           </button>
         </div>
 
-        {displaySessions.length === 0 ? (
+        <div className="section-label">Volume Over Time</div>
+        <VolumeGraph
+          sessions={sessionsAsc}
+          exerciseId={exercise.id}
+          loading={!logsResolved}
+          offline={!isOnline}
+          error={graphError}
+        />
+
+        {displaySessions.length === 0 ? (logsResolved && !graphError && isOnline ? (
           <div className="empty-state">
             No sessions yet. Hit ＋ Log to record your first one!
           </div>
-        ) : (
+        ) : null) : (
           <>
             <div className="section-label">Personal Records</div>
             <RecordBadges records={records} />
-
-            <div className="section-label">Volume Over Time</div>
-            <VolumeGraph sessions={sessionsAsc} />
 
             <div className="section-label">Session History</div>
             <div className="history-sessions">
@@ -82,7 +95,7 @@ export default function ExerciseHistoryModal({ exercise, logs, onClose, onOpenLo
                 const prev = displaySessions[i + 1];
                 const diff = prev ? session.totalVolume - prev.totalVolume : null;
                 return (
-                  <div className="session-card" key={session.date}>
+                  <div className="session-card" key={session.clientSessionId || session.remoteId || session.id || `${session.date}:${i}`}>
                     <div className="session-card-header">
                       <div className="session-date">
                         {new Date(session.date).toLocaleDateString(undefined, {
@@ -94,7 +107,7 @@ export default function ExerciseHistoryModal({ exercise, logs, onClose, onOpenLo
                       </div>
                       <button
                         className="session-delete-btn"
-                        onClick={(e) => handleDeleteClick(e, session.date)}
+                        onClick={(e) => handleDeleteClick(e, session)}
                         title="Delete this session"
                         aria-label="Delete session"
                       >
@@ -136,7 +149,7 @@ export default function ExerciseHistoryModal({ exercise, logs, onClose, onOpenLo
       </div>
 
       {/* ── Delete confirm modal ── */}
-      {confirmDate && (
+      {confirmSession && (
         <div className="confirm-overlay" onClick={handleCancelDelete}>
           <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
             <div className="confirm-icon" aria-hidden="true"><TrashIcon /></div>

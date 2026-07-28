@@ -12,6 +12,7 @@ import {
   bestSet,
   deleteSession,
   getRecords,
+  getLogsLoadError,
   getSessionRepFeedback,
   getSessionsAsc,
   getSessionsDesc,
@@ -26,6 +27,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCoach } from '../context/CoachContext';
 import { getPreviousSets, isIntensityAllowed } from '../lib/coachEngine';
 import { ensureSetIdentity, getSetFingerprint, normalizeSetIdentities } from '../utils/setIdentity';
+import useOnlineStatus from '../hooks/useOnlineStatus';
 import './CoachComponents.css';
 
 const EMPTY_SET_ROW = { reps: '', weight: '', setType: 'normal', done: false };
@@ -33,6 +35,15 @@ const DROPSET_CHILD_COUNT = 2;
 
 function reportSessionSyncFailure(error) {
   reportBackgroundFailure(error, { source: 'sync', category: 'unknown' });
+}
+
+function createClientSessionId() {
+  const random = Math.random().toString(36).slice(2, 10);
+  return `client-session-${Date.now().toString(36)}-${random}`;
+}
+
+function sessionIdentity(session = {}) {
+  return session.clientSessionId || session.remoteId || session.id || session.sessionId || session.date;
 }
 
 export function isDropsetChild(set = {}) {
@@ -233,7 +244,7 @@ export default function ExerciseLogModal({
   const [activeTab, setActiveTab] = useState(initialTab); // 'log' | 'overview'
   const [sets, setSets] = useState([emptySetRow()]);
   const [editingSession, setEditingSession] = useState(null);
-  const [confirmDeleteDate, setConfirmDeleteDate] = useState(null);
+  const [confirmDeleteSession, setConfirmDeleteSession] = useState(null);
   const [intensity, setIntensity] = useState('moderate');
   const [rir, setRir] = useState('');
   const [lastSavedSet, setLastSavedSet] = useState(null);
@@ -244,6 +255,7 @@ export default function ExerciseLogModal({
   const [isSaving, setIsSaving] = useState(false);
   const [localSaveStatus, setLocalSaveStatus] = useState('');
   const [showExerciseCompleteCue, setShowExerciseCompleteCue] = useState(false);
+  const isOnline = useOnlineStatus();
   const saveInFlightRef = useRef(false);
   const previousExerciseDoneRef = useRef(isExerciseDone);
   const logScrollRef = useRef(null);
@@ -253,6 +265,7 @@ export default function ExerciseLogModal({
   useEffect(() => () => {
     mountedRef.current = false;
   }, []);
+
 
   useEffect(() => {
     if (!undoRemoval) return undefined;
@@ -450,19 +463,19 @@ export default function ExerciseLogModal({
     scrollToTop();
   }
 
-  function handleRequestDelete(sessionDate) {
-    setConfirmDeleteDate(sessionDate);
+  function handleRequestDelete(session) {
+    setConfirmDeleteSession(session);
   }
 
   function handleCancelDelete() {
-    setConfirmDeleteDate(null);
+    setConfirmDeleteSession(null);
   }
 
   function handleConfirmDelete() {
-    if (!confirmDeleteDate) return;
-    const updatedLogs = deleteSession(exercise.id, confirmDeleteDate, user?.id);
-    setConfirmDeleteDate(null);
-    if (editingSession?.date === confirmDeleteDate) {
+    if (!confirmDeleteSession) return;
+    const updatedLogs = deleteSession(exercise.id, confirmDeleteSession, user?.id);
+    setConfirmDeleteSession(null);
+    if (sessionIdentity(editingSession) === sessionIdentity(confirmDeleteSession)) {
       setEditingSession(null);
       setSets([emptySetRow()]);
     }
@@ -520,12 +533,13 @@ export default function ExerciseLogModal({
       updatedLogs = {
         ...currentLogs,
         [exercise.id]: existingSessions.map((session) =>
-          session.date === editingSession.date ? persistedSession : session
+          sessionIdentity(session) === sessionIdentity(editingSession) ? persistedSession : session
         ),
       };
     } else {
       persistedSession = {
         date: new Date().toISOString(),
+        clientSessionId: createClientSessionId(),
         ...baseSession,
       };
       updatedLogs = {
@@ -584,7 +598,7 @@ export default function ExerciseLogModal({
       updatedLogs = {
         ...latestLogs,
         [exercise.id]: (latestLogs[exercise.id] || []).map((session) =>
-          session.date === persistedSession.date ? { ...session, remoteId } : session
+          sessionIdentity(session) === sessionIdentity(persistedSession) ? { ...session, remoteId } : session
         ),
       };
       saveLogs(updatedLogs);
@@ -608,7 +622,7 @@ export default function ExerciseLogModal({
           const attachedRemoteId = persistReturnedRemoteId(remoteResult);
           if (attachedRemoteId && mountedRef.current) {
             setEditingSession((current) =>
-              current?.date === persistedSession.date
+              sessionIdentity(current) === sessionIdentity(persistedSession)
                 ? { ...current, remoteId: persistedSession.remoteId }
                 : current
             );
@@ -640,8 +654,14 @@ export default function ExerciseLogModal({
   }
 
   // ── Derived data for Overview tab ──
-  const sessionsDesc = getSessionsDesc(logs, exercise.id);
-  const sessionsAsc = getSessionsAsc(logs, exercise.id);
+  const logsResolved = logs !== undefined && logs !== null;
+  const safeLogs = logsResolved && typeof logs === 'object' ? logs : {};
+  const rawExerciseHistory = logsResolved ? safeLogs[exercise.id] : undefined;
+  const graphHistoryError = getLogsLoadError() || (logsResolved && rawExerciseHistory !== undefined && !Array.isArray(rawExerciseHistory)
+    ? 'invalid-history'
+    : null);
+  const sessionsDesc = graphHistoryError ? [] : getSessionsDesc(safeLogs, exercise.id);
+  const sessionsAsc = graphHistoryError ? [] : getSessionsAsc(safeLogs, exercise.id);
   const hasHistory = sessionsDesc.length > 0;
   const records = getRecords(sessionsDesc);
   const liveTotals = calcTotals(sets);
@@ -926,7 +946,7 @@ export default function ExerciseLogModal({
             <>
               <div className="modal-divider" />
 
-              {!hasHistory && (
+              {logsResolved && !graphHistoryError && isOnline && !hasHistory && (
                 <p className="insights-no-history">
                   <EmptyIcon /> No history yet on this device/site - log a session to see your records and graph.
                 </p>
@@ -940,7 +960,13 @@ export default function ExerciseLogModal({
               )}
 
               <div className="section-label">Volume Over Time</div>
-              <VolumeGraph sessions={sessionsAsc} />
+              <VolumeGraph
+                sessions={sessionsAsc}
+                exerciseId={exercise.id}
+                loading={!logsResolved}
+                offline={!isOnline}
+                error={graphHistoryError}
+              />
 
               {hasHistory && lastSession && (
                 <>
@@ -982,8 +1008,8 @@ export default function ExerciseLogModal({
                 <>
                   <div className="section-label">Recent Sessions</div>
                   <div className="history-sessions">
-                    {last5.map((session) => (
-                      <div className="session-card" key={session.date}>
+                    {last5.map((session, index) => (
+                      <div className="session-card" key={`${sessionIdentity(session)}:${index}`}>
                         <div className="session-card-header">
                           <div className="session-date">
                             {new Date(session.date).toLocaleDateString(undefined, {
@@ -1007,7 +1033,7 @@ export default function ExerciseLogModal({
                             aria-label="Delete session"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleRequestDelete(session.date);
+                              handleRequestDelete(session);
                             }}
                           >
                             <TrashIcon />
@@ -1072,7 +1098,7 @@ export default function ExerciseLogModal({
         actionLabel="Undo"
         onAction={undoRemoveSet}
       />
-      {confirmDeleteDate && (
+      {confirmDeleteSession && (
         <div className="confirm-overlay" onClick={handleCancelDelete}>
           <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
             <div className="confirm-icon" aria-hidden="true"><TrashIcon /></div>

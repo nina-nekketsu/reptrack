@@ -113,9 +113,11 @@ async function executePendingMutation(operation) {
   }
 
   if (operation.kind === 'session/insert') {
+    const remotePayload = { ...operation.payload };
+    delete remotePayload._client_session_id;
     const { data, error } = await supabase
       .from('exercise_logs')
-      .insert(operation.payload)
+      .insert(remotePayload)
       .select()
       .single();
     if (error) throw error;
@@ -160,8 +162,13 @@ function attachRemoteSessionId(payload, remoteId) {
   const logs = safeParseJSON(localStorage.getItem('exerciseLogs'), {});
   const sessions = logs[payload.exercise_id] || [];
   let changed = false;
-  const nextSessions = sessions.map((session) => {
-    if (session.remoteId || session.date !== payload.date) return session;
+  const targetIndex = sessions.findIndex((session) => !session.remoteId && (
+    payload._client_session_id
+      ? session.clientSessionId === payload._client_session_id
+      : session.date === payload.date
+  ));
+  const nextSessions = sessions.map((session, index) => {
+    if (index !== targetIndex) return session;
     changed = true;
     return { ...session, remoteId };
   });
@@ -511,14 +518,28 @@ export async function pushLogs(userId) {
         operation.kind === 'session/insert'
         && operation.payload?.user_id === userId
       ))
-      .map((operation) => `${operation.payload.exercise_id}:${operation.payload.date}`)
+      .map((operation) => `${operation.payload.exercise_id}:${operation.payload._client_session_id || operation.payload.date}`)
   );
   const rows = [];
+  const duplicateDateCounts = new Map();
+  for (const [exerciseId, sessions] of Object.entries(logs)) {
+    for (const session of sessions) {
+      if (session.remoteId) continue;
+      const key = `${String(exerciseId)}:${session.date}`;
+      duplicateDateCounts.set(key, (duplicateDateCounts.get(key) || 0) + 1);
+    }
+  }
+  const identitySensitiveSessions = [];
   for (const [exerciseId, sessions] of Object.entries(logs)) {
     for (const session of sessions) {
       // Skip sessions that already have a remoteId (already pushed)
       if (session.remoteId) continue;
-      if (queuedSessionKeys.has(`${String(exerciseId)}:${session.date}`)) continue;
+      const localIdentity = session.clientSessionId || session.date;
+      if (queuedSessionKeys.has(`${String(exerciseId)}:${localIdentity}`)) continue;
+      if ((duplicateDateCounts.get(`${String(exerciseId)}:${session.date}`) || 0) > 1) {
+        identitySensitiveSessions.push({ exerciseId, session });
+        continue;
+      }
       rows.push({
         user_id: userId,
         exercise_id: String(exerciseId),
@@ -531,6 +552,10 @@ export async function pushLogs(userId) {
     }
   }
 
+  for (const { exerciseId, session } of identitySensitiveSessions) {
+    await pushSession(exerciseId, session, userId);
+  }
+
   if (rows.length === 0) return;
 
   const { data, error } = await supabase.from('exercise_logs').insert(rows).select();
@@ -541,12 +566,12 @@ export async function pushLogs(userId) {
   // Mark sessions with their remoteId so we don't push them again
   if (data) {
     const logsCopy = safeParseJSON(localStorage.getItem('exerciseLogs'), {});
-    for (const inserted of data) {
+    data.forEach((inserted) => {
       const sessions = logsCopy[inserted.exercise_id];
-      if (!sessions) continue;
-      const match = sessions.find(s => s.date === inserted.date && !s.remoteId);
+      if (!sessions) return;
+      const match = sessions.find((session) => !session.remoteId && session.date === inserted.date);
       if (match) match.remoteId = inserted.id;
-    }
+    });
     localStorage.setItem('exerciseLogs', JSON.stringify(logsCopy));
   }
 }
@@ -664,9 +689,10 @@ export async function pushSession(exerciseId, session, userId) {
   if (!exerciseId || !session?.date || !userId) return null;
   getMutationOutbox().enqueue({
     kind: 'session/insert',
-    entityId: `${exerciseId}:${session.date}`,
-    idempotencyKey: `${userId}:session-insert:${exerciseId}:${session.date}`,
+    entityId: `${exerciseId}:${session.clientSessionId || session.date}`,
+    idempotencyKey: `${userId}:session-insert:${exerciseId}:${session.clientSessionId || session.date}`,
     payload: {
+      _client_session_id: session.clientSessionId || null,
       user_id: userId,
       exercise_id: String(exerciseId),
       date: session.date,
@@ -679,7 +705,9 @@ export async function pushSession(exerciseId, session, userId) {
   await flushPendingMutations();
   const latestLogs = safeParseJSON(localStorage.getItem('exerciseLogs'), {});
   const matched = (latestLogs[String(exerciseId)] || latestLogs[exerciseId] || [])
-    .find((candidate) => candidate.date === session.date);
+    .find((candidate) => session.clientSessionId
+      ? candidate.clientSessionId === session.clientSessionId
+      : candidate.date === session.date);
   return matched?.remoteId || null;
 }
 

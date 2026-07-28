@@ -1,13 +1,21 @@
 import fs from 'fs';
 import path from 'path';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import ExerciseLogModal from './ExerciseLogModal';
+import { loadLogs } from '../utils/exerciseHelpers';
+
+const mockVolumeGraph = jest.fn(() => <div data-testid="mock-volume-graph">Graph</div>);
+
+beforeEach(() => {
+  localStorage.clear();
+  loadLogs();
+});
 
 jest.mock('../context/AuthContext', () => ({ useAuth: () => ({ user: null }) }));
 jest.mock('../context/CoachContext', () => ({ useCoach: () => ({ isOnboarded: false, coachActive: false, profile: {}, metadata: {} }) }));
 jest.mock('./SetTimer', () => () => <div>Timer</div>);
 jest.mock('./RecordBadges', () => () => <div>Records</div>);
-jest.mock('./VolumeGraph', () => () => <div>Graph</div>);
+jest.mock('./VolumeGraph', () => (props) => mockVolumeGraph(props));
 jest.mock('./CoachFeedback', () => () => null);
 jest.mock('./RestAdvisor', () => () => null);
 jest.mock('../utils/buildInfo', () => ({ formatBuildId: () => 'test-build' }));
@@ -37,6 +45,94 @@ describe('ExerciseLogModal saved feedback', () => {
     localStorage.setItem('exerciseLogs', JSON.stringify(logs));
     render(<ExerciseLogModal exercise={{ id: 'bench', name: 'Bench Press', muscleGroup: 'Chest' }} logs={logs} onClose={() => {}} onSaved={() => {}} stayOpenOnSave />);
     expect(screen.getByText('More reps than last time')).toBeInTheDocument();
+  });
+});
+
+describe('ExerciseLogModal progress graph integration', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    HTMLElement.prototype.scrollTo = jest.fn();
+    mockVolumeGraph.mockClear();
+    Object.defineProperty(window.navigator, 'onLine', { configurable: true, value: true });
+  });
+
+  test('wires the overview graph to the active exercise id and local-first sessions', () => {
+    const logs = {
+      bench: [{ date: '2026-07-01T08:00:00.000Z', totalReps: 5, totalVolume: 250, sets: [{ reps: 5, weight: 50 }] }],
+      squat: [{ date: '2026-07-02T08:00:00.000Z', totalReps: 5, totalVolume: 500, sets: [{ reps: 5, weight: 100 }] }],
+    };
+    render(<ExerciseLogModal exercise={{ id: 'squat', name: 'Squat', muscleGroup: 'Legs' }} logs={logs} onClose={() => {}} onSaved={() => {}} />);
+    fireEvent.click(screen.getByRole('tab', { name: 'Overview' }));
+
+    expect(mockVolumeGraph).toHaveBeenLastCalledWith(expect.objectContaining({
+      exerciseId: 'squat',
+      sessions: logs.squat,
+      loading: false,
+      offline: false,
+      error: null,
+    }));
+  });
+
+  test('passes truthful loading, invalid-history error, and offline state without inventing remote graph fetches', () => {
+    const { rerender } = render(<ExerciseLogModal exercise={{ id: 'bench', name: 'Bench', muscleGroup: 'Chest' }} logs={undefined} onClose={() => {}} onSaved={() => {}} initialTab="overview" />);
+    fireEvent.click(screen.getByRole('tab', { name: 'Overview' }));
+    expect(mockVolumeGraph).toHaveBeenLastCalledWith(expect.objectContaining({ loading: true, error: null, offline: false }));
+
+    rerender(<ExerciseLogModal exercise={{ id: 'bench', name: 'Bench', muscleGroup: 'Chest' }} logs={{ bench: { unreadable: true } }} onClose={() => {}} onSaved={() => {}} initialTab="overview" />);
+    fireEvent.click(screen.getByRole('tab', { name: 'Overview' }));
+    expect(mockVolumeGraph).toHaveBeenLastCalledWith(expect.objectContaining({ loading: false, error: 'invalid-history', offline: false }));
+
+    Object.defineProperty(window.navigator, 'onLine', { configurable: true, value: false });
+    act(() => window.dispatchEvent(new Event('offline')));
+    rerender(<ExerciseLogModal exercise={{ id: 'bench', name: 'Bench', muscleGroup: 'Chest' }} logs={{ bench: [] }} onClose={() => {}} onSaved={() => {}} initialTab="overview" />);
+    fireEvent.click(screen.getByRole('tab', { name: 'Overview' }));
+    expect(mockVolumeGraph).toHaveBeenLastCalledWith(expect.objectContaining({ loading: false, error: null, offline: true }));
+  });
+
+  test('resets graph props when changing exercises', () => {
+    const logs = {
+      bench: [{ date: '2026-07-01T08:00:00.000Z', totalReps: 5, totalVolume: 250, sets: [{ reps: 5, weight: 50 }] }],
+      squat: [{ date: '2026-07-02T08:00:00.000Z', totalReps: 5, totalVolume: 500, sets: [{ reps: 5, weight: 100 }] }],
+    };
+    const { rerender } = render(<ExerciseLogModal exercise={{ id: 'bench', name: 'Bench', muscleGroup: 'Chest' }} logs={logs} onClose={() => {}} onSaved={() => {}} initialTab="overview" />);
+    expect(mockVolumeGraph).toHaveBeenLastCalledWith(expect.objectContaining({ exerciseId: 'bench', sessions: logs.bench }));
+
+    rerender(<ExerciseLogModal exercise={{ id: 'squat', name: 'Squat', muscleGroup: 'Legs' }} logs={logs} onClose={() => {}} onSaved={() => {}} initialTab="overview" />);
+    fireEvent.click(screen.getByRole('tab', { name: 'Overview' }));
+    expect(mockVolumeGraph).toHaveBeenLastCalledWith(expect.objectContaining({ exerciseId: 'squat', sessions: logs.squat }));
+  });
+});
+
+describe('ExerciseLogModal session identity', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    HTMLElement.prototype.scrollTo = jest.fn();
+  });
+
+  test('adds a durable clientSessionId to newly saved local sessions', async () => {
+    render(<ExerciseLogModal exercise={{ id: 'bench', name: 'Bench', muscleGroup: 'Chest' }} logs={{}} onClose={() => {}} onSaved={() => {}} stayOpenOnSave />);
+    const inputs = screen.getAllByRole('spinbutton');
+    fireEvent.change(inputs[0], { target: { value: '5' } });
+    fireEvent.change(inputs[1], { target: { value: '50' } });
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Done' })));
+
+    const saved = JSON.parse(localStorage.getItem('exerciseLogs'));
+    expect(saved.bench[0].clientSessionId).toMatch(/^client-session-/);
+  });
+
+  test('preserves an existing clientSessionId when editing a session', async () => {
+    const logs = { bench: [{ date: '2026-07-01T08:00:00.000Z', clientSessionId: 'client-session-existing', totalReps: 5, totalVolume: 250, sets: [{ reps: 5, weight: 50 }] }] };
+    localStorage.setItem('exerciseLogs', JSON.stringify(logs));
+    render(<ExerciseLogModal exercise={{ id: 'bench', name: 'Bench', muscleGroup: 'Chest' }} logs={logs} onClose={() => {}} onSaved={() => {}} stayOpenOnSave initialTab="overview" />);
+    fireEvent.click(screen.getByRole('tab', { name: 'Overview' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    fireEvent.change(screen.getAllByRole('spinbutton')[0], { target: { value: '6' } });
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Done' })));
+
+    const saved = JSON.parse(localStorage.getItem('exerciseLogs'));
+    expect(saved.bench).toHaveLength(1);
+    expect(saved.bench[0].clientSessionId).toBe('client-session-existing');
+    expect(saved.bench[0].totalReps).toBe(6);
   });
 });
 

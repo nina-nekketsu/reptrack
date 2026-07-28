@@ -393,39 +393,114 @@
   overflow: hidden;
 }
 
+.graph-wrap--v1 {
+  padding: 10px;
+  overflow: visible;
+}
+
 .volume-graph {
   width: 100%;
   height: auto;
   display: block;
 }
 
-.volume-graph__plot {
-  animation: volume-graph-plot-reveal 300ms var(--motion-ease-enter) 1 both;
+.volume-graph__stage {
+  position: relative;
 }
 
-@keyframes volume-graph-plot-reveal {
-  from {
-    opacity: 0;
-    clip-path: inset(0 100% 0 0);
-  }
-  to {
-    opacity: 1;
-    clip-path: inset(0);
+.volume-graph__image {
+  position: relative;
+}
+
+.volume-graph__interaction-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.volume-graph__controls {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.volume-graph__segmented {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.volume-graph__control {
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--bg-2);
+  color: var(--ink-mid);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.volume-graph__control.is-selected,
+.volume-graph__control[aria-pressed="true"] {
+  border-color: var(--go);
+  background: color-mix(in srgb, var(--go) 18%, transparent);
+  color: var(--ink-hi);
+}
+
+.volume-graph__unit {
+  color: var(--ink-low);
+  font-size: 11px;
+  font-weight: 800;
+  text-align: right;
+  text-transform: uppercase;
+  letter-spacing: 0.35px;
+}
+
+.volume-graph__plot,
+.volume-graph__line,
+.volume-graph__area,
+.volume-graph__point {
+  opacity: 1;
+}
+
+.volume-graph__axis-label {
+  font-size: 14px;
+}
+
+.volume-graph__point-control {
+  position: absolute;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+  outline: none;
+  pointer-events: auto;
+  transform: translate(-50%, -50%);
+}
+
+.volume-graph__point-control:focus-visible {
+  box-shadow: 0 0 0 2px var(--go);
+}
+
+@media (max-width: 380px) {
+  .volume-graph__axis-label {
+    font-size: 15px;
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .record-chip--new-record {
-    animation: none;
-    opacity: 1;
-    transform: none;
-  }
-
-  .volume-graph__plot {
-    animation: none;
-    opacity: 1;
-    clip-path: inset(0);
-  }
+.volume-graph__callout {
+  margin-top: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg-2);
+  color: var(--ink-hi);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
 }
 
 .graph-placeholder {
@@ -436,6 +511,31 @@
   background: var(--bg-1);
   border: 1px solid var(--line);
   border-radius: 12px;
+}
+
+.graph-placeholder--frame {
+  border-style: dashed;
+  background: color-mix(in srgb, var(--bg-1) 88%, transparent);
+  padding: 8px 10px 12px;
+}
+
+.graph-placeholder--frame p {
+  margin: 6px 0 0;
+}
+
+.volume-graph--empty line {
+  stroke: var(--line);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  opacity: 0.55;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .record-chip--new-record {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* ── Set table ── */
