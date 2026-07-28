@@ -1,4 +1,4 @@
-import { getSetRepFeedback, getSessionRepFeedback, saveLogs } from './exerciseHelpers';
+import { deleteSession, getSetRepFeedback, getSessionRepFeedback, saveLogs } from './exerciseHelpers';
 
 describe('saveLogs', () => {
   beforeEach(() => {
@@ -23,6 +23,22 @@ describe('saveLogs', () => {
     } finally {
       Storage.prototype.setItem.mockRestore();
     }
+  });
+});
+
+describe('deleteSession stable identity', () => {
+  test('deletes only the requested same-timestamp session', () => {
+    const timestamp = '2026-07-28T12:00:00.000Z';
+    localStorage.setItem('exerciseLogs', JSON.stringify({ bench: [
+      { date: timestamp, clientSessionId: 'local-a', sets: [{ reps: 5, weight: 50 }] },
+      { date: timestamp, clientSessionId: 'local-b', sets: [{ reps: 6, weight: 60 }] },
+    ] }));
+
+    const updated = deleteSession('bench', { date: timestamp, clientSessionId: 'local-a' }, null);
+
+    expect(updated.bench).toEqual([
+      expect.objectContaining({ clientSessionId: 'local-b' }),
+    ]);
   });
 });
 

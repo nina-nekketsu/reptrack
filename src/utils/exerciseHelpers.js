@@ -15,6 +15,8 @@ const defaultExercises = [
   { id: 8, name: 'Plank',          muscleGroup: 'Core',      type: 'Strength' },
 ];
 
+let logsLoadError = null;
+
 export { defaultExercises };
 
 function reportSyncFailure(error) {
@@ -34,13 +36,27 @@ export function loadExercises() {
 }
 
 export function loadLogs() {
-  if (!STORAGE_AVAILABLE) return {};
-  try {
-    const saved = localStorage.getItem('exerciseLogs');
-    return saved ? JSON.parse(saved) : {};
-  } catch {
+  if (!STORAGE_AVAILABLE) {
+    logsLoadError = 'storage-unavailable';
     return {};
   }
+  try {
+    const saved = localStorage.getItem('exerciseLogs');
+    const parsed = saved ? JSON.parse(saved) : {};
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      logsLoadError = 'invalid-history';
+      return {};
+    }
+    logsLoadError = null;
+    return parsed;
+  } catch {
+    logsLoadError = 'invalid-history';
+    return {};
+  }
+}
+
+export function getLogsLoadError() {
+  return logsLoadError;
 }
 
 /** Write logs directly (used by sync pull). Returns true only after a durable write. */
@@ -185,13 +201,20 @@ export async function upsertSession(exerciseId, session, userId) {
  * @param {string} userId — current user id (for Supabase delete)
  * @returns {object} updated logs
  */
-export function deleteSession(exerciseId, sessionDate, userId) {
+export function deleteSession(exerciseId, sessionOrDate, userId) {
   const logs = loadLogs();
   const sessions = logs[exerciseId] || [];
-  const target = sessions.find((s) => s.date === sessionDate);
+  const requestedIdentity = typeof sessionOrDate === 'object'
+    ? sessionOrDate.clientSessionId || sessionOrDate.remoteId || sessionOrDate.id || sessionOrDate.sessionId || sessionOrDate.date
+    : sessionOrDate;
+  const targetIndex = sessions.findIndex((session) => {
+    const identity = session.clientSessionId || session.remoteId || session.id || session.sessionId || session.date;
+    return identity === requestedIdentity;
+  });
+  const target = targetIndex >= 0 ? sessions[targetIndex] : null;
   const updated = {
     ...logs,
-    [exerciseId]: sessions.filter((s) => s.date !== sessionDate),
+    [exerciseId]: sessions.filter((_session, index) => index !== targetIndex),
   };
   saveLogs(updated);
 
