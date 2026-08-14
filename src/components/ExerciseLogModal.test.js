@@ -163,6 +163,17 @@ describe('ExerciseLogModal Done button state contract', () => {
     expect(doneButton).toBeEnabled();
   });
 
+  test('styles the set type letter smaller and centered without shrinking the control', () => {
+    const typeRule = readCssRule('.modal--log .set-row-actions select.set-input');
+
+    expect(typeRule).toContain('font-size: 12px');
+    expect(typeRule).toContain('font-weight: 700');
+    expect(typeRule).toContain('text-align: center');
+    expect(typeRule).toContain('text-align-last: center');
+    expect(typeRule).toContain('min-width: 44px');
+    expect(typeRule).toContain('min-height: 48px');
+  });
+
   test('styles disabled and enabled Done as readable, distinct states with reduced-motion support', () => {
     const disabledRule = readCssRule('.modal--log .log-actions .btn-primary:disabled');
     const enabledRule = readCssRule('.modal--log .log-actions .btn-primary:not(:disabled)');

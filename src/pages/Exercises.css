@@ -1404,6 +1404,15 @@
 .log-sticky-top,.log-actions{background:var(--bg-2);border-color:var(--line)}.modal-title{color:var(--ink-hi);font-size:20px;line-height:26px}.modal-sub,.section-label{color:var(--ink-mid)}
 .log-tabs{background:var(--bg-1)}.log-tab{min-height:44px;color:var(--ink-mid)}.log-tab.active{background:var(--go-dim);color:var(--go)}
 .sets-header{color:var(--ink-low)}.set-row{min-height:52px;border-color:var(--line)}.set-input,.rir-input{min-height:48px;background:var(--bg-1);border-color:var(--line-strong);color:var(--ink-hi);font-size:16px;font-variant-numeric:tabular-nums}.set-input:focus,.rir-input:focus{border-color:var(--focus)}
+.modal--log .set-row-actions select.set-input {
+  min-width: 44px;
+  min-height: 48px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  text-align-last: center;
+}
 .remove-set-btn,.set-done-btn{min-width:44px!important;width:44px!important;min-height:44px!important;height:44px!important}.remove-set-btn{background:var(--danger-dim);color:var(--danger)}.set-done-btn{background:var(--bg-3);border-color:var(--line-strong);color:var(--ink-mid)}.set-done-btn--active{background:var(--go);border-color:var(--go);color:var(--ink-on-accent);box-shadow:none}
 .add-set-btn{min-height:48px;background:var(--bg-1);border-color:var(--line-strong);color:var(--go)}.live-totals,.total-pill{background:var(--bg-1);border-color:var(--line)}.total-label{color:var(--ink-mid)}.total-value{color:var(--ink-hi)}
 .set-row--improved,.set-input--improved{background:var(--go-dim);border-color:var(--go)}.set-row--regressed,.set-input--regressed{background:var(--danger-dim);border-color:var(--danger)}.set-feedback--improved{color:var(--go)}.set-feedback--regressed{color:var(--danger)}

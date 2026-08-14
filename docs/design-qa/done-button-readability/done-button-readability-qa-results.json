@@ -23,7 +23,7 @@
         },
         {
           "href": "/src/pages/Exercises.css",
-          "ruleCount": 337
+          "ruleCount": 338
         },
         {
           "href": null,
@@ -78,6 +78,19 @@
         "color": "rgb(243, 239, 230)",
         "background": "rgb(30, 37, 46)",
         "contrast": 13.463113113751506
+      },
+      "setType": {
+        "rect": {
+          "top": 332.296875,
+          "left": 29,
+          "right": 73,
+          "bottom": 380.296875,
+          "width": 44,
+          "height": 48
+        },
+        "fontSize": "12px",
+        "fontWeight": "700",
+        "textAlign": "center"
       }
     },
     "verdict": {
@@ -92,6 +105,9 @@
       "disabledDistinct": true,
       "doneTouchTarget": true,
       "cancelTouchTarget": true,
+      "setTypeLetterSize": true,
+      "setTypeLetterCentered": true,
+      "setTypeTouchTarget": true,
       "noDocumentOverflow": true,
       "noModalOverflow": true,
       "footerVisible": true
@@ -121,7 +137,7 @@
         },
         {
           "href": "/src/pages/Exercises.css",
-          "ruleCount": 337
+          "ruleCount": 338
         },
         {
           "href": null,
@@ -176,6 +192,19 @@
         "color": "rgb(243, 239, 230)",
         "background": "rgb(30, 37, 46)",
         "contrast": 13.463113113751506
+      },
+      "setType": {
+        "rect": {
+          "top": 332.296875,
+          "left": 29,
+          "right": 73,
+          "bottom": 380.296875,
+          "width": 44,
+          "height": 48
+        },
+        "fontSize": "12px",
+        "fontWeight": "700",
+        "textAlign": "center"
       }
     },
     "verdict": {
@@ -190,6 +219,9 @@
       "disabledDistinct": true,
       "doneTouchTarget": true,
       "cancelTouchTarget": true,
+      "setTypeLetterSize": true,
+      "setTypeLetterCentered": true,
+      "setTypeTouchTarget": true,
       "noDocumentOverflow": true,
       "noModalOverflow": true,
       "footerVisible": true
@@ -219,7 +251,7 @@
         },
         {
           "href": "/src/pages/Exercises.css",
-          "ruleCount": 337
+          "ruleCount": 338
         },
         {
           "href": null,
@@ -274,6 +306,19 @@
         "color": "rgb(243, 239, 230)",
         "background": "rgb(30, 37, 46)",
         "contrast": 13.463113113751506
+      },
+      "setType": {
+        "rect": {
+          "top": 469.796875,
+          "left": 42.453125,
+          "right": 86.453125,
+          "bottom": 517.796875,
+          "width": 44,
+          "height": 48
+        },
+        "fontSize": "12px",
+        "fontWeight": "700",
+        "textAlign": "center"
       }
     },
     "verdict": {
@@ -288,6 +333,9 @@
       "disabledDistinct": true,
       "doneTouchTarget": true,
       "cancelTouchTarget": true,
+      "setTypeLetterSize": true,
+      "setTypeLetterCentered": true,
+      "setTypeTouchTarget": true,
       "noDocumentOverflow": true,
       "noModalOverflow": true,
       "footerVisible": true
@@ -317,7 +365,7 @@
         },
         {
           "href": "/src/pages/Exercises.css",
-          "ruleCount": 337
+          "ruleCount": 338
         },
         {
           "href": null,
@@ -372,6 +420,19 @@
         "color": "rgb(243, 239, 230)",
         "background": "rgb(30, 37, 46)",
         "contrast": 13.463113113751506
+      },
+      "setType": {
+        "rect": {
+          "top": 469.796875,
+          "left": 42.453125,
+          "right": 86.453125,
+          "bottom": 517.796875,
+          "width": 44,
+          "height": 48
+        },
+        "fontSize": "12px",
+        "fontWeight": "700",
+        "textAlign": "center"
       }
     },
     "verdict": {
@@ -386,6 +447,9 @@
       "disabledDistinct": true,
       "doneTouchTarget": true,
       "cancelTouchTarget": true,
+      "setTypeLetterSize": true,
+      "setTypeLetterCentered": true,
+      "setTypeTouchTarget": true,
       "noDocumentOverflow": true,
       "noModalOverflow": true,
       "footerVisible": true
