@@ -2671,6 +2671,10 @@
   transition: background-color 180ms var(--motion-ease-standard), border-color 180ms var(--motion-ease-standard);
 }
 
+.set-row[data-anchor-set="true"] {
+  scroll-margin-top: 8px;
+}
+
 .set-done-btn__check {
   display: inline-flex;
   align-items: center;

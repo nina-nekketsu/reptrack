@@ -27,6 +27,12 @@ import { useAuth } from '../context/AuthContext';
 import { useCoach } from '../context/CoachContext';
 import { getPreviousSets, isIntensityAllowed } from '../lib/coachEngine';
 import { ensureSetIdentity, getSetFingerprint, normalizeSetIdentities } from '../utils/setIdentity';
+import {
+  deriveExerciseDraftProgress,
+  getAnchorContextIndex,
+  getAnchorScrollTop,
+  getAnchorSetIndex,
+} from '../utils/exerciseDraftProgress';
 import useOnlineStatus from '../hooks/useOnlineStatus';
 import './CoachComponents.css';
 
@@ -73,8 +79,8 @@ export function createDropsetChildRows(parentWeight) {
   return children;
 }
 
-function emptySetRow() {
-  return ensureSetIdentity({ ...EMPTY_SET_ROW });
+function emptySetRow({ planned = false, automaticPlaceholder = true } = {}) {
+  return ensureSetIdentity({ ...EMPTY_SET_ROW, planned, automaticPlaceholder });
 }
 
 export function normalizeSetRow(set = {}, { resetDone = false } = {}) {
@@ -86,6 +92,8 @@ export function normalizeSetRow(set = {}, { resetDone = false } = {}) {
     weight: set.weight?.toString() ?? '',
     setType,
     ...(setType === 'dropset_child' ? { dropSetChild: true } : {}),
+    ...(set.planned === true ? { planned: true } : {}),
+    ...(set.automaticPlaceholder === true ? { automaticPlaceholder: true } : {}),
     done: resetDone ? false : Boolean(set.done),
   };
 }
@@ -95,7 +103,11 @@ export function withTrailingEmptyRow(rows = [], options = {}) {
   const lastRow = normalized[normalized.length - 1];
   const needsBlankRow = !lastRow || lastRow.reps !== '' || lastRow.weight !== '' || lastRow.setType !== 'normal';
   if (needsBlankRow) return [...normalized, emptySetRow()];
-  return [...normalized.slice(0, -1), { ...lastRow, done: false }];
+  if (lastRow.planned === true) return [...normalized, emptySetRow()];
+  return [
+    ...normalized.slice(0, -1),
+    { ...lastRow, planned: false, automaticPlaceholder: true, done: false },
+  ];
 }
 
 export function appendSameAsLastSet(rows = []) {
@@ -115,6 +127,8 @@ export function appendSameAsLastSet(rows = []) {
     reps: source.reps?.toString() ?? '',
     weight: source.weight?.toString() ?? '',
     setType: 'normal',
+    planned: true,
+    automaticPlaceholder: false,
     done: false,
   });
   return withTrailingEmptyRow([...rowsWithoutTrailingBlank, copy]);
@@ -146,10 +160,6 @@ function isParentDropset(set = {}) {
 
 function isWarmupRow(set = {}) {
   return set.setType === 'warmup' || set.warmup === true;
-}
-
-function countFullSets(rows = []) {
-  return rows.filter((row) => !isDropsetChild(row) && !isWarmupRow(row) && isMeaningfulSet(row)).length;
 }
 
 function getSetLabel(rows, index) {
@@ -214,6 +224,9 @@ export function applySetUpdate(rows, index, field, value) {
       : removeDropsetChildrenAfter(next, index);
   }
   next[index] = { ...current, [field]: value };
+  if ((field === 'reps' || field === 'weight') && value !== '') {
+    next[index] = { ...next[index], planned: true, automaticPlaceholder: false };
+  }
   return field === 'weight' ? refreshDropsetChildren(next, index) : next;
 }
 
@@ -255,6 +268,7 @@ export default function ExerciseLogModal({
   const [isSaving, setIsSaving] = useState(false);
   const [localSaveStatus, setLocalSaveStatus] = useState('');
   const [showExerciseCompleteCue, setShowExerciseCompleteCue] = useState(false);
+  const [positioningRevision, setPositioningRevision] = useState(0);
   const isOnline = useOnlineStatus();
   const saveInFlightRef = useRef(false);
   const previousExerciseDoneRef = useRef(isExerciseDone);
@@ -288,7 +302,6 @@ export default function ExerciseLogModal({
 
   // When opening an exercise, pre-populate sets if already logged in the current active workout session
   useEffect(() => {
-    logScrollRef.current?.scrollTo({ top: 0 });
     setActiveTab('log');
     setEditingSession(null);
     setSavedSetFeedback([]);
@@ -350,12 +363,42 @@ export default function ExerciseLogModal({
     if (!foundCurrentSession && !hasPrefilledValues && Number(prescribedSets) > 0) {
       initialSets = Array.from(
         { length: Number(prescribedSets) },
-        () => emptySetRow()
+        () => emptySetRow({ planned: true, automaticPlaceholder: false })
       );
     }
 
     setSets(initialSets);
+    setPositioningRevision((revision) => revision + 1);
   }, [exercise?.id, prescribedSets]);
+
+  const anchorSetIndex = getAnchorSetIndex(sets);
+
+  useEffect(() => {
+    if (positioningRevision === 0) return undefined;
+    const frameId = window.requestAnimationFrame(() => {
+      const container = logScrollRef.current;
+      if (!container) return;
+      const anchorRow = container.querySelector('[data-anchor-set="true"]');
+      if (!anchorRow) return;
+      const contextIndex = getAnchorContextIndex(sets, anchorSetIndex);
+      const contextRow = contextIndex >= 0
+        ? container.querySelector(`[data-set-index="${contextIndex}"]`)
+        : null;
+      const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+      container.scrollTo({
+        top: getAnchorScrollTop({
+          anchorOffsetTop: anchorRow.offsetTop,
+          anchorHeight: anchorRow.offsetHeight,
+          contextOffsetTop: contextRow?.offsetTop,
+          containerHeight: container.clientHeight,
+        }),
+        behavior: reducedMotion ? 'auto' : 'smooth',
+      });
+    });
+    return () => window.cancelAnimationFrame(frameId);
+  // Position only after an open/reopen initialization, never after row edits or manual scrolling.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [positioningRevision]);
 
   const editingDateLabel = editingSession
     ? new Date(editingSession.date).toLocaleDateString(undefined, {
@@ -388,7 +431,20 @@ export default function ExerciseLogModal({
   function addSet() {
     setSavedSetFeedback([]);
     setLocalSaveStatus('');
-    setSets((prev) => [...prev, emptySetRow()]);
+    setSets((prev) => {
+      const next = [...prev];
+      const placeholderIndex = next.findIndex((row) => row.automaticPlaceholder === true);
+      if (placeholderIndex >= 0) {
+        next[placeholderIndex] = {
+          ...next[placeholderIndex],
+          planned: true,
+          automaticPlaceholder: false,
+        };
+      } else {
+        next.push(emptySetRow({ planned: true, automaticPlaceholder: false }));
+      }
+      return [...next, emptySetRow()];
+    });
   }
 
   function addSameAsLastSet() {
@@ -665,10 +721,13 @@ export default function ExerciseLogModal({
   const hasHistory = sessionsDesc.length > 0;
   const records = getRecords(sessionsDesc);
   const liveTotals = calcTotals(sets);
-  const completedSetCount = sets.filter(
-    (set) => !isDropsetChild(set) && isMeaningfulSet(set) && set.done
-  ).length;
-  const completionTarget = Math.max(1, Number(prescribedSets) || countFullSets(sets) || 1);
+  const draftProgress = deriveExerciseDraftProgress({
+    exerciseId: exercise.id,
+    rows: sets,
+    prescribedSets,
+  });
+  const completedSetCount = draftProgress.completedPrimarySets;
+  const completionTarget = Math.max(1, draftProgress.targetPrimarySets);
 
   const lastSession = sessionsDesc[0] || null;
   const last5 = sessionsDesc.slice(0, 5);
@@ -745,7 +804,12 @@ export default function ExerciseLogModal({
                 const describedBy = [feedbackId, validationId].filter(Boolean).join(' ') || undefined;
                 return (
                   <React.Fragment key={s.clientSetId || i}>
-                    <div className={`set-row ${s.done ? 'set-row--checked' : ''} ${feedback ? `set-row--${feedback.state}` : ''} ${isWarmupRow(s) ? 'set-row--warmup' : ''} ${isParentDropset(s) ? 'set-row--dropset' : ''} ${childRow ? 'set-row--dropset-child' : ''}`}>
+                    <div
+                      className={`set-row ${s.done ? 'set-row--checked' : ''} ${feedback ? `set-row--${feedback.state}` : ''} ${isWarmupRow(s) ? 'set-row--warmup' : ''} ${isParentDropset(s) ? 'set-row--dropset' : ''} ${childRow ? 'set-row--dropset-child' : ''}`}
+                      data-set-id={s.clientSetId}
+                      data-set-index={i}
+                      data-anchor-set={i === anchorSetIndex ? 'true' : undefined}
+                    >
                       <span className={`set-num ${childRow ? 'set-num--dropset-child' : ''}`}>{getSetLabel(sets, i)}</span>
                       <div className="set-stepper set-stepper--reps">
                         <span className="set-stepper__label" aria-hidden="true">Reps</span>
