@@ -11,6 +11,7 @@ import {
   calcTotals,
   bestSet,
   deleteSession,
+  getBestExactSetRecord,
   getRecords,
   getLogsLoadError,
   getSessionRepFeedback,
@@ -27,6 +28,12 @@ import { useAuth } from '../context/AuthContext';
 import { useCoach } from '../context/CoachContext';
 import { getPreviousSets, isIntensityAllowed } from '../lib/coachEngine';
 import { ensureSetIdentity, getSetFingerprint, normalizeSetIdentities } from '../utils/setIdentity';
+import {
+  deriveExerciseDraftProgress,
+  getAnchorContextIndex,
+  getAnchorScrollTop,
+  getAnchorSetIndex,
+} from '../utils/exerciseDraftProgress';
 import useOnlineStatus from '../hooks/useOnlineStatus';
 import './CoachComponents.css';
 
@@ -43,7 +50,8 @@ function createClientSessionId() {
 }
 
 function sessionIdentity(session = {}) {
-  return session.clientSessionId || session.remoteId || session.id || session.sessionId || session.date;
+  const value = session || {};
+  return value.clientSessionId || value.remoteId || value.id || value.sessionId || value.date;
 }
 
 export function isDropsetChild(set = {}) {
@@ -73,8 +81,8 @@ export function createDropsetChildRows(parentWeight) {
   return children;
 }
 
-function emptySetRow() {
-  return ensureSetIdentity({ ...EMPTY_SET_ROW });
+function emptySetRow({ planned = false, automaticPlaceholder = true } = {}) {
+  return ensureSetIdentity({ ...EMPTY_SET_ROW, planned, automaticPlaceholder });
 }
 
 export function normalizeSetRow(set = {}, { resetDone = false } = {}) {
@@ -86,6 +94,8 @@ export function normalizeSetRow(set = {}, { resetDone = false } = {}) {
     weight: set.weight?.toString() ?? '',
     setType,
     ...(setType === 'dropset_child' ? { dropSetChild: true } : {}),
+    ...(set.planned === true ? { planned: true } : {}),
+    ...(set.automaticPlaceholder === true ? { automaticPlaceholder: true } : {}),
     done: resetDone ? false : Boolean(set.done),
   };
 }
@@ -95,7 +105,11 @@ export function withTrailingEmptyRow(rows = [], options = {}) {
   const lastRow = normalized[normalized.length - 1];
   const needsBlankRow = !lastRow || lastRow.reps !== '' || lastRow.weight !== '' || lastRow.setType !== 'normal';
   if (needsBlankRow) return [...normalized, emptySetRow()];
-  return [...normalized.slice(0, -1), { ...lastRow, done: false }];
+  if (lastRow.planned === true) return [...normalized, emptySetRow()];
+  return [
+    ...normalized.slice(0, -1),
+    { ...lastRow, planned: false, automaticPlaceholder: true, done: false },
+  ];
 }
 
 export function appendSameAsLastSet(rows = []) {
@@ -115,6 +129,8 @@ export function appendSameAsLastSet(rows = []) {
     reps: source.reps?.toString() ?? '',
     weight: source.weight?.toString() ?? '',
     setType: 'normal',
+    planned: true,
+    automaticPlaceholder: false,
     done: false,
   });
   return withTrailingEmptyRow([...rowsWithoutTrailingBlank, copy]);
@@ -148,13 +164,9 @@ function isWarmupRow(set = {}) {
   return set.setType === 'warmup' || set.warmup === true;
 }
 
-function countFullSets(rows = []) {
-  return rows.filter((row) => !isDropsetChild(row) && !isWarmupRow(row) && isMeaningfulSet(row)).length;
-}
-
 function getSetLabel(rows, index) {
   const row = rows[index];
-  const fullSetNumber = rows.slice(0, index + 1).filter((set) => !isDropsetChild(set) && !isWarmupRow(set)).length;
+  const fullSetNumber = getLogicalSetNumber(rows, index);
   if (isWarmupRow(row)) return 'W';
   if (!isDropsetChild(row)) return fullSetNumber;
   let childNumber = 1;
@@ -163,6 +175,10 @@ function getSetLabel(rows, index) {
     childNumber += 1;
   }
   return `${fullSetNumber}↓${childNumber}`;
+}
+
+function getLogicalSetNumber(rows, index) {
+  return rows.slice(0, index + 1).filter((set) => !isDropsetChild(set) && !isWarmupRow(set)).length;
 }
 
 function removeDropsetChildrenAfter(rows, parentIndex) {
@@ -214,6 +230,9 @@ export function applySetUpdate(rows, index, field, value) {
       : removeDropsetChildrenAfter(next, index);
   }
   next[index] = { ...current, [field]: value };
+  if ((field === 'reps' || field === 'weight') && value !== '') {
+    next[index] = { ...next[index], planned: true, automaticPlaceholder: false };
+  }
   return field === 'weight' ? refreshDropsetChildren(next, index) : next;
 }
 
@@ -234,6 +253,7 @@ export default function ExerciseLogModal({
   stayOpenOnSave = false,
   isExerciseDone = false,
   onCompletionChange,
+  onDraftProgressChange,
   prescribedSets = null,
   prescribedReps = null,
   initialTab = 'log',
@@ -250,17 +270,23 @@ export default function ExerciseLogModal({
   const [lastSavedSet, setLastSavedSet] = useState(null);
   const [lastSavedCoachContext, setLastSavedCoachContext] = useState(null);
   const [savedSetFeedback, setSavedSetFeedback] = useState([]);
-  const [previousSessionSets, setPreviousSessionSets] = useState([]);
+  const [comparisonLogs, setComparisonLogs] = useState(() => (
+    logs && typeof logs === 'object' ? logs : loadLogs()
+  ));
+  const [bestRecordExcludedSession, setBestRecordExcludedSession] = useState(null);
   const [undoRemoval, setUndoRemoval] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [localSaveStatus, setLocalSaveStatus] = useState('');
   const [showExerciseCompleteCue, setShowExerciseCompleteCue] = useState(false);
+  const [positioningRevision, setPositioningRevision] = useState(0);
+  const [draftInitializedExerciseId, setDraftInitializedExerciseId] = useState(null);
   const isOnline = useOnlineStatus();
   const saveInFlightRef = useRef(false);
   const previousExerciseDoneRef = useRef(isExerciseDone);
   const logScrollRef = useRef(null);
   const weightInputRefs = useRef([]);
   const mountedRef = useRef(true);
+  const lastDraftProgressSignatureRef = useRef('');
 
   useEffect(() => () => {
     mountedRef.current = false;
@@ -279,6 +305,10 @@ export default function ExerciseLogModal({
     setShowExerciseCompleteCue(becameComplete);
   }, [isExerciseDone]);
 
+  useEffect(() => {
+    if (logs && typeof logs === 'object') setComparisonLogs(logs);
+  }, [logs]);
+
   // Coach-related derived data
   const isCoachActive = coach.isOnboarded && coach.coachActive;
   const previousSets = useMemo(
@@ -288,11 +318,11 @@ export default function ExerciseLogModal({
 
   // When opening an exercise, pre-populate sets if already logged in the current active workout session
   useEffect(() => {
-    logScrollRef.current?.scrollTo({ top: 0 });
+    setDraftInitializedExerciseId(null);
     setActiveTab('log');
     setEditingSession(null);
     setSavedSetFeedback([]);
-    setPreviousSessionSets([]);
+    setBestRecordExcludedSession(null);
     setLastSavedCoachContext(null);
     setLocalSaveStatus('');
 
@@ -301,6 +331,7 @@ export default function ExerciseLogModal({
     let foundCurrentSession = false;
     try {
       const currentLogs = loadLogs();
+      setComparisonLogs(currentLogs);
       const exerciseSessions = exercise?.id ? (currentLogs[exercise.id] || []) : [];
       const sessionsNewestFirst = [...exerciseSessions]
         .sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -322,15 +353,8 @@ export default function ExerciseLogModal({
             foundCurrentSession = true;
             initialSets = withTrailingEmptyRow(latestSession.sets || []);
             setEditingSession({ ...latestSession });
+            setBestRecordExcludedSession({ ...latestSession });
             setSavedSetFeedback(getSessionRepFeedback(currentLogs, exercise.id, latestSession));
-          }
-          const latestBeforeWorkout = sessionsNewestFirst.find(
-            (session) => new Date(session.workoutSessionStartedAt || session.date) < sessionStart
-          );
-          if (latestBeforeWorkout) {
-            setPreviousSessionSets(
-              (latestBeforeWorkout.sets || []).map((set) => normalizeSetRow(set, { resetDone: true }))
-            );
           }
         }
       }
@@ -338,9 +362,6 @@ export default function ExerciseLogModal({
       if (!foundCurrentSession && exerciseSessions.length > 0) {
         const latestPrevious = sessionsNewestFirst[0];
         initialSets = withTrailingEmptyRow(latestPrevious.sets || [], { resetDone: true });
-        setPreviousSessionSets(
-          (latestPrevious.sets || []).map((set) => normalizeSetRow(set, { resetDone: true }))
-        );
       }
     } catch (e) {
       // Fall back to empty row if anything goes wrong
@@ -350,12 +371,88 @@ export default function ExerciseLogModal({
     if (!foundCurrentSession && !hasPrefilledValues && Number(prescribedSets) > 0) {
       initialSets = Array.from(
         { length: Number(prescribedSets) },
-        () => emptySetRow()
+        () => emptySetRow({ planned: true, automaticPlaceholder: false })
       );
     }
 
     setSets(initialSets);
+    setDraftInitializedExerciseId(exercise?.id || null);
+    setPositioningRevision((revision) => revision + 1);
   }, [exercise?.id, prescribedSets]);
+
+  useEffect(() => {
+    if (!onDraftProgressChange || draftInitializedExerciseId !== exercise?.id) return;
+    const progress = deriveExerciseDraftProgress({
+      exerciseId: exercise.id,
+      rows: sets,
+      prescribedSets,
+    });
+    const signature = [
+      progress.exerciseId,
+      progress.completedPrimarySets,
+      progress.targetPrimarySets,
+      progress.meaningfulPrimarySets,
+      progress.isExplicitlyComplete,
+    ].join(':');
+    if (lastDraftProgressSignatureRef.current === signature) return;
+    lastDraftProgressSignatureRef.current = signature;
+    onDraftProgressChange(progress);
+  }, [draftInitializedExerciseId, exercise?.id, onDraftProgressChange, prescribedSets, sets]);
+
+  const anchorSetIndex = getAnchorSetIndex(sets);
+  const bestRecordQuerySignature = sets.map((set) => [
+    set.reps,
+    set.setType,
+    set.warmup === true,
+    set.dropSetChild === true,
+  ].join(':')).join('|');
+  const bestRecordHelpers = useMemo(() => sets.map((set, index) => {
+    if (isWarmupRow(set) || isDropsetChild(set)) return null;
+    const normalizedReps = Number(set.reps);
+    if (set.reps === '' || !Number.isFinite(normalizedReps)
+      || !Number.isInteger(normalizedReps) || normalizedReps <= 0) {
+      return 'Enter reps to view best';
+    }
+    const record = getBestExactSetRecord({
+      logs: comparisonLogs,
+      exerciseId: exercise.id,
+      logicalSetNumber: getLogicalSetNumber(sets, index),
+      reps: normalizedReps,
+      excludeSession: bestRecordExcludedSession,
+    });
+    return record
+      ? `Best: ${record.reps} reps · ${record.weight} kg`
+      : `No record for ${normalizedReps} reps`;
+  // Weight edits do not change the historical query key.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [bestRecordExcludedSession, bestRecordQuerySignature, comparisonLogs, exercise.id]);
+
+  useEffect(() => {
+    if (positioningRevision === 0) return undefined;
+    const frameId = window.requestAnimationFrame(() => {
+      const container = logScrollRef.current;
+      if (!container) return;
+      const anchorRow = container.querySelector('[data-anchor-set="true"]');
+      if (!anchorRow) return;
+      const contextIndex = getAnchorContextIndex(sets, anchorSetIndex);
+      const contextRow = contextIndex >= 0
+        ? container.querySelector(`[data-set-index="${contextIndex}"]`)
+        : null;
+      const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+      container.scrollTo({
+        top: getAnchorScrollTop({
+          anchorOffsetTop: anchorRow.offsetTop,
+          anchorHeight: anchorRow.offsetHeight,
+          contextOffsetTop: contextRow?.offsetTop,
+          containerHeight: container.clientHeight,
+        }),
+        behavior: reducedMotion ? 'auto' : 'smooth',
+      });
+    });
+    return () => window.cancelAnimationFrame(frameId);
+  // Position only after an open/reopen initialization, never after row edits or manual scrolling.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [positioningRevision]);
 
   const editingDateLabel = editingSession
     ? new Date(editingSession.date).toLocaleDateString(undefined, {
@@ -388,7 +485,20 @@ export default function ExerciseLogModal({
   function addSet() {
     setSavedSetFeedback([]);
     setLocalSaveStatus('');
-    setSets((prev) => [...prev, emptySetRow()]);
+    setSets((prev) => {
+      const next = [...prev];
+      const placeholderIndex = next.findIndex((row) => row.automaticPlaceholder === true);
+      if (placeholderIndex >= 0) {
+        next[placeholderIndex] = {
+          ...next[placeholderIndex],
+          planned: true,
+          automaticPlaceholder: false,
+        };
+      } else {
+        next.push(emptySetRow({ planned: true, automaticPlaceholder: false }));
+      }
+      return [...next, emptySetRow()];
+    });
   }
 
   function addSameAsLastSet() {
@@ -432,6 +542,7 @@ export default function ExerciseLogModal({
 
   function closeModal() {
     setEditingSession(null);
+    setBestRecordExcludedSession(null);
     setSets([emptySetRow()]);
     setActiveTab('log');
     setSavedSetFeedback([]);
@@ -449,6 +560,7 @@ export default function ExerciseLogModal({
     const normalizedSets = withTrailingEmptyRow(session.sets || []);
     setSets(normalizedSets);
     setEditingSession({ ...session });
+    setBestRecordExcludedSession({ ...session });
     setSavedSetFeedback(getSessionRepFeedback(logs, exercise.id, session));
     setLocalSaveStatus('');
     setActiveTab('log');
@@ -457,6 +569,7 @@ export default function ExerciseLogModal({
 
   function handleLogAsNewSession() {
     setEditingSession(null);
+    setBestRecordExcludedSession(null);
     setSets([emptySetRow()]);
     setSavedSetFeedback([]);
     setLocalSaveStatus('');
@@ -474,9 +587,11 @@ export default function ExerciseLogModal({
   function handleConfirmDelete() {
     if (!confirmDeleteSession) return;
     const updatedLogs = deleteSession(exercise.id, confirmDeleteSession, user?.id);
+    setComparisonLogs(updatedLogs);
     setConfirmDeleteSession(null);
     if (sessionIdentity(editingSession) === sessionIdentity(confirmDeleteSession)) {
       setEditingSession(null);
+      setBestRecordExcludedSession(null);
       setSets([emptySetRow()]);
     }
     window.dispatchEvent(new Event('exerciseLogged'));
@@ -555,6 +670,7 @@ export default function ExerciseLogModal({
       setLocalSaveStatus("Couldn't save on this device. Try again.");
       return;
     }
+    setComparisonLogs(updatedLogs);
     window.dispatchEvent(new Event('exerciseLogged'));
     if (onSaved) onSaved(updatedLogs);
     const meaningfulParentSets = enrichedSets.filter(
@@ -611,6 +727,7 @@ export default function ExerciseLogModal({
       // Commit the local UI state immediately. Remote latency must not rehydrate over
       // edits the user makes while the insert is in flight.
       setEditingSession({ ...persistedSession });
+      if (!editingSession) setBestRecordExcludedSession(null);
       setSets(withTrailingEmptyRow(persistedSession.sets));
       setSavedSetFeedback(getSessionRepFeedback(updatedLogs, exercise.id, persistedSession));
       setActiveTab('log');
@@ -665,10 +782,13 @@ export default function ExerciseLogModal({
   const hasHistory = sessionsDesc.length > 0;
   const records = getRecords(sessionsDesc);
   const liveTotals = calcTotals(sets);
-  const completedSetCount = sets.filter(
-    (set) => !isDropsetChild(set) && isMeaningfulSet(set) && set.done
-  ).length;
-  const completionTarget = Math.max(1, Number(prescribedSets) || countFullSets(sets) || 1);
+  const draftProgress = deriveExerciseDraftProgress({
+    exerciseId: exercise.id,
+    rows: sets,
+    prescribedSets,
+  });
+  const completedSetCount = draftProgress.completedPrimarySets;
+  const completionTarget = Math.max(1, draftProgress.targetPrimarySets);
 
   const lastSession = sessionsDesc[0] || null;
   const last5 = sessionsDesc.slice(0, 5);
@@ -745,7 +865,12 @@ export default function ExerciseLogModal({
                 const describedBy = [feedbackId, validationId].filter(Boolean).join(' ') || undefined;
                 return (
                   <React.Fragment key={s.clientSetId || i}>
-                    <div className={`set-row ${s.done ? 'set-row--checked' : ''} ${feedback ? `set-row--${feedback.state}` : ''} ${isWarmupRow(s) ? 'set-row--warmup' : ''} ${isParentDropset(s) ? 'set-row--dropset' : ''} ${childRow ? 'set-row--dropset-child' : ''}`}>
+                    <div
+                      className={`set-row ${s.done ? 'set-row--checked' : ''} ${feedback ? `set-row--${feedback.state}` : ''} ${isWarmupRow(s) ? 'set-row--warmup' : ''} ${isParentDropset(s) ? 'set-row--dropset' : ''} ${childRow ? 'set-row--dropset-child' : ''}`}
+                      data-set-id={s.clientSetId}
+                      data-set-index={i}
+                      data-anchor-set={i === anchorSetIndex ? 'true' : undefined}
+                    >
                       <span className={`set-num ${childRow ? 'set-num--dropset-child' : ''}`}>{getSetLabel(sets, i)}</span>
                       <div className="set-stepper set-stepper--reps">
                         <span className="set-stepper__label" aria-hidden="true">Reps</span>
@@ -824,9 +949,9 @@ export default function ExerciseLogModal({
                         </button>
                         <button className="remove-set-btn" aria-label={`Remove set ${i + 1}`} onClick={() => removeSet(i)} disabled={sets.length === 1}>x</button>
                       </div>
-                      {previousSessionSets[i] && isMeaningfulSet(previousSessionSets[i]) && (
-                        <div className="set-ghost" aria-label={`Previous session set ${i + 1}`}>
-                          Last: {previousSessionSets[i].reps || 0} reps · {previousSessionSets[i].weight || 0} kg
+                      {bestRecordHelpers[i] && (
+                        <div className="set-ghost" aria-label={`Historical best for set ${getSetLabel(sets, i)}`}>
+                          {bestRecordHelpers[i]}
                         </div>
                       )}
                     </div>

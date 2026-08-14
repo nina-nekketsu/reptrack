@@ -51,7 +51,7 @@ const existingSession = {
   totalVolume: 2700,
 };
 
-function renderModal(onSaved = jest.fn()) {
+function renderModal(onSaved = jest.fn(), onDraftProgressChange = undefined) {
   const logs = { [exercise.id]: [existingSession] };
   localStorage.setItem('activeWorkoutSession', JSON.stringify(activeWorkout));
   localStorage.setItem('exerciseLogs', JSON.stringify(logs));
@@ -60,6 +60,7 @@ function renderModal(onSaved = jest.fn()) {
       exercise={exercise}
       logs={logs}
       onSaved={onSaved}
+      onDraftProgressChange={onDraftProgressChange}
       onClose={jest.fn()}
     />
   );
@@ -76,6 +77,100 @@ describe('active workout exercise session integrity', () => {
     mockUser = null;
     mockPushSession.mockReset();
     mockUpdateRemoteSession.mockReset();
+  });
+
+  test('emits normalized draft progress for add, remove, undo, check, uncheck, and type changes', async () => {
+    localStorage.setItem('activeWorkoutSession', JSON.stringify(activeWorkout));
+    localStorage.setItem('exerciseLogs', JSON.stringify({}));
+    const onDraftProgressChange = jest.fn();
+
+    render(
+      <ExerciseLogModal
+        exercise={exercise}
+        logs={{}}
+        onSaved={jest.fn()}
+        onClose={jest.fn()}
+        prescribedSets={2}
+        onDraftProgressChange={onDraftProgressChange}
+      />
+    );
+
+    await waitFor(() => expect(onDraftProgressChange).toHaveBeenLastCalledWith(expect.objectContaining({
+      exerciseId: exercise.id,
+      completedPrimarySets: 0,
+      targetPrimarySets: 2,
+      meaningfulPrimarySets: 0,
+      isExplicitlyComplete: false,
+      updatedAt: expect.any(Number),
+    })));
+
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 reps' }), { target: { value: '5' } });
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 weight' }), { target: { value: '80' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Mark set 1 done' }));
+    await waitFor(() => expect(onDraftProgressChange).toHaveBeenLastCalledWith(expect.objectContaining({
+      completedPrimarySets: 1,
+      targetPrimarySets: 2,
+      meaningfulPrimarySets: 1,
+      isExplicitlyComplete: false,
+    })));
+    expect(screen.getByText('1/2 full sets checked')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '+ Add Set' }));
+    await waitFor(() => expect(onDraftProgressChange).toHaveBeenLastCalledWith(expect.objectContaining({
+      completedPrimarySets: 1,
+      targetPrimarySets: 3,
+      meaningfulPrimarySets: 1,
+    })));
+    expect(screen.getByText('1/3 full sets checked')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove set 3' }));
+    await waitFor(() => expect(onDraftProgressChange).toHaveBeenLastCalledWith(expect.objectContaining({
+      completedPrimarySets: 1,
+      targetPrimarySets: 2,
+    })));
+    expect(screen.getByText('1/2 full sets checked')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+    await waitFor(() => expect(onDraftProgressChange).toHaveBeenLastCalledWith(expect.objectContaining({
+      completedPrimarySets: 1,
+      targetPrimarySets: 3,
+    })));
+    expect(screen.getByText('1/3 full sets checked')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByRole('combobox', { name: 'Set 1 type' }), { target: { value: 'warmup' } });
+    await waitFor(() => expect(onDraftProgressChange).toHaveBeenLastCalledWith(expect.objectContaining({
+      completedPrimarySets: 0,
+      targetPrimarySets: 2,
+      meaningfulPrimarySets: 0,
+    })));
+    expect(screen.queryByText(/full sets checked/)).not.toBeInTheDocument();
+    fireEvent.change(screen.getByRole('combobox', { name: 'Set W type' }), { target: { value: 'dropset' } });
+    await waitFor(() => expect(onDraftProgressChange).toHaveBeenLastCalledWith(expect.objectContaining({
+      completedPrimarySets: 1,
+      targetPrimarySets: 3,
+      meaningfulPrimarySets: 1,
+    })));
+    expect(screen.getByText('1/3 full sets checked')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Mark set 1 not done' }));
+    await waitFor(() => expect(onDraftProgressChange).toHaveBeenLastCalledWith(expect.objectContaining({
+      completedPrimarySets: 0,
+      targetPrimarySets: 3,
+      isExplicitlyComplete: false,
+    })));
+    expect(screen.queryByText(/full sets checked/)).not.toBeInTheDocument();
+  });
+
+  test('loads existing progress once without counting its automatic placeholder', async () => {
+    const onDraftProgressChange = jest.fn();
+    renderModal(jest.fn(), onDraftProgressChange);
+
+    await waitFor(() => expect(onDraftProgressChange).toHaveBeenCalledTimes(1));
+    expect(onDraftProgressChange).toHaveBeenCalledWith(expect.objectContaining({
+      exerciseId: exercise.id,
+      completedPrimarySets: 0,
+      targetPrimarySets: 3,
+      meaningfulPrimarySets: 3,
+    }));
   });
 
   test('reopening an exercise enters edit mode and updates the existing session', async () => {
@@ -136,11 +231,11 @@ describe('active workout exercise session integrity', () => {
     const inputs = screen.getAllByRole('spinbutton');
     expect(inputs[0]).toHaveValue(10);
     expect(inputs[1]).toHaveValue(100);
-    expect(screen.getByText('Last: 10 reps · 100 kg')).toBeInTheDocument();
+    expect(screen.getByText('Best: 10 reps · 100 kg')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Mark set 1 done' })).toHaveAttribute('aria-pressed', 'false');
   });
 
-  test('shows the older session as the ghost while editing the current workout session', () => {
+  test('excludes the current session and requires an exact rep match while editing', () => {
     const previous = {
       ...existingSession,
       date: '2026-07-14T08:30:00.000Z',
@@ -167,7 +262,7 @@ describe('active workout exercise session integrity', () => {
     expect(screen.getByText(/Editing session:/)).toBeInTheDocument();
     expect(screen.getByRole('spinbutton', { name: 'Set 1 reps' })).toHaveValue(8);
     expect(screen.getByRole('spinbutton', { name: 'Set 1 weight' })).toHaveValue(110);
-    expect(screen.getByText('Last: 10 reps · 100 kg')).toBeInTheDocument();
+    expect(screen.getByText('No record for 8 reps')).toBeInTheDocument();
   });
 
   test('appends the last meaningful set in one tap, keeps one ready row, and ignores decrement taps on that blank row', () => {

@@ -142,6 +142,74 @@ export function getSessionsDesc(logs, exerciseId) {
   return [...entry].sort((a, b) => new Date(b.date) - new Date(a.date));
 }
 
+function getSessionIdentity(session = {}) {
+  const value = session || {};
+  return value.clientSessionId || value.remoteId || value.id || value.sessionId || value.date;
+}
+
+function isDropsetChild(set = {}) {
+  return set.dropSetChild === true || set.setType === 'dropset_child';
+}
+
+function normalizeValidReps(value) {
+  if (value === '' || value === null || value === undefined) return null;
+  const reps = Number(value);
+  return Number.isFinite(reps) && Number.isInteger(reps) && reps > 0 ? reps : null;
+}
+
+function normalizeValidWeight(value) {
+  if (value === '' || value === null || value === undefined) return null;
+  const weight = Number(value);
+  return Number.isFinite(weight) && weight >= 0 ? weight : null;
+}
+
+export function getBestExactSetRecord({
+  logs,
+  exerciseId,
+  logicalSetNumber,
+  reps,
+  excludeSession = null,
+}) {
+  const normalizedReps = normalizeValidReps(reps);
+  const normalizedSetNumber = Number(logicalSetNumber);
+  if (normalizedReps === null || !Number.isInteger(normalizedSetNumber) || normalizedSetNumber <= 0) {
+    return null;
+  }
+
+  const sessions = logs && typeof logs === 'object' && Array.isArray(logs[exerciseId])
+    ? logs[exerciseId]
+    : [];
+  const excludedIdentity = typeof excludeSession === 'object'
+    ? getSessionIdentity(excludeSession)
+    : excludeSession;
+  let maximumWeight = null;
+
+  sessions.forEach((session) => {
+    if (!session || session.deleted === true || session.isDeleted === true) return;
+    if (excludedIdentity !== null && excludedIdentity !== undefined
+      && getSessionIdentity(session) === excludedIdentity) return;
+
+    let currentLogicalSetNumber = 0;
+    const sessionSets = Array.isArray(session.sets) ? session.sets : [];
+    sessionSets.forEach((set) => {
+      if (!set || isWarmupSet(set) || isDropsetChild(set)) return;
+      currentLogicalSetNumber += 1;
+      if (currentLogicalSetNumber !== normalizedSetNumber
+        || set.automaticPlaceholder === true
+        || set.deleted === true
+        || set.isDeleted === true) return;
+      const historicalReps = normalizeValidReps(set.reps);
+      const historicalWeight = normalizeValidWeight(set.weight);
+      if (historicalReps !== normalizedReps || historicalWeight === null) return;
+      if (maximumWeight === null || historicalWeight > maximumWeight) {
+        maximumWeight = historicalWeight;
+      }
+    });
+  });
+
+  return maximumWeight === null ? null : { reps: normalizedReps, weight: maximumWeight };
+}
+
 function toFiniteNumber(value) {
   if (value === '' || value === null || value === undefined) return null;
   const parsed = Number(value);
