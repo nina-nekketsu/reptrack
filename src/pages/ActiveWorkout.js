@@ -190,11 +190,20 @@ export default function ActiveWorkout() {
         new Date(b.date).getTime() - new Date(a.date).getTime()
       ))[0];
     if (!latestSession) return fallback;
-    return deriveExerciseDraftProgress({
+    const progress = deriveExerciseDraftProgress({
       exerciseId,
       rows: latestSession.sets || [],
       prescribedSets,
     });
+    const durableTarget = Number(latestSession.targetSetCount);
+    if (!Number.isFinite(durableTarget) || durableTarget < 1) return progress;
+    const targetPrimarySets = Math.floor(durableTarget);
+    return {
+      ...progress,
+      targetPrimarySets,
+      isExplicitlyComplete: targetPrimarySets > 0
+        && progress.completedPrimarySets >= targetPrimarySets,
+    };
   }
 
   const exerciseProgress = plan

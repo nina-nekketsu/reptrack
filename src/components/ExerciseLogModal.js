@@ -54,6 +54,19 @@ function sessionIdentity(session = {}) {
   return value.clientSessionId || value.remoteId || value.id || value.sessionId || value.date;
 }
 
+function normalizeTargetSetCount(value, fallback = 1) {
+  const numericValue = Number(value);
+  if (Number.isFinite(numericValue) && numericValue >= 1) return Math.floor(numericValue);
+  const numericFallback = Number(fallback);
+  return Number.isFinite(numericFallback) && numericFallback >= 1
+    ? Math.floor(numericFallback)
+    : 1;
+}
+
+function getSessionTargetSetCount(session, fallback) {
+  return normalizeTargetSetCount(session?.targetSetCount, fallback);
+}
+
 export function isDropsetChild(set = {}) {
   return set.dropSetChild === true || set.setType === 'dropset_child';
 }
@@ -104,12 +117,35 @@ export function withTrailingEmptyRow(rows = [], options = {}) {
   const normalized = normalizeSetIdentities(rows.map((row) => normalizeSetRow(row, options)));
   const lastRow = normalized[normalized.length - 1];
   const needsBlankRow = !lastRow || lastRow.reps !== '' || lastRow.weight !== '' || lastRow.setType !== 'normal';
-  if (needsBlankRow) return [...normalized, emptySetRow()];
-  if (lastRow.planned === true) return [...normalized, emptySetRow()];
-  return [
-    ...normalized.slice(0, -1),
-    { ...lastRow, planned: false, automaticPlaceholder: true, done: false },
-  ];
+  let result;
+  if (needsBlankRow) result = [...normalized, emptySetRow()];
+  else if (lastRow.planned === true) result = [...normalized, emptySetRow()];
+  else {
+    result = [
+      ...normalized.slice(0, -1),
+      { ...lastRow, planned: false, automaticPlaceholder: true, done: false },
+    ];
+  }
+
+  const requestedTargetCount = Number(options.targetCount);
+  if (!Number.isFinite(requestedTargetCount) || requestedTargetCount < 1) return result;
+
+  const convenienceRow = result[result.length - 1]?.automaticPlaceholder === true
+    ? result[result.length - 1]
+    : emptySetRow();
+  const targetRows = result[result.length - 1]?.automaticPlaceholder === true
+    ? result.slice(0, -1)
+    : result;
+  const currentTargetCount = targetRows.filter((row) => (
+    !isDropsetChild(row)
+    && row.setType !== 'warmup'
+    && (row.planned === true || isMeaningfulSet(row))
+  )).length;
+  const missingTargetRows = Array.from(
+    { length: Math.max(0, Math.floor(requestedTargetCount) - currentTargetCount) },
+    () => emptySetRow({ planned: true, automaticPlaceholder: false })
+  );
+  return [...targetRows, ...missingTargetRows, convenienceRow];
 }
 
 export function appendSameAsLastSet(rows = []) {
@@ -351,7 +387,9 @@ export default function ExerciseLogModal({
             // updates it instead of duplicating volume and remote rows.
             const latestSession = sessionsDuringWorkout[0];
             foundCurrentSession = true;
-            initialSets = withTrailingEmptyRow(latestSession.sets || []);
+            initialSets = withTrailingEmptyRow(latestSession.sets || [], {
+              targetCount: getSessionTargetSetCount(latestSession, prescribedSets),
+            });
             setEditingSession({ ...latestSession });
             setBestRecordExcludedSession({ ...latestSession });
             setSavedSetFeedback(getSessionRepFeedback(currentLogs, exercise.id, latestSession));
@@ -361,7 +399,10 @@ export default function ExerciseLogModal({
 
       if (!foundCurrentSession && exerciseSessions.length > 0) {
         const latestPrevious = sessionsNewestFirst[0];
-        initialSets = withTrailingEmptyRow(latestPrevious.sets || [], { resetDone: true });
+        initialSets = withTrailingEmptyRow(latestPrevious.sets || [], {
+          resetDone: true,
+          targetCount: getSessionTargetSetCount(latestPrevious, prescribedSets),
+        });
       }
     } catch (e) {
       // Fall back to empty row if anything goes wrong
@@ -557,7 +598,9 @@ export default function ExerciseLogModal({
   }
 
   function handleEditSession(session) {
-    const normalizedSets = withTrailingEmptyRow(session.sets || []);
+    const normalizedSets = withTrailingEmptyRow(session.sets || [], {
+      targetCount: getSessionTargetSetCount(session, prescribedSets),
+    });
     setSets(normalizedSets);
     setEditingSession({ ...session });
     setBestRecordExcludedSession({ ...session });
@@ -568,9 +611,13 @@ export default function ExerciseLogModal({
   }
 
   function handleLogAsNewSession() {
+    const targetSetCount = getSessionTargetSetCount(editingSession, prescribedSets);
     setEditingSession(null);
     setBestRecordExcludedSession(null);
-    setSets([emptySetRow()]);
+    setSets(Array.from(
+      { length: targetSetCount },
+      () => emptySetRow({ planned: true, automaticPlaceholder: false })
+    ));
     setSavedSetFeedback([]);
     setLocalSaveStatus('');
     scrollToTop();
@@ -620,9 +667,11 @@ export default function ExerciseLogModal({
 
     const best = bestSet(enrichedSets);
     const activeWorkoutSession = getStoredVisibleActiveWorkoutSession();
+    const targetSetCount = normalizeTargetSetCount(draftProgress.targetPrimarySets, prescribedSets);
     const baseSession = {
       sets: enrichedSets,
       bestSet: best,
+      targetSetCount,
       ...calcTotals(enrichedSets),
       ...(activeWorkoutSession?.startedAt
         ? { workoutSessionStartedAt: activeWorkoutSession.startedAt }
@@ -673,11 +722,7 @@ export default function ExerciseLogModal({
     setComparisonLogs(updatedLogs);
     window.dispatchEvent(new Event('exerciseLogged'));
     if (onSaved) onSaved(updatedLogs);
-    const meaningfulParentSets = enrichedSets.filter(
-      (set) => !isDropsetChild(set) && isMeaningfulSet(set)
-    );
-    const completedAfterSave = meaningfulParentSets.length > 0
-      && meaningfulParentSets.every((set) => set.done === true);
+    const completedAfterSave = draftProgress.completedPrimarySets >= targetSetCount;
     // ActiveWorkout owns the completion handoff announcement. Keep durability
     // feedback for non-completing saves so assistive technology hears one event.
     setLocalSaveStatus(onCompletionChange && completedAfterSave ? '' : 'Saved on this device');
@@ -728,7 +773,9 @@ export default function ExerciseLogModal({
       // edits the user makes while the insert is in flight.
       setEditingSession({ ...persistedSession });
       if (!editingSession) setBestRecordExcludedSession(null);
-      setSets(withTrailingEmptyRow(persistedSession.sets));
+      setSets(withTrailingEmptyRow(persistedSession.sets, {
+        targetCount: persistedSession.targetSetCount,
+      }));
       setSavedSetFeedback(getSessionRepFeedback(updatedLogs, exercise.id, persistedSession));
       setActiveTab('log');
       scrollToTop();

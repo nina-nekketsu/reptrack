@@ -160,6 +160,80 @@ describe('active workout exercise session integrity', () => {
     expect(screen.queryByText(/full sets checked/)).not.toBeInTheDocument();
   });
 
+  test('persists an adjusted target through stay-open save and reopen', async () => {
+    const onSaved = jest.fn();
+    localStorage.setItem('activeWorkoutSession', JSON.stringify(activeWorkout));
+    localStorage.setItem('exerciseLogs', JSON.stringify({}));
+
+    const view = render(
+      <ExerciseLogModal
+        exercise={exercise}
+        logs={{}}
+        onSaved={onSaved}
+        onClose={jest.fn()}
+        prescribedSets={4}
+        stayOpenOnSave
+      />
+    );
+
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 reps' }), { target: { value: '8' } });
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 weight' }), { target: { value: '92.5' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Remove set 4' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
+    const updatedLogs = onSaved.mock.calls[0][0];
+    expect(updatedLogs[exercise.id][0]).toMatchObject({ targetSetCount: 3 });
+    expect(updatedLogs[exercise.id][0].sets).toHaveLength(1);
+    expect(screen.getAllByRole('spinbutton')).toHaveLength(8);
+
+    view.unmount();
+    render(
+      <ExerciseLogModal
+        exercise={exercise}
+        logs={updatedLogs}
+        onSaved={jest.fn()}
+        onClose={jest.fn()}
+        prescribedSets={4}
+        stayOpenOnSave
+      />
+    );
+
+    await waitFor(() => expect(screen.getAllByRole('spinbutton')).toHaveLength(8));
+  });
+
+  test('retains the durable target for Log as new session and Overview edit', async () => {
+    const currentSession = {
+      ...existingSession,
+      targetSetCount: 4,
+      sets: [{ reps: '8', weight: '100', done: true, planned: true }],
+      workoutSessionStartedAt: activeWorkout.startedAt,
+    };
+    const logs = { [exercise.id]: [currentSession] };
+    localStorage.setItem('activeWorkoutSession', JSON.stringify(activeWorkout));
+    localStorage.setItem('exerciseLogs', JSON.stringify(logs));
+
+    render(
+      <ExerciseLogModal
+        exercise={exercise}
+        logs={logs}
+        onSaved={jest.fn()}
+        onClose={jest.fn()}
+        prescribedSets={2}
+        stayOpenOnSave
+      />
+    );
+
+    await screen.findByText(/Editing session:/);
+    expect(screen.getAllByRole('spinbutton')).toHaveLength(10);
+    fireEvent.click(screen.getByRole('button', { name: 'Log as new session' }));
+    expect(screen.getAllByRole('spinbutton')).toHaveLength(8);
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Overview' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    expect(screen.getAllByRole('spinbutton')).toHaveLength(10);
+  });
+
   test('loads existing progress once without counting its automatic placeholder', async () => {
     const onDraftProgressChange = jest.fn();
     renderModal(jest.fn(), onDraftProgressChange);
@@ -474,6 +548,30 @@ describe('active workout exercise session integrity', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Done' }));
     expect(onSaved).not.toHaveBeenCalled();
     expect(JSON.parse(localStorage.getItem('exerciseLogs'))).toEqual({});
+  });
+
+  test('does not complete an exercise while durable target rows remain', async () => {
+    localStorage.setItem('activeWorkoutSession', JSON.stringify(activeWorkout));
+    localStorage.setItem('exerciseLogs', JSON.stringify({}));
+    const onCompletionChange = jest.fn();
+
+    render(
+      <ExerciseLogModal
+        exercise={exercise}
+        logs={{}}
+        onSaved={jest.fn()}
+        onClose={jest.fn()}
+        prescribedSets={3}
+        onCompletionChange={onCompletionChange}
+      />
+    );
+
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 reps' }), { target: { value: '5' } });
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 weight' }), { target: { value: '80' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Mark set 1 done' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+
+    await waitFor(() => expect(onCompletionChange).toHaveBeenCalledWith(false));
   });
 
   test('persists checked sets, stable identity, and explicit exercise completion', async () => {

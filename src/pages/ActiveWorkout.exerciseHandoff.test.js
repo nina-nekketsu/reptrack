@@ -168,6 +168,26 @@ describe('ActiveWorkout P1.5 exercise completion handoff', () => {
     expect(exerciseRow('Squat')).toHaveTextContent('Logged');
   });
 
+  test('uses the durable target when reconstructing persisted progress', () => {
+    setup({
+      planExercises: [
+        { exerciseId: 'squat', prescribedSets: 2, prescribedReps: 5 },
+        { exerciseId: 'bench', prescribedSets: 1, prescribedReps: 5 },
+      ],
+      logs: {
+        squat: [{
+          date: '2026-07-20T08:30:00.000Z',
+          workoutSessionStartedAt: '2026-07-20T08:00:00.000Z',
+          targetSetCount: 4,
+          sets: [{ reps: '5', weight: '80', done: true, planned: true }],
+        }],
+      },
+    });
+
+    expect(exerciseRow('Squat')).toHaveTextContent('1/4');
+    expect(exerciseRow('Squat')).toHaveClass('aw-exercise-row--partial');
+  });
+
   test('clears the draft on save and reconstructs the saved target without double counting', () => {
     setup({ planExercises: [
       { exerciseId: 'squat', prescribedSets: 1, prescribedReps: 5 },

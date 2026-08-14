@@ -231,6 +231,20 @@ describe('exercise mutation outbox integration', () => {
     ]);
   });
 
+  test('round-trips a session target through the remote best-set JSON field', () => {
+    const { deserializeSessionBestSet, serializeSessionBestSet } = loadSyncModule();
+
+    const encoded = serializeSessionBestSet({
+      bestSet: { reps: 8, weight: 80 },
+      targetSetCount: 4,
+    });
+    expect(encoded).toEqual({ reps: 8, weight: 80, sessionTargetSetCount: 4 });
+    expect(deserializeSessionBestSet(encoded)).toEqual({
+      bestSet: { reps: 8, weight: 80 },
+      targetSetCount: 4,
+    });
+  });
+
   test('retains and retries a failed update to an already-synced workout session', async () => {
     let updateError = Object.assign(new Error('TypeError: Failed to fetch'), { code: '' });
     const eqExercise = jest.fn(async () => ({ error: updateError }));
