@@ -33,6 +33,31 @@ function readLastSuccessfulSyncAt() {
 let _lastSuccessfulSyncAt = readLastSuccessfulSyncAt();
 let _pausedReason = null;
 
+export function serializeSessionBestSet(session = {}) {
+  const targetSetCount = Number(session.targetSetCount);
+  if (!Number.isFinite(targetSetCount) || targetSetCount < 1) {
+    return session.bestSet || null;
+  }
+  return {
+    ...(session.bestSet || {}),
+    sessionTargetSetCount: Math.floor(targetSetCount),
+  };
+}
+
+export function deserializeSessionBestSet(remoteBestSet) {
+  if (!remoteBestSet || typeof remoteBestSet !== 'object' || Array.isArray(remoteBestSet)) {
+    return { bestSet: remoteBestSet || null };
+  }
+  const { sessionTargetSetCount, ...bestSet } = remoteBestSet;
+  const targetSetCount = Number(sessionTargetSetCount);
+  return {
+    bestSet: Object.keys(bestSet).length > 0 ? bestSet : null,
+    ...(Number.isFinite(targetSetCount) && targetSetCount >= 1
+      ? { targetSetCount: Math.floor(targetSetCount) }
+      : {}),
+  };
+}
+
 function notifySyncSnapshot() {
   const snapshot = getSyncSnapshot();
   _snapshotListeners.forEach((listener) => {
@@ -383,10 +408,11 @@ export async function pullAll(userId) {
       for (const row of logsRes.data) {
         const exId = row.exercise_id;
         if (!remoteMap[exId]) remoteMap[exId] = [];
+        const decodedBestSet = deserializeSessionBestSet(row.best_set);
         remoteMap[exId].push({
           date: row.date,
           sets: row.sets || [],
-          bestSet: row.best_set || null,
+          ...decodedBestSet,
           totalReps: row.total_reps || 0,
           totalVolume: row.total_volume || 0,
           remoteId: row.id,
@@ -545,7 +571,7 @@ export async function pushLogs(userId) {
         exercise_id: String(exerciseId),
         date: session.date,
         sets: session.sets,
-        best_set: session.bestSet || null,
+        best_set: serializeSessionBestSet(session),
         total_reps: session.totalReps || 0,
         total_volume: session.totalVolume || 0,
       });
@@ -697,7 +723,7 @@ export async function pushSession(exerciseId, session, userId) {
       exercise_id: String(exerciseId),
       date: session.date,
       sets: session.sets,
-      best_set: session.bestSet || null,
+      best_set: serializeSessionBestSet(session),
       total_reps: session.totalReps || 0,
       total_volume: session.totalVolume || 0,
     },
@@ -722,7 +748,7 @@ export async function updateRemoteSession(remoteId, exerciseId, session, userId)
       exercise_id: String(exerciseId),
       user_id: userId,
       sets: session.sets,
-      best_set: session.bestSet || null,
+      best_set: serializeSessionBestSet(session),
       total_reps: session.totalReps || 0,
       total_volume: session.totalVolume || 0,
     },
