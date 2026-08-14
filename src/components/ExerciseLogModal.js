@@ -722,11 +722,7 @@ export default function ExerciseLogModal({
     setComparisonLogs(updatedLogs);
     window.dispatchEvent(new Event('exerciseLogged'));
     if (onSaved) onSaved(updatedLogs);
-    const meaningfulParentSets = enrichedSets.filter(
-      (set) => !isDropsetChild(set) && isMeaningfulSet(set)
-    );
-    const completedAfterSave = meaningfulParentSets.length > 0
-      && meaningfulParentSets.every((set) => set.done === true);
+    const completedAfterSave = draftProgress.completedPrimarySets >= targetSetCount;
     // ActiveWorkout owns the completion handoff announcement. Keep durability
     // feedback for non-completing saves so assistive technology hears one event.
     setLocalSaveStatus(onCompletionChange && completedAfterSave ? '' : 'Saved on this device');

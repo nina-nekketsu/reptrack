@@ -550,6 +550,30 @@ describe('active workout exercise session integrity', () => {
     expect(JSON.parse(localStorage.getItem('exerciseLogs'))).toEqual({});
   });
 
+  test('does not complete an exercise while durable target rows remain', async () => {
+    localStorage.setItem('activeWorkoutSession', JSON.stringify(activeWorkout));
+    localStorage.setItem('exerciseLogs', JSON.stringify({}));
+    const onCompletionChange = jest.fn();
+
+    render(
+      <ExerciseLogModal
+        exercise={exercise}
+        logs={{}}
+        onSaved={jest.fn()}
+        onClose={jest.fn()}
+        prescribedSets={3}
+        onCompletionChange={onCompletionChange}
+      />
+    );
+
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 reps' }), { target: { value: '5' } });
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 weight' }), { target: { value: '80' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Mark set 1 done' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+
+    await waitFor(() => expect(onCompletionChange).toHaveBeenCalledWith(false));
+  });
+
   test('persists checked sets, stable identity, and explicit exercise completion', async () => {
     localStorage.setItem('activeWorkoutSession', JSON.stringify(activeWorkout));
     localStorage.setItem('exerciseLogs', JSON.stringify({}));
