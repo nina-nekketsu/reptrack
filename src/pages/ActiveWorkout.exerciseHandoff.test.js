@@ -227,7 +227,12 @@ describe('ActiveWorkout P1.5 exercise completion handoff', () => {
     expect(progress).toHaveAttribute('aria-valuemin', '0');
     expect(progress).toHaveAttribute('aria-valuemax', '3');
     expect(progress).toHaveAttribute('aria-valuetext', '1 of 3 exercises complete');
-    expect(progress.querySelector('.aw-progress-bar__fill')).toHaveStyle({ transform: 'scaleX(0.3333333333333333)' });
+    expect(progress.tagName.toLowerCase()).toBe('svg');
+    expect(progress.querySelector('.aw-progress-bar__fill')).toHaveAttribute(
+      'transform',
+      'scale(0.3333333333333333 1)'
+    );
+    expect(progress.querySelector('.aw-progress-bar__fill')).not.toHaveAttribute('style');
 
     view.rerender(<ActiveWorkout />);
     fireEvent.click(screen.getByRole('button', { name: 'Complete Squat' }));

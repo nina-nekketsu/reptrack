@@ -94,12 +94,16 @@ describe('shared overlay motion behavior', () => {
   test('Dialog portals sheets to the document body so they escape transformed modal ancestors', () => {
     const onClose = jest.fn();
     const { container } = render(
-      <div style={{ transform: 'translateY(0)', overflow: 'hidden' }}>
+      <div data-testid="transformed-sheet-ancestor">
         <Sheet open onClose={onClose} title="Choose rest duration">
           <button type="button">90 seconds</button>
         </Sheet>
       </div>
     );
+    Object.assign(screen.getByTestId('transformed-sheet-ancestor').style, {
+      transform: 'translateY(0)',
+      overflow: 'hidden',
+    });
 
     const backdrop = document.querySelector('.sheet-backdrop');
     expect(backdrop).toBeInTheDocument();

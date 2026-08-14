@@ -451,21 +451,25 @@ export default function ActiveWorkout() {
         </div>
 
         {/* Progress bar */}
-        <div
+        <svg
           className="aw-progress-bar"
           role="progressbar"
+          viewBox="0 0 1 1"
+          preserveAspectRatio="none"
           aria-label="Workout completion"
           aria-valuenow={completedCount}
           aria-valuemin={0}
           aria-valuemax={totalExercises}
           aria-valuetext={`${completedCount} of ${totalExercises} exercises complete`}
         >
-          <span
+          <rect
             className="aw-progress-bar__fill"
-            style={{ transform: `scaleX(${progressScale})` }}
+            width="1"
+            height="1"
+            transform={`scale(${progressScale} 1)`}
             aria-hidden="true"
           />
-        </div>
+        </svg>
       </div>
 
       {completionAnnouncement && (

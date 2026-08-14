@@ -11,7 +11,7 @@
 .active-workout-page{gap:12px}.aw-header{position:sticky;top:0;z-index:20;margin:-24px -16px 4px;padding:max(16px,env(safe-area-inset-top)) 16px 14px;background:var(--bg-2);border:0;border-bottom:1px solid var(--line);border-radius:0;color:var(--ink-hi);box-shadow:var(--shadow-e1);overflow:visible}.aw-header::after{display:none}
 .aw-header__label{color:var(--go);opacity:1;font-size:11px;line-height:16px;letter-spacing:.06em}.aw-header__name{font-size:20px;line-height:26px}.aw-end-btn{min-height:44px;background:transparent;border-color:var(--danger);color:var(--danger);padding:8px 12px}
 .aw-header__stats{gap:8px}.aw-stat{background:var(--bg-3);padding:8px 12px;border:1px solid var(--line)}.aw-stat__icon{color:var(--ink-mid)}.aw-stat__value{color:var(--ink-hi);font-family:inherit;font-variant-numeric:tabular-nums;font-feature-settings:"tnum";letter-spacing:0}.aw-stat__label{color:var(--ink-mid);opacity:1}
-.aw-progress-bar{width:100%;height:8px;min-width:0;border-radius:var(--r-full);background:var(--bg-3);overflow:hidden}.aw-progress-bar__fill{background:var(--go)}
+.aw-progress-bar{width:100%;height:8px;min-width:0;border-radius:var(--r-full);background:var(--bg-3);overflow:hidden}.aw-progress-bar__fill{fill:var(--go)}
 .aw-exercise-row{min-height:72px;background:var(--bg-1);border-color:var(--line);border-width:1px;color:var(--ink-hi);border-radius:var(--r-md);padding:12px;}.aw-exercise-row:hover{background:var(--bg-3);box-shadow:none}.aw-exercise-row--done{background:var(--go-dim);border-color:var(--go)}.aw-exercise-row--almost,.aw-exercise-row--ready{background:var(--rest-dim);border-color:var(--rest)}.aw-exercise-row--partial{background:var(--bg-2);border-color:var(--line-strong)}
 .aw-number{background:var(--bg-3);color:var(--ink-mid)}.aw-check{background:var(--go);color:var(--ink-on-accent)}.aw-exercise-thumb,.aw-exercise-row--done .aw-exercise-thumb{background:var(--bg-3)}.aw-exercise-name{color:var(--ink-hi);font-size:17px;line-height:24px}.aw-exercise-name--done{color:var(--go)}.aw-exercise-meta{color:var(--ink-mid)}.aw-log-btn{min-height:44px;display:inline-flex;align-items:center;background:var(--go);color:var(--ink-on-accent);padding:8px 14px}.aw-logged-badge{background:var(--go-dim);color:var(--go)}
 .aw-end-overlay{background:rgba(6,8,10,.72)}.aw-end-confirm{background:var(--bg-2);color:var(--ink-hi);border:1px solid var(--line);box-shadow:var(--shadow-e2)}.aw-end-confirm__title{color:var(--ink-hi)}.aw-end-confirm__subtitle{color:var(--ink-mid)}
@@ -137,9 +137,9 @@
   width: 100%;
   height: 100%;
   min-width: 0;
-  background: var(--ink-hi);
+  fill: var(--ink-hi);
   border-radius: 3px;
-  transform: scaleX(0);
+  transform-box: fill-box;
   transform-origin: left center;
   transition: transform 220ms var(--motion-ease-standard);
 }
@@ -525,7 +525,7 @@
 
 /* Final Gym Floor cascade */
 .aw-header{position:sticky;top:0;z-index:20;margin:-24px -16px 4px;padding:max(16px,env(safe-area-inset-top)) 16px 14px;background:var(--bg-2);border:0;border-bottom:1px solid var(--line);border-radius:0;color:var(--ink-hi);box-shadow:var(--shadow-e1);overflow:visible}.aw-header::after{display:none}.aw-end-btn{min-height:44px;background:transparent;border-color:var(--danger);color:var(--danger)}
-.aw-stat{background:var(--bg-3);border:1px solid var(--line)}.aw-progress-bar{background:var(--bg-3)}.aw-progress-bar__fill{background:var(--go)}
+.aw-stat{background:var(--bg-3);border:1px solid var(--line)}.aw-progress-bar{background:var(--bg-3)}.aw-progress-bar__fill{fill:var(--go)}
 .aw-exercise-row{background:var(--bg-1);border-color:var(--line)}.aw-exercise-row:hover{background:var(--bg-3);box-shadow:none}.aw-exercise-row--done{background:var(--go-dim);border-color:var(--go)}.aw-exercise-row--almost,.aw-exercise-row--ready{background:var(--rest-dim);border-color:var(--rest)}.aw-exercise-row--partial{background:var(--bg-2);border-color:var(--line-strong)}
 .aw-exercise-thumb,.aw-exercise-row--done .aw-exercise-thumb{background:var(--bg-3)}.aw-exercise-name{color:var(--ink-hi)}.aw-exercise-name--done{color:var(--go)}.aw-exercise-meta{color:var(--ink-mid)}.aw-number{background:var(--bg-3);color:var(--ink-mid)}.aw-check,.aw-log-btn{background:var(--go);color:var(--ink-on-accent)}
 .aw-end-confirm{background:var(--bg-2);color:var(--ink-hi);border:1px solid var(--line)}.aw-end-confirm__title{color:var(--ink-hi)}.aw-end-confirm__subtitle{color:var(--ink-mid)}.aw-end-confirm__btn--cancel{background:var(--bg-3);color:var(--ink-hi)}.aw-end-confirm__btn--confirm{background:var(--danger);color:var(--ink-on-accent);box-shadow:none}
