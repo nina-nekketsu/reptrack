@@ -43,12 +43,27 @@ jest.mock('../components/ExerciseLogModal', () => function MockExerciseLogModal(
   exercise,
   isExerciseDone,
   onClose,
+  onSaved,
   onCompletionChange,
+  onDraftProgressChange,
 }) {
   return (
     <div role="dialog" aria-label={`Log ${exercise.name}`}>
       <button onClick={() => onCompletionChange(true)}>Complete {exercise.name}</button>
       <button onClick={() => onCompletionChange(false)}>Revert {exercise.name}</button>
+      <button onClick={() => onDraftProgressChange({ exerciseId: exercise.id, completedPrimarySets: 1, targetPrimarySets: 3, meaningfulPrimarySets: 1, isExplicitlyComplete: false, updatedAt: 1 })}>Draft partial {exercise.name}</button>
+      <button onClick={() => onDraftProgressChange({ exerciseId: exercise.id, completedPrimarySets: 2, targetPrimarySets: 2, meaningfulPrimarySets: 2, isExplicitlyComplete: true, updatedAt: 2 })}>Draft ready {exercise.name}</button>
+      <button onClick={() => onDraftProgressChange({ exerciseId: exercise.id, completedPrimarySets: 1, targetPrimarySets: 2, meaningfulPrimarySets: 1, isExplicitlyComplete: false, updatedAt: 3 })}>Draft regressed {exercise.name}</button>
+      <button onClick={() => onSaved({
+        [exercise.id]: [{
+          date: '2026-07-20T08:30:00.000Z',
+          workoutSessionStartedAt: '2026-07-20T08:00:00.000Z',
+          sets: [
+            { reps: '5', weight: '80', done: false, planned: true },
+            { reps: '5', weight: '80', done: true, planned: true },
+          ],
+        }],
+      })}>Save draft {exercise.name}</button>
       <button onClick={onClose}>Close log</button>
       <span>{isExerciseDone ? 'Done state' : 'Incomplete state'}</span>
     </div>
@@ -75,6 +90,7 @@ function setup({
   ],
   storedExercises = exercises,
   completedExerciseIds = [],
+  logs = {},
 } = {}) {
   localStorage.setItem('workoutPlans', JSON.stringify([{
     id: 'plan-a',
@@ -82,7 +98,7 @@ function setup({
     exercises: planExercises,
   }]));
   localStorage.setItem('exercises', JSON.stringify(storedExercises));
-  localStorage.setItem('exerciseLogs', JSON.stringify({}));
+  localStorage.setItem('exerciseLogs', JSON.stringify(logs));
   localStorage.setItem('activeWorkoutSession', JSON.stringify({
     planId: 'plan-a',
     planName: 'Strength A',
@@ -119,6 +135,58 @@ describe('ActiveWorkout P1.5 exercise completion handoff', () => {
     mockPushActiveWorkoutSession.mockClear();
     saveActiveWorkoutSession.mockReset();
     saveActiveWorkoutSession.mockImplementation((...args) => actualSession.saveActiveWorkoutSession(...args));
+  });
+
+  test('uses only the open exercise draft for immediate badge and color transitions', () => {
+    setup();
+    openExercise('Squat');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Draft partial Squat' }));
+    expect(exerciseRow('Squat')).toHaveClass('aw-exercise-row--partial');
+    expect(exerciseRow('Squat')).toHaveTextContent('1/3');
+    expect(exerciseRow('Bench Press')).toHaveClass('aw-exercise-row--idle');
+    expect(exerciseRow('Bench Press')).toHaveTextContent('Log');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Draft ready Squat' }));
+    expect(exerciseRow('Squat')).toHaveClass('aw-exercise-row--ready');
+    expect(exerciseRow('Squat')).toHaveTextContent('2/2');
+    expect(exerciseRow('Squat')).not.toHaveClass('aw-exercise-row--done');
+  });
+
+  test('regresses persisted completion while the draft adds work and restores it on unsaved close', () => {
+    setup({ completedExerciseIds: ['squat'] });
+    expect(exerciseRow('Squat')).toHaveClass('aw-exercise-row--done');
+
+    openExercise('Squat');
+    fireEvent.click(screen.getByRole('button', { name: 'Draft regressed Squat' }));
+    expect(exerciseRow('Squat')).toHaveClass('aw-exercise-row--almost');
+    expect(exerciseRow('Squat')).toHaveTextContent('1/2');
+    expect(exerciseRow('Squat')).not.toHaveClass('aw-exercise-row--done');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close log' }));
+    expect(exerciseRow('Squat')).toHaveClass('aw-exercise-row--done');
+    expect(exerciseRow('Squat')).toHaveTextContent('Logged');
+  });
+
+  test('clears the draft on save and reconstructs the saved target without double counting', () => {
+    setup({ planExercises: [
+      { exerciseId: 'squat', prescribedSets: 1, prescribedReps: 5 },
+      { exerciseId: 'bench', prescribedSets: 1, prescribedReps: 5 },
+    ] });
+    openExercise('Squat');
+    fireEvent.click(screen.getByRole('button', { name: 'Draft partial Squat' }));
+    expect(exerciseRow('Squat')).toHaveTextContent('1/3');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save draft Squat' }));
+    expect(exerciseRow('Squat')).toHaveClass('aw-exercise-row--almost');
+    expect(exerciseRow('Squat')).toHaveTextContent('1/2');
+    expect(exerciseRow('Squat')).not.toHaveTextContent('4/2');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close log' }));
+    openExercise('Squat');
+    fireEvent.click(screen.getByRole('button', { name: 'Draft ready Squat' }));
+    expect(exerciseRow('Squat')).toHaveTextContent('2/2');
+    expect(exerciseRow('Bench Press')).toHaveClass('aw-exercise-row--idle');
   });
 
   test('persists once before announcing, preserves focus and order, and hands off past missing rows', () => {

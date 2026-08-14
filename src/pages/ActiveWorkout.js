@@ -29,11 +29,11 @@ import {
 import { pushActiveWorkoutSession } from '../lib/sync';
 import { beginCoachWorkout, endCoachWorkout } from '../lib/coachCloud';
 import {
-  countCompletedSets,
   getExerciseProgressState,
   getNextIncompleteIndex,
   getRestRecommendation,
 } from '../utils/workoutProgress';
+import { deriveExerciseDraftProgress } from '../utils/exerciseDraftProgress';
 import './Page.css';
 import './Exercises.css';
 import './Workouts.css';
@@ -97,6 +97,7 @@ export default function ActiveWorkout() {
   const [elapsed, setElapsed] = useState('0:00');
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [selectedPlanExercise, setSelectedPlanExercise] = useState(null);
+  const [draftProgressByExerciseId, setDraftProgressByExerciseId] = useState({});
   const [completedExerciseIds, setCompletedExerciseIds] = useState(
     () => getStoredVisibleActiveWorkoutSession()?.completedExerciseIds || []
   );
@@ -174,33 +175,51 @@ export default function ActiveWorkout() {
     [allExercises]
   );
 
-  // Count sets logged during this active session for a given exercise
-  function getSetsLoggedThisSession(exerciseId) {
-    if (!activeSession) return 0;
+  function getPersistedExerciseProgress(exerciseId, prescribedSets) {
+    const fallback = {
+      completedPrimarySets: 0,
+      targetPrimarySets: prescribedSets || 1,
+    };
+    if (!activeSession) return fallback;
     const sessions = logs[exerciseId];
-    if (!sessions || sessions.length === 0) return 0;
+    if (!sessions || sessions.length === 0) return fallback;
     const sessionStart = new Date(activeSession.startedAt).getTime();
-    let total = 0;
-    for (const s of sessions) {
-      if (new Date(s.workoutSessionStartedAt || s.date).getTime() >= sessionStart) {
-        total += countCompletedSets(s.sets || []);
-      }
-    }
-    return total;
-  }
-
-  // Check if ALL prescribed sets are logged
-  function isFullyLogged(exerciseId, prescribedSets) {
-    return completedExerciseIds.includes(exerciseId)
-      || getSetsLoggedThisSession(exerciseId) >= (prescribedSets || 1);
+    const latestSession = sessions
+      .filter((session) => new Date(session.workoutSessionStartedAt || session.date).getTime() >= sessionStart)
+      .sort((a, b) => (
+        new Date(b.date).getTime() - new Date(a.date).getTime()
+      ))[0];
+    if (!latestSession) return fallback;
+    return deriveExerciseDraftProgress({
+      exerciseId,
+      rows: latestSession.sets || [],
+      prescribedSets,
+    });
   }
 
   const exerciseProgress = plan
     ? plan.exercises.map((planExercise, index) => {
         const exercise = getExercise(planExercise.exerciseId);
-        const setsLogged = getSetsLoggedThisSession(planExercise.exerciseId);
-        const targetSets = planExercise.prescribedSets || 1;
-        const done = isFullyLogged(planExercise.exerciseId, targetSets);
+        const prescribedTarget = planExercise.prescribedSets || 1;
+        const persistedProgress = getPersistedExerciseProgress(
+          planExercise.exerciseId,
+          prescribedTarget
+        );
+        const draftProgress = selectedExercise?.id === planExercise.exerciseId
+          ? draftProgressByExerciseId[planExercise.exerciseId]
+          : null;
+        const setsLogged = draftProgress?.completedPrimarySets
+          ?? persistedProgress.completedPrimarySets;
+        const targetSets = draftProgress?.targetPrimarySets
+          ?? persistedProgress.targetPrimarySets;
+        const persistedDone = completedExerciseIds.includes(planExercise.exerciseId)
+          || (
+            persistedProgress.targetPrimarySets > 0
+            && persistedProgress.completedPrimarySets >= persistedProgress.targetPrimarySets
+          );
+        const done = draftProgress
+          ? persistedDone && draftProgress.isExplicitlyComplete
+          : persistedDone;
         return {
           done,
           exercise,
@@ -224,9 +243,15 @@ export default function ActiveWorkout() {
   function getCompletionAnnouncement(nextCompletedExerciseIds) {
     const projectedProgress = plan.exercises.map((planExercise) => {
       const exercise = getExercise(planExercise.exerciseId);
-      const targetSets = planExercise.prescribedSets || 1;
+      const persistedProgress = getPersistedExerciseProgress(
+        planExercise.exerciseId,
+        planExercise.prescribedSets || 1
+      );
       const done = nextCompletedExerciseIds.includes(planExercise.exerciseId)
-        || getSetsLoggedThisSession(planExercise.exerciseId) >= targetSets;
+        || (
+          persistedProgress.targetPrimarySets > 0
+          && persistedProgress.completedPrimarySets >= persistedProgress.targetPrimarySets
+        );
       return { done, exercise };
     });
     const projectedCompletedCount = projectedProgress.filter(({ done }) => done).length;
@@ -337,8 +362,26 @@ export default function ActiveWorkout() {
     navigate('/workouts', { replace: true });
   }
 
-  function handleLogSaved(updatedLogs) {
+  function clearDraftProgress(exerciseId) {
+    setDraftProgressByExerciseId((current) => {
+      if (!current[exerciseId]) return current;
+      const next = { ...current };
+      delete next[exerciseId];
+      return next;
+    });
+  }
+
+  function handleLogSaved(exerciseId, updatedLogs) {
     setLogs(updatedLogs);
+    clearDraftProgress(exerciseId);
+  }
+
+  function handleDraftProgressChange(progress) {
+    if (!progress?.exerciseId || progress.exerciseId !== selectedExercise?.id) return;
+    setDraftProgressByExerciseId((current) => ({
+      ...current,
+      [progress.exerciseId]: progress,
+    }));
   }
 
   function openExerciseLog(exercise, planExercise) {
@@ -347,6 +390,7 @@ export default function ActiveWorkout() {
   }
 
   function closeExerciseLog() {
+    if (selectedExercise?.id) clearDraftProgress(selectedExercise.id);
     setSelectedExercise(null);
     setSelectedPlanExercise(null);
   }
@@ -493,7 +537,7 @@ export default function ActiveWorkout() {
             );
           }
 
-          const partial = progressState === 'partial' || progressState === 'almost';
+          const showProgressBadge = progressState !== 'idle' && !done;
           const isNext = i === nextExerciseIndex;
 
           return (
@@ -529,7 +573,7 @@ export default function ActiveWorkout() {
               <div className="aw-exercise-action">
                 {done ? (
                   <span className="aw-logged-badge">Logged</span>
-                ) : partial ? (
+                ) : showProgressBadge ? (
                   <span className="aw-partial-badge">{setsLogged}/{targetSets}</span>
                 ) : (
                   <span className="aw-log-btn">Log</span>
@@ -584,11 +628,14 @@ export default function ActiveWorkout() {
           exercise={selectedExercise}
           logs={logs}
           onClose={closeExerciseLog}
-          onSaved={handleLogSaved}
+          onSaved={(updatedLogs) => handleLogSaved(selectedExercise.id, updatedLogs)}
+          onDraftProgressChange={handleDraftProgressChange}
           stayOpenOnSave
           prescribedSets={selectedPlanExercise?.prescribedSets || 1}
           prescribedReps={selectedPlanExercise?.prescribedReps || null}
-          isExerciseDone={completedExerciseIds.includes(selectedExercise.id)}
+          isExerciseDone={exerciseProgress.find(
+            ({ planExercise }) => planExercise.exerciseId === selectedExercise.id
+          )?.done === true}
           onCompletionChange={(done) => handleExerciseCompletion(selectedExercise.id, done)}
         />
       )}

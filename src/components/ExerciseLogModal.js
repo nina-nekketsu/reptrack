@@ -247,6 +247,7 @@ export default function ExerciseLogModal({
   stayOpenOnSave = false,
   isExerciseDone = false,
   onCompletionChange,
+  onDraftProgressChange,
   prescribedSets = null,
   prescribedReps = null,
   initialTab = 'log',
@@ -269,12 +270,14 @@ export default function ExerciseLogModal({
   const [localSaveStatus, setLocalSaveStatus] = useState('');
   const [showExerciseCompleteCue, setShowExerciseCompleteCue] = useState(false);
   const [positioningRevision, setPositioningRevision] = useState(0);
+  const [draftInitializedExerciseId, setDraftInitializedExerciseId] = useState(null);
   const isOnline = useOnlineStatus();
   const saveInFlightRef = useRef(false);
   const previousExerciseDoneRef = useRef(isExerciseDone);
   const logScrollRef = useRef(null);
   const weightInputRefs = useRef([]);
   const mountedRef = useRef(true);
+  const lastDraftProgressSignatureRef = useRef('');
 
   useEffect(() => () => {
     mountedRef.current = false;
@@ -302,6 +305,7 @@ export default function ExerciseLogModal({
 
   // When opening an exercise, pre-populate sets if already logged in the current active workout session
   useEffect(() => {
+    setDraftInitializedExerciseId(null);
     setActiveTab('log');
     setEditingSession(null);
     setSavedSetFeedback([]);
@@ -368,8 +372,28 @@ export default function ExerciseLogModal({
     }
 
     setSets(initialSets);
+    setDraftInitializedExerciseId(exercise?.id || null);
     setPositioningRevision((revision) => revision + 1);
   }, [exercise?.id, prescribedSets]);
+
+  useEffect(() => {
+    if (!onDraftProgressChange || draftInitializedExerciseId !== exercise?.id) return;
+    const progress = deriveExerciseDraftProgress({
+      exerciseId: exercise.id,
+      rows: sets,
+      prescribedSets,
+    });
+    const signature = [
+      progress.exerciseId,
+      progress.completedPrimarySets,
+      progress.targetPrimarySets,
+      progress.meaningfulPrimarySets,
+      progress.isExplicitlyComplete,
+    ].join(':');
+    if (lastDraftProgressSignatureRef.current === signature) return;
+    lastDraftProgressSignatureRef.current = signature;
+    onDraftProgressChange(progress);
+  }, [draftInitializedExerciseId, exercise?.id, onDraftProgressChange, prescribedSets, sets]);
 
   const anchorSetIndex = getAnchorSetIndex(sets);
 
