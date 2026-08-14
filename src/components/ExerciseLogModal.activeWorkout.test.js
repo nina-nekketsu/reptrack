@@ -231,11 +231,11 @@ describe('active workout exercise session integrity', () => {
     const inputs = screen.getAllByRole('spinbutton');
     expect(inputs[0]).toHaveValue(10);
     expect(inputs[1]).toHaveValue(100);
-    expect(screen.getByText('Last: 10 reps · 100 kg')).toBeInTheDocument();
+    expect(screen.getByText('Best: 10 reps · 100 kg')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Mark set 1 done' })).toHaveAttribute('aria-pressed', 'false');
   });
 
-  test('shows the older session as the ghost while editing the current workout session', () => {
+  test('excludes the current session and requires an exact rep match while editing', () => {
     const previous = {
       ...existingSession,
       date: '2026-07-14T08:30:00.000Z',
@@ -262,7 +262,7 @@ describe('active workout exercise session integrity', () => {
     expect(screen.getByText(/Editing session:/)).toBeInTheDocument();
     expect(screen.getByRole('spinbutton', { name: 'Set 1 reps' })).toHaveValue(8);
     expect(screen.getByRole('spinbutton', { name: 'Set 1 weight' })).toHaveValue(110);
-    expect(screen.getByText('Last: 10 reps · 100 kg')).toBeInTheDocument();
+    expect(screen.getByText('No record for 8 reps')).toBeInTheDocument();
   });
 
   test('appends the last meaningful set in one tap, keeps one ready row, and ignores decrement taps on that blank row', () => {

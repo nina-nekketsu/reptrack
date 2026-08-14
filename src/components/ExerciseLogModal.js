@@ -11,6 +11,7 @@ import {
   calcTotals,
   bestSet,
   deleteSession,
+  getBestExactSetRecord,
   getRecords,
   getLogsLoadError,
   getSessionRepFeedback,
@@ -49,7 +50,8 @@ function createClientSessionId() {
 }
 
 function sessionIdentity(session = {}) {
-  return session.clientSessionId || session.remoteId || session.id || session.sessionId || session.date;
+  const value = session || {};
+  return value.clientSessionId || value.remoteId || value.id || value.sessionId || value.date;
 }
 
 export function isDropsetChild(set = {}) {
@@ -164,7 +166,7 @@ function isWarmupRow(set = {}) {
 
 function getSetLabel(rows, index) {
   const row = rows[index];
-  const fullSetNumber = rows.slice(0, index + 1).filter((set) => !isDropsetChild(set) && !isWarmupRow(set)).length;
+  const fullSetNumber = getLogicalSetNumber(rows, index);
   if (isWarmupRow(row)) return 'W';
   if (!isDropsetChild(row)) return fullSetNumber;
   let childNumber = 1;
@@ -173,6 +175,10 @@ function getSetLabel(rows, index) {
     childNumber += 1;
   }
   return `${fullSetNumber}↓${childNumber}`;
+}
+
+function getLogicalSetNumber(rows, index) {
+  return rows.slice(0, index + 1).filter((set) => !isDropsetChild(set) && !isWarmupRow(set)).length;
 }
 
 function removeDropsetChildrenAfter(rows, parentIndex) {
@@ -264,7 +270,10 @@ export default function ExerciseLogModal({
   const [lastSavedSet, setLastSavedSet] = useState(null);
   const [lastSavedCoachContext, setLastSavedCoachContext] = useState(null);
   const [savedSetFeedback, setSavedSetFeedback] = useState([]);
-  const [previousSessionSets, setPreviousSessionSets] = useState([]);
+  const [comparisonLogs, setComparisonLogs] = useState(() => (
+    logs && typeof logs === 'object' ? logs : loadLogs()
+  ));
+  const [bestRecordExcludedSession, setBestRecordExcludedSession] = useState(null);
   const [undoRemoval, setUndoRemoval] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [localSaveStatus, setLocalSaveStatus] = useState('');
@@ -296,6 +305,10 @@ export default function ExerciseLogModal({
     setShowExerciseCompleteCue(becameComplete);
   }, [isExerciseDone]);
 
+  useEffect(() => {
+    if (logs && typeof logs === 'object') setComparisonLogs(logs);
+  }, [logs]);
+
   // Coach-related derived data
   const isCoachActive = coach.isOnboarded && coach.coachActive;
   const previousSets = useMemo(
@@ -309,7 +322,7 @@ export default function ExerciseLogModal({
     setActiveTab('log');
     setEditingSession(null);
     setSavedSetFeedback([]);
-    setPreviousSessionSets([]);
+    setBestRecordExcludedSession(null);
     setLastSavedCoachContext(null);
     setLocalSaveStatus('');
 
@@ -318,6 +331,7 @@ export default function ExerciseLogModal({
     let foundCurrentSession = false;
     try {
       const currentLogs = loadLogs();
+      setComparisonLogs(currentLogs);
       const exerciseSessions = exercise?.id ? (currentLogs[exercise.id] || []) : [];
       const sessionsNewestFirst = [...exerciseSessions]
         .sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -339,15 +353,8 @@ export default function ExerciseLogModal({
             foundCurrentSession = true;
             initialSets = withTrailingEmptyRow(latestSession.sets || []);
             setEditingSession({ ...latestSession });
+            setBestRecordExcludedSession({ ...latestSession });
             setSavedSetFeedback(getSessionRepFeedback(currentLogs, exercise.id, latestSession));
-          }
-          const latestBeforeWorkout = sessionsNewestFirst.find(
-            (session) => new Date(session.workoutSessionStartedAt || session.date) < sessionStart
-          );
-          if (latestBeforeWorkout) {
-            setPreviousSessionSets(
-              (latestBeforeWorkout.sets || []).map((set) => normalizeSetRow(set, { resetDone: true }))
-            );
           }
         }
       }
@@ -355,9 +362,6 @@ export default function ExerciseLogModal({
       if (!foundCurrentSession && exerciseSessions.length > 0) {
         const latestPrevious = sessionsNewestFirst[0];
         initialSets = withTrailingEmptyRow(latestPrevious.sets || [], { resetDone: true });
-        setPreviousSessionSets(
-          (latestPrevious.sets || []).map((set) => normalizeSetRow(set, { resetDone: true }))
-        );
       }
     } catch (e) {
       // Fall back to empty row if anything goes wrong
@@ -396,6 +400,32 @@ export default function ExerciseLogModal({
   }, [draftInitializedExerciseId, exercise?.id, onDraftProgressChange, prescribedSets, sets]);
 
   const anchorSetIndex = getAnchorSetIndex(sets);
+  const bestRecordQuerySignature = sets.map((set) => [
+    set.reps,
+    set.setType,
+    set.warmup === true,
+    set.dropSetChild === true,
+  ].join(':')).join('|');
+  const bestRecordHelpers = useMemo(() => sets.map((set, index) => {
+    if (isWarmupRow(set) || isDropsetChild(set)) return null;
+    const normalizedReps = Number(set.reps);
+    if (set.reps === '' || !Number.isFinite(normalizedReps)
+      || !Number.isInteger(normalizedReps) || normalizedReps <= 0) {
+      return 'Enter reps to view best';
+    }
+    const record = getBestExactSetRecord({
+      logs: comparisonLogs,
+      exerciseId: exercise.id,
+      logicalSetNumber: getLogicalSetNumber(sets, index),
+      reps: normalizedReps,
+      excludeSession: bestRecordExcludedSession,
+    });
+    return record
+      ? `Best: ${record.reps} reps · ${record.weight} kg`
+      : `No record for ${normalizedReps} reps`;
+  // Weight edits do not change the historical query key.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [bestRecordExcludedSession, bestRecordQuerySignature, comparisonLogs, exercise.id]);
 
   useEffect(() => {
     if (positioningRevision === 0) return undefined;
@@ -512,6 +542,7 @@ export default function ExerciseLogModal({
 
   function closeModal() {
     setEditingSession(null);
+    setBestRecordExcludedSession(null);
     setSets([emptySetRow()]);
     setActiveTab('log');
     setSavedSetFeedback([]);
@@ -529,6 +560,7 @@ export default function ExerciseLogModal({
     const normalizedSets = withTrailingEmptyRow(session.sets || []);
     setSets(normalizedSets);
     setEditingSession({ ...session });
+    setBestRecordExcludedSession({ ...session });
     setSavedSetFeedback(getSessionRepFeedback(logs, exercise.id, session));
     setLocalSaveStatus('');
     setActiveTab('log');
@@ -537,6 +569,7 @@ export default function ExerciseLogModal({
 
   function handleLogAsNewSession() {
     setEditingSession(null);
+    setBestRecordExcludedSession(null);
     setSets([emptySetRow()]);
     setSavedSetFeedback([]);
     setLocalSaveStatus('');
@@ -554,9 +587,11 @@ export default function ExerciseLogModal({
   function handleConfirmDelete() {
     if (!confirmDeleteSession) return;
     const updatedLogs = deleteSession(exercise.id, confirmDeleteSession, user?.id);
+    setComparisonLogs(updatedLogs);
     setConfirmDeleteSession(null);
     if (sessionIdentity(editingSession) === sessionIdentity(confirmDeleteSession)) {
       setEditingSession(null);
+      setBestRecordExcludedSession(null);
       setSets([emptySetRow()]);
     }
     window.dispatchEvent(new Event('exerciseLogged'));
@@ -635,6 +670,7 @@ export default function ExerciseLogModal({
       setLocalSaveStatus("Couldn't save on this device. Try again.");
       return;
     }
+    setComparisonLogs(updatedLogs);
     window.dispatchEvent(new Event('exerciseLogged'));
     if (onSaved) onSaved(updatedLogs);
     const meaningfulParentSets = enrichedSets.filter(
@@ -691,6 +727,7 @@ export default function ExerciseLogModal({
       // Commit the local UI state immediately. Remote latency must not rehydrate over
       // edits the user makes while the insert is in flight.
       setEditingSession({ ...persistedSession });
+      if (!editingSession) setBestRecordExcludedSession(null);
       setSets(withTrailingEmptyRow(persistedSession.sets));
       setSavedSetFeedback(getSessionRepFeedback(updatedLogs, exercise.id, persistedSession));
       setActiveTab('log');
@@ -912,9 +949,9 @@ export default function ExerciseLogModal({
                         </button>
                         <button className="remove-set-btn" aria-label={`Remove set ${i + 1}`} onClick={() => removeSet(i)} disabled={sets.length === 1}>x</button>
                       </div>
-                      {previousSessionSets[i] && isMeaningfulSet(previousSessionSets[i]) && (
-                        <div className="set-ghost" aria-label={`Previous session set ${i + 1}`}>
-                          Last: {previousSessionSets[i].reps || 0} reps · {previousSessionSets[i].weight || 0} kg
+                      {bestRecordHelpers[i] && (
+                        <div className="set-ghost" aria-label={`Historical best for set ${getSetLabel(sets, i)}`}>
+                          {bestRecordHelpers[i]}
                         </div>
                       )}
                     </div>
