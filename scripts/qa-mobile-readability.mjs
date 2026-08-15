@@ -50,6 +50,7 @@ const viewports = [
   { width: 360, height: 640 },
   { width: 375, height: 667 },
   { width: 390, height: 844 },
+  { width: 390, height: 844, name: '390x844-live-training', query: 'liveTraining=1' },
   { width: 390, height: 844, name: '390x844-rest-sheet', query: 'restSheet=1' },
   { width: 393, height: 852 },
   { width: 430, height: 932 },
@@ -176,6 +177,10 @@ function verdictFor(metrics) {
     noDocumentOverflow: metrics.documentOverflow === 0,
     noModalOverflow: metrics.modalOverflow === 0 && metrics.scrollBodyOverflow === 0,
     modalAtMost92dvh: metrics.modalHeight <= metrics.viewport.height * 0.92 + 1,
+    liveTrainingSheetExpanded: !metrics.liveTrainingSheet || (
+      Math.abs(metrics.modalHeight - Math.min(metrics.viewport.height * 0.92, 720)) <= 1
+      && Math.abs(metrics.modalTop - (metrics.viewport.height - metrics.modalHeight) / 2) <= 1
+    ),
     timerAtMost40Percent390: metrics.viewport.width !== 390 || metrics.stickyHeight <= metrics.viewport.height * 0.4,
     threeRowsVisible390: metrics.viewport.width !== 390 || metrics.completeRowsVisible >= 3,
     noSetControlOverlaps: metrics.rowLayouts.every((row) => row.controlOverlaps.length === 0),

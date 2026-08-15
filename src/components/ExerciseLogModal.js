@@ -293,6 +293,7 @@ export default function ExerciseLogModal({
   prescribedSets = null,
   prescribedReps = null,
   initialTab = 'log',
+  liveTrainingSheet = false,
 }) {
   const { user } = useAuth();
   const coach = useCoach();
@@ -842,7 +843,13 @@ export default function ExerciseLogModal({
 
   return (
     <div className="modal-overlay" onClick={closeModal}>
-      <div className="modal modal--log" role="dialog" aria-modal="true" aria-labelledby="exercise-log-title" onClick={(e) => e.stopPropagation()}>
+      <div
+        className={`modal modal--log${liveTrainingSheet ? ' modal--live-training' : ''}`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="exercise-log-title"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="log-sticky-top">
           <div id="log-timer-top" className="log-timer-zone">
             <div className="log-header-text">
