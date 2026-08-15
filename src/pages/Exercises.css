@@ -1121,6 +1121,11 @@
   box-sizing: border-box;
 }
 
+/* The live-training Log flow opens at its full intended sheet height. */
+.modal--log.modal--live-training {
+  height: min(92dvh, 720px);
+}
+
 /* Overlay: center the log modal (not bottom-sheet) so it always fits in view */
 .modal-overlay:has(.modal--log) {
   align-items: center;

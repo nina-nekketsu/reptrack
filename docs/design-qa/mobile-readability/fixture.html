@@ -167,6 +167,9 @@
       timerPanelToggle.addEventListener('click', () => setTimerPanel(timerPanelToggle.getAttribute('aria-expanded') !== 'true'));
       const fixtureParams = new URLSearchParams(window.location.search);
       if (fixtureParams.get('expanded') === '1') setTimerPanel(true);
+      if (fixtureParams.get('liveTraining') === '1') {
+        document.querySelector('.modal--log').classList.add('modal--live-training');
+      }
       if (fixtureParams.get('restSheet') === '1') {
         document.body.append(document.getElementById('rest-sheet-template').content.cloneNode(true));
       }
@@ -261,6 +264,8 @@
           modalOverflow: document.querySelector('.modal--log').scrollWidth - document.querySelector('.modal--log').clientWidth,
           scrollBodyOverflow: document.querySelector('.log-scroll-body').scrollWidth - document.querySelector('.log-scroll-body').clientWidth,
           modalHeight: rect('.modal--log').height,
+          modalTop: rect('.modal--log').top,
+          liveTrainingSheet: document.querySelector('.modal--log').classList.contains('modal--live-training'),
           stickyHeight: rect('.log-sticky-top').height,
           timerHeight: rect('.set-timer--ds11').height,
           activeDigitFontSize: Number.parseFloat(style('.timer-phase__display').fontSize),

@@ -644,6 +644,7 @@ export default function ActiveWorkout() {
           onSaved={(updatedLogs) => handleLogSaved(selectedExercise.id, updatedLogs)}
           onDraftProgressChange={handleDraftProgressChange}
           stayOpenOnSave
+          liveTrainingSheet
           prescribedSets={selectedPlanExercise?.prescribedSets || 1}
           prescribedReps={selectedPlanExercise?.prescribedReps || null}
           isExerciseDone={exerciseProgress.find(

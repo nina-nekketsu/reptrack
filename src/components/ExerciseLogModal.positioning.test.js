@@ -27,13 +27,19 @@ function currentSession(sets) {
   };
 }
 
-function renderExercise(exerciseId, sets) {
+function renderExercise(exerciseId, sets, modalProps = {}) {
   const exercise = { id: exerciseId, name: exerciseId, muscleGroup: 'Test' };
   const logs = { [exerciseId]: [currentSession(sets)] };
   localStorage.setItem('activeWorkoutSession', JSON.stringify(activeWorkout));
   localStorage.setItem('exerciseLogs', JSON.stringify(logs));
   return render(
-    <ExerciseLogModal exercise={exercise} logs={logs} onClose={jest.fn()} onSaved={jest.fn()} />
+    <ExerciseLogModal
+      exercise={exercise}
+      logs={logs}
+      onClose={jest.fn()}
+      onSaved={jest.fn()}
+      {...modalProps}
+    />
   );
 }
 
@@ -81,6 +87,19 @@ describe('ExerciseLogModal open and reopen positioning', () => {
     expect(document.activeElement).toBe(document.body);
   });
 
+  test('applies the tall outer-sheet class only when the live-training flow opts in', () => {
+    const view = renderExercise('squat', [
+      { clientSetId: 'one', reps: '8', weight: '80', done: false },
+    ]);
+    expect(document.querySelector('.modal--log')).not.toHaveClass('modal--live-training');
+
+    view.unmount();
+    renderExercise('squat', [
+      { clientSetId: 'one', reps: '8', weight: '80', done: false },
+    ], { liveTrainingSheet: true });
+    expect(document.querySelector('.modal--log')).toHaveClass('modal--live-training');
+  });
+
   test('uses the last completed primary row when all planned rows are done', () => {
     renderExercise('bench', [
       { clientSetId: 'one', reps: '8', weight: '80', done: true },
@@ -115,6 +134,40 @@ describe('ExerciseLogModal open and reopen positioning', () => {
 
     expect(document.querySelector('[data-set-id="bench-two"]')).toHaveAttribute('data-anchor-set', 'true');
     expect(firstBody.scrollTo).toHaveBeenCalledTimes(2);
+  });
+
+  test('switching from a scrolled exercise to a zero-progress live exercise anchors set 1', () => {
+    const { rerender } = renderExercise('squat', [
+      { clientSetId: 'squat-one', reps: '8', weight: '80', done: true },
+      { clientSetId: 'squat-two', reps: '8', weight: '85', done: true },
+      { clientSetId: 'squat-three', reps: '8', weight: '90', done: false },
+    ], { liveTrainingSheet: true, prescribedSets: 3 });
+    flushPositioning();
+    const body = document.querySelector('.log-scroll-body');
+    body.scrollTop = 360;
+
+    const bench = { id: 'bench', name: 'bench', muscleGroup: 'Test' };
+    const benchLogs = {};
+    localStorage.setItem('exerciseLogs', JSON.stringify(benchLogs));
+
+    rerender(
+      <ExerciseLogModal
+        exercise={bench}
+        logs={benchLogs}
+        onClose={jest.fn()}
+        onSaved={jest.fn()}
+        liveTrainingSheet
+        prescribedSets={3}
+      />
+    );
+    const firstBenchRow = document.querySelector('[data-set-index="0"]');
+    Object.defineProperty(firstBenchRow, 'offsetTop', { configurable: true, value: 96 });
+    flushPositioning();
+
+    expect(firstBenchRow).toHaveAttribute('data-anchor-set', 'true');
+    expect(body.scrollTop).toBe(88);
+    expect(body.scrollTo).toHaveBeenLastCalledWith({ top: 88, behavior: 'smooth' });
+    expect(document.activeElement).toBe(document.body);
   });
 
   test('positions immediately for reduced-motion users without moving focus', () => {

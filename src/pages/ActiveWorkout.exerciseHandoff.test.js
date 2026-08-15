@@ -42,13 +42,18 @@ jest.mock('../components/WorkoutSummary', () => () => null);
 jest.mock('../components/ExerciseLogModal', () => function MockExerciseLogModal({
   exercise,
   isExerciseDone,
+  liveTrainingSheet,
   onClose,
   onSaved,
   onCompletionChange,
   onDraftProgressChange,
 }) {
   return (
-    <div role="dialog" aria-label={`Log ${exercise.name}`}>
+    <div
+      role="dialog"
+      aria-label={`Log ${exercise.name}`}
+      data-live-training-sheet={liveTrainingSheet ? 'true' : 'false'}
+    >
       <button onClick={() => onCompletionChange(true)}>Complete {exercise.name}</button>
       <button onClick={() => onCompletionChange(false)}>Revert {exercise.name}</button>
       <button onClick={() => onDraftProgressChange({ exerciseId: exercise.id, completedPrimarySets: 1, targetPrimarySets: 3, meaningfulPrimarySets: 1, isExplicitlyComplete: false, updatedAt: 1 })}>Draft partial {exercise.name}</button>
@@ -135,6 +140,21 @@ describe('ActiveWorkout P1.5 exercise completion handoff', () => {
     mockPushActiveWorkoutSession.mockClear();
     saveActiveWorkoutSession.mockReset();
     saveActiveWorkoutSession.mockImplementation((...args) => actualSession.saveActiveWorkoutSession(...args));
+  });
+
+  test('opens the overview Log flow as a tall live-training sheet', () => {
+    setup();
+
+    openExercise('Squat');
+
+    expect(screen.getByRole('dialog', { name: 'Log Squat' }))
+      .toHaveAttribute('data-live-training-sheet', 'true');
+
+    const modalCss = fs.readFileSync(path.join(__dirname, 'Exercises.css'), 'utf8');
+    const liveSheetRules = readCssRules(modalCss, '.modal--log.modal--live-training');
+    expect(liveSheetRules).toEqual(expect.arrayContaining([
+      expect.stringContaining('height: min(92dvh, 720px)'),
+    ]));
   });
 
   test('uses only the open exercise draft for immediate badge and color transitions', () => {
