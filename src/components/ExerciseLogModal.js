@@ -481,13 +481,17 @@ export default function ExerciseLogModal({
         ? container.querySelector(`[data-set-index="${contextIndex}"]`)
         : null;
       const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+      const targetTop = getAnchorScrollTop({
+        anchorOffsetTop: anchorRow.offsetTop,
+        anchorHeight: anchorRow.offsetHeight,
+        contextOffsetTop: contextRow?.offsetTop,
+        containerHeight: container.clientHeight,
+      });
+      if (anchorSetIndex === 0 && contextIndex < 0) {
+        container.scrollTop = targetTop;
+      }
       container.scrollTo({
-        top: getAnchorScrollTop({
-          anchorOffsetTop: anchorRow.offsetTop,
-          anchorHeight: anchorRow.offsetHeight,
-          contextOffsetTop: contextRow?.offsetTop,
-          containerHeight: container.clientHeight,
-        }),
+        top: targetTop,
         behavior: reducedMotion ? 'auto' : 'smooth',
       });
     });
