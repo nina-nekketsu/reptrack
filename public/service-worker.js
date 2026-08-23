@@ -1,6 +1,9 @@
 /* global self, caches, clients */
 
-const CACHE_VERSION = '2026-07-18-r31-r34-ds17';
+// The production build stamps this token with build-info.json's buildId.
+// Changing the worker bytes on every release is what makes installed PWAs
+// discover the new worker instead of remaining on an older application shell.
+const CACHE_VERSION = '2026-07-18-r31-r34-ds17-__REPTRACK_BUILD_ID__';
 const STATIC_CACHE = `reptrack-static-v${CACHE_VERSION}`;
 const PAGES_CACHE = `reptrack-pages-v${CACHE_VERSION}`;
 const CACHE_NAMES = [STATIC_CACHE, PAGES_CACHE];
