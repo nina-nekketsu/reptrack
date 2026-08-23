@@ -128,7 +128,8 @@ describe('route content transition CSS', () => {
     const routeRule = blockFor(css, '.route-content');
     const keyframes = blockFor(css, '@keyframes route-content-enter');
 
-    expect(routeRule).toContain('animation: route-content-enter 170ms var(--motion-ease-enter) 1 both');
+    expect(routeRule).toContain('animation: route-content-enter 170ms var(--motion-ease-enter) 1 backwards');
+    expect(routeRule).not.toMatch(/\b(?:both|forwards)\b/);
     expect(routeRule).not.toMatch(/transition\s*:/);
     expect(keyframes).toMatch(/from \{ opacity: 0; transform: translateY\(4px\); \}/);
     expect(keyframes).toMatch(/to \{ opacity: 1; transform: none; \}/);

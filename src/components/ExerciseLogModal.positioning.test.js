@@ -76,8 +76,10 @@ describe('ExerciseLogModal open and reopen positioning', () => {
     const body = document.querySelector('.log-scroll-body');
     const contextRow = document.querySelector('[data-set-id="two"]');
     const anchorRow = document.querySelector('[data-set-id="three"]');
-    Object.defineProperty(contextRow, 'offsetTop', { configurable: true, value: 240 });
-    Object.defineProperty(anchorRow, 'offsetTop', { configurable: true, value: 320 });
+    body.getBoundingClientRect = jest.fn(() => ({ top: 100 }));
+    contextRow.getBoundingClientRect = jest.fn(() => ({ top: 340 }));
+    anchorRow.getBoundingClientRect = jest.fn(() => ({ top: 420 }));
+    Object.defineProperty(anchorRow, 'offsetHeight', { configurable: true, value: 60 });
     Object.defineProperty(body, 'clientHeight', { configurable: true, value: 420 });
 
     flushPositioning();
@@ -161,7 +163,8 @@ describe('ExerciseLogModal open and reopen positioning', () => {
       />
     );
     const firstBenchRow = document.querySelector('[data-set-index="0"]');
-    Object.defineProperty(firstBenchRow, 'offsetTop', { configurable: true, value: 96 });
+    body.getBoundingClientRect = jest.fn(() => ({ top: 200 }));
+    firstBenchRow.getBoundingClientRect = jest.fn(() => ({ top: -64 }));
     flushPositioning();
 
     expect(firstBenchRow).toHaveAttribute('data-anchor-set', 'true');

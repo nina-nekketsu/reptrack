@@ -20,7 +20,7 @@
 }
 
 .route-content {
-  animation: route-content-enter 170ms var(--motion-ease-enter) 1 both;
+  animation: route-content-enter 170ms var(--motion-ease-enter) 1 backwards;
 }
 
 @keyframes route-content-enter {
