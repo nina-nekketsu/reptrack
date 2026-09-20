@@ -83,6 +83,18 @@ function loadExercises() {
   }
 }
 
+function orderPlanExercises(planExercises, exerciseOrder) {
+  const keyedExercises = planExercises.map((entry, planIndex) => ({
+    ...entry,
+    sessionOrderKey: `${entry.exerciseId}:${planIndex}`,
+  }));
+  if (!Array.isArray(exerciseOrder)) return keyedExercises;
+  const byKey = new Map(keyedExercises.map((entry) => [entry.sessionOrderKey, entry]));
+  const ordered = exerciseOrder.map((key) => byKey.get(key)).filter(Boolean);
+  const orderedKeys = new Set(ordered.map((entry) => entry.sessionOrderKey));
+  return [...ordered, ...keyedExercises.filter((entry) => !orderedKeys.has(entry.sessionOrderKey))];
+}
+
 export default function ActiveWorkout() {
   const { planId } = useParams();
   const navigate = useNavigate();
@@ -108,14 +120,21 @@ export default function ActiveWorkout() {
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [isEnding, setIsEnding] = useState(false);
   const [completionAnnouncement, setCompletionAnnouncement] = useState('');
+  const [reorderAnnouncement, setReorderAnnouncement] = useState('');
   const [acknowledgedExerciseId, setAcknowledgedExerciseId] = useState(null);
   const startedCoachSessionRef = useRef(null);
   const endingRef = useRef(false);
   const workoutEndedRef = useRef(false);
   const completedExerciseIdsRef = useRef(completedExerciseIds);
+  const dragRef = useRef({ active: false, index: -1, pointerId: null, timer: null });
+  const suppressExerciseClickUntilRef = useRef(0);
+  const [draggedExerciseId, setDraggedExerciseId] = useState(null);
   completedExerciseIdsRef.current = completedExerciseIds;
 
   const plan = plans.find((p) => p.id === planId);
+  const orderedPlanExercises = plan
+    ? orderPlanExercises(plan.exercises, activeSession?.exerciseOrder)
+    : [];
 
   // Activate coach when workout starts
   useEffect(() => {
@@ -170,6 +189,25 @@ export default function ActiveWorkout() {
     return () => clearInterval(iv);
   }, [activeSession]);
 
+  useEffect(() => {
+    const finishPointerInteraction = () => {
+      if (dragRef.current.timer) clearTimeout(dragRef.current.timer);
+      if (dragRef.current.active) suppressExerciseClickUntilRef.current = Date.now() + 750;
+      dragRef.current.timer = null;
+      dragRef.current.active = false;
+      dragRef.current.index = -1;
+      dragRef.current.pointerId = null;
+      setDraggedExerciseId(null);
+    };
+    window.addEventListener('pointerup', finishPointerInteraction);
+    window.addEventListener('pointercancel', finishPointerInteraction);
+    return () => {
+      if (dragRef.current.timer) clearTimeout(dragRef.current.timer);
+      window.removeEventListener('pointerup', finishPointerInteraction);
+      window.removeEventListener('pointercancel', finishPointerInteraction);
+    };
+  }, []);
+
   const getExercise = useCallback(
     (id) => allExercises.find((e) => e.id === id),
     [allExercises]
@@ -207,7 +245,7 @@ export default function ActiveWorkout() {
   }
 
   const exerciseProgress = plan
-    ? plan.exercises.map((planExercise, index) => {
+    ? orderedPlanExercises.map((planExercise, index) => {
         const exercise = getExercise(planExercise.exerciseId);
         const prescribedTarget = planExercise.prescribedSets || 1;
         const persistedProgress = getPersistedExerciseProgress(
@@ -250,7 +288,7 @@ export default function ActiveWorkout() {
   const progressScale = totalExercises > 0 ? completedCount / totalExercises : 0;
 
   function getCompletionAnnouncement(nextCompletedExerciseIds) {
-    const projectedProgress = plan.exercises.map((planExercise) => {
+    const projectedProgress = orderedPlanExercises.map((planExercise) => {
       const exercise = getExercise(planExercise.exerciseId);
       const persistedProgress = getPersistedExerciseProgress(
         planExercise.exerciseId,
@@ -398,6 +436,85 @@ export default function ActiveWorkout() {
     setSelectedPlanExercise(planExercise);
   }
 
+  function moveExercise(index, offset) {
+    return moveExerciseTo(index, index + offset);
+  }
+
+  function moveExerciseTo(index, destination) {
+    if (destination < 0 || destination >= orderedPlanExercises.length || destination === index) return false;
+    const reordered = [...orderedPlanExercises];
+    const [moved] = reordered.splice(index, 1);
+    reordered.splice(destination, 0, moved);
+    const updatedSession = saveActiveWorkoutSession({
+      action: 'update',
+      patch: { exerciseOrder: reordered.map((entry) => entry.sessionOrderKey) },
+      now: new Date().toISOString(),
+    });
+    if (!updatedSession) return false;
+    setActiveSession(updatedSession);
+    setCompletionAnnouncement('');
+    const movedExercise = getExercise(moved.exerciseId);
+    setReorderAnnouncement(
+      `${movedExercise?.name || 'Exercise'} moved to position ${destination + 1} of ${reordered.length}`
+    );
+    pushActiveWorkoutSession(user?.id);
+    return true;
+  }
+
+  function handleExerciseKeyDown(event, index) {
+    if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+      event.preventDefault();
+      moveExercise(index, event.key === 'ArrowUp' ? -1 : 1);
+      return;
+    }
+  }
+
+  function cancelPendingLongPress() {
+    if (dragRef.current.timer) clearTimeout(dragRef.current.timer);
+    dragRef.current.timer = null;
+  }
+
+  function handleExercisePointerDown(event, index, exerciseKey) {
+    if ((event.button ?? 0) !== 0) return;
+    cancelPendingLongPress();
+    dragRef.current = {
+      active: false,
+      index,
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      timer: setTimeout(() => {
+        dragRef.current.active = true;
+        setDraggedExerciseId(exerciseKey);
+      }, 450),
+    };
+  }
+
+  function handleExercisePointerMove(event) {
+    const drag = dragRef.current;
+    if (drag.pointerId != null && event.pointerId !== drag.pointerId) return;
+    if (!drag.active) {
+      const moved = Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY);
+      if (Number.isFinite(moved) && moved > 8) cancelPendingLongPress();
+      return;
+    }
+    event.preventDefault();
+    const target = document.elementFromPoint?.(event.clientX, event.clientY)
+      ?.closest('[data-exercise-index]');
+    const destination = Number(target?.dataset.exerciseIndex);
+    if (!Number.isInteger(destination) || destination === drag.index) return;
+    if (moveExerciseTo(drag.index, destination)) drag.index = destination;
+  }
+
+  function handleExercisePointerEnd() {
+    cancelPendingLongPress();
+    if (dragRef.current.active) suppressExerciseClickUntilRef.current = Date.now() + 750;
+    dragRef.current.active = false;
+    dragRef.current.index = -1;
+    dragRef.current.pointerId = null;
+    setDraggedExerciseId(null);
+  }
+
   function closeExerciseLog() {
     if (selectedExercise?.id) clearDraftProgress(selectedExercise.id);
     setSelectedExercise(null);
@@ -424,9 +541,11 @@ export default function ActiveWorkout() {
     setActiveSession(updatedSession);
     if (done) {
       setAcknowledgedExerciseId(exerciseId);
+      setReorderAnnouncement('');
       setCompletionAnnouncement(getCompletionAnnouncement(next));
     } else {
       setAcknowledgedExerciseId(null);
+      setReorderAnnouncement('');
       setCompletionAnnouncement('');
     }
     pushActiveWorkoutSession(user?.id);
@@ -486,6 +605,11 @@ export default function ActiveWorkout() {
           {completionAnnouncement}
         </p>
       )}
+      {reorderAnnouncement && (
+        <p className="sr-only" role="status" aria-live="polite">
+          {reorderAnnouncement}
+        </p>
+      )}
 
       {/* Warm-up prompt — PRD Section 5.4.3 */}
       {coach.isOnboarded && !warmupDismissed && completedCount === 0 && (
@@ -515,7 +639,12 @@ export default function ActiveWorkout() {
       )}
 
       {/* Exercise list */}
-      <div className="aw-exercise-list">
+      <div
+        className="aw-exercise-list"
+        onPointerMove={handleExercisePointerMove}
+        onPointerUp={handleExercisePointerEnd}
+        onPointerCancel={handleExercisePointerEnd}
+      >
         {exerciseProgress.map((progress) => {
           const {
             done,
@@ -552,15 +681,43 @@ export default function ActiveWorkout() {
 
           const showProgressBadge = progressState !== 'idle' && !done;
           const isNext = i === nextExerciseIndex;
+          const reorderStatus = done
+            ? 'completed'
+            : showProgressBadge
+              ? `${setsLogged} of ${targetSets} sets logged`
+              : 'not logged';
 
           return (
             <div
-              key={`${planEx.exerciseId}-${i}`}
-              className={`aw-exercise-row aw-exercise-row--${progressState} ${planEx.superset ? 'aw-exercise-row--superset' : ''} ${isNext ? 'aw-exercise-row--next' : ''} ${acknowledgedExerciseId === planEx.exerciseId ? 'aw-exercise-row--ack' : ''}`}
-              onClick={() => openExerciseLog(ex, planEx)}
+              key={planEx.sessionOrderKey}
+              data-exercise-index={i}
+              className={`aw-exercise-row aw-exercise-row--${progressState} ${planEx.superset ? 'aw-exercise-row--superset' : ''} ${isNext ? 'aw-exercise-row--next' : ''} ${acknowledgedExerciseId === planEx.exerciseId ? 'aw-exercise-row--ack' : ''} ${draggedExerciseId === planEx.sessionOrderKey ? 'aw-exercise-row--dragging' : ''}`}
+              onClick={() => {
+                if (Date.now() < suppressExerciseClickUntilRef.current) return;
+                openExerciseLog(ex, planEx);
+              }}
             >
               <span className="aw-exercise-next-outline" aria-hidden="true" />
-              <div className="aw-exercise-status">
+              <div
+                className="aw-exercise-status"
+                role="spinbutton"
+                tabIndex={0}
+                aria-valuemin={1}
+                aria-valuemax={exerciseProgress.length}
+                aria-valuenow={i + 1}
+                aria-valuetext={`Position ${i + 1} of ${exerciseProgress.length}`}
+                aria-keyshortcuts="ArrowUp ArrowDown"
+                aria-label={`Reorder ${ex.name}. ${isNext ? 'Next exercise. ' : ''}${reorderStatus}. ${ex.muscleGroup}, ${planEx.prescribedSets} sets of ${planEx.prescribedReps} reps. Hold and drag, or use Arrow Up and Arrow Down.`}
+                onPointerDown={(event) => {
+                  event.stopPropagation();
+                  handleExercisePointerDown(event, i, planEx.sessionOrderKey);
+                }}
+                onClick={(event) => event.stopPropagation()}
+                onKeyDown={(event) => {
+                  event.stopPropagation();
+                  handleExerciseKeyDown(event, i);
+                }}
+              >
                 {done ? (
                   <span className="aw-check" aria-label={`${ex.name} completed`}><CheckIcon /></span>
                 ) : (

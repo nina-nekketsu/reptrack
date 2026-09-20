@@ -1,7 +1,7 @@
 import React from 'react';
 import fs from 'fs';
 import path from 'path';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import ActiveWorkout from './ActiveWorkout';
 import { saveActiveWorkoutSession } from '../lib/activeWorkoutSession';
 
@@ -86,6 +86,7 @@ jest.mock('../lib/activeWorkoutSession', () => {
 const exercises = [
   { id: 'squat', name: 'Squat', muscleGroup: 'Legs' },
   { id: 'bench', name: 'Bench Press', muscleGroup: 'Chest' },
+  { id: 'deadlift', name: 'Deadlift', muscleGroup: 'Back' },
 ];
 
 function setup({
@@ -96,6 +97,7 @@ function setup({
   storedExercises = exercises,
   completedExerciseIds = [],
   logs = {},
+  session = {},
 } = {}) {
   localStorage.setItem('workoutPlans', JSON.stringify([{
     id: 'plan-a',
@@ -113,6 +115,7 @@ function setup({
     endedAt: null,
     deviceId: 'device-a',
     completedExerciseIds,
+    ...session,
   }));
 
   return render(<ActiveWorkout />);
@@ -326,6 +329,158 @@ describe('ActiveWorkout P1.5 exercise completion handoff', () => {
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
     expect(view.container.querySelectorAll('[aria-live]')).toHaveLength(0);
     expect(saveActiveWorkoutSession).not.toHaveBeenCalled();
+  });
+
+  test('moves an exercise with the keyboard and persists only the active session order', () => {
+    const planExercises = [
+      { exerciseId: 'squat', prescribedSets: 1, prescribedReps: 5 },
+      { exerciseId: 'bench', prescribedSets: 1, prescribedReps: 5 },
+      { exerciseId: 'deadlift', prescribedSets: 1, prescribedReps: 5 },
+    ];
+    const view = setup({ planExercises, completedExerciseIds: ['squat'] });
+
+    const deadliftHandle = screen.getByRole('spinbutton', { name: /Reorder Deadlift/ });
+    expect(deadliftHandle).toHaveAttribute('aria-keyshortcuts', 'ArrowUp ArrowDown');
+    fireEvent.keyDown(deadliftHandle, { key: 'ArrowUp', altKey: true });
+
+    expect(Array.from(view.container.querySelectorAll('.aw-exercise-name')).map((node) => node.textContent))
+      .toEqual(['Squat', 'Deadlift', 'Bench Press']);
+    expect(exerciseRow('Deadlift')).toHaveTextContent('2');
+    expect(exerciseRow('Deadlift')).toHaveClass('aw-exercise-row--next');
+    expect(screen.getByRole('button', { name: 'Log next: Deadlift' })).toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Log Deadlift' })).not.toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Deadlift moved to position 2 of 3');
+    expect(JSON.parse(localStorage.getItem('activeWorkoutSession'))).toEqual(expect.objectContaining({
+      completedExerciseIds: ['squat'],
+      exerciseOrder: ['squat:0', 'deadlift:2', 'bench:1'],
+    }));
+    expect(JSON.parse(localStorage.getItem('workoutPlans'))[0].exercises).toEqual(planExercises);
+    expect(mockPushActiveWorkoutSession).toHaveBeenCalledTimes(1);
+
+    view.unmount();
+    const resumed = render(<ActiveWorkout />);
+    expect(Array.from(resumed.container.querySelectorAll('.aw-exercise-name')).map((node) => node.textContent))
+      .toEqual(['Squat', 'Deadlift', 'Bench Press']);
+    expect(screen.getByRole('button', { name: 'Log next: Deadlift' })).toBeInTheDocument();
+  });
+
+  test('long-press drag reorders rows without opening the exercise log', () => {
+    jest.useFakeTimers();
+    const view = setup({
+      planExercises: [
+        { exerciseId: 'squat', prescribedSets: 1, prescribedReps: 5 },
+        { exerciseId: 'bench', prescribedSets: 1, prescribedReps: 5 },
+        { exerciseId: 'deadlift', prescribedSets: 1, prescribedReps: 5 },
+      ],
+    });
+    const benchRow = exerciseRow('Bench Press');
+    const deadliftRow = exerciseRow('Deadlift');
+    const originalElementFromPoint = document.elementFromPoint;
+    document.elementFromPoint = jest.fn(() => deadliftRow);
+
+    try {
+      const benchHandle = screen.getByRole('spinbutton', { name: /Reorder Bench Press/ });
+      fireEvent.pointerDown(benchHandle, { pointerId: 7, pointerType: 'touch', clientX: 20, clientY: 100 });
+      act(() => jest.advanceTimersByTime(500));
+      act(() => jest.advanceTimersByTime(1000));
+      fireEvent.pointerMove(view.container.querySelector('.aw-exercise-list'), {
+        pointerId: 7,
+        pointerType: 'touch',
+        clientX: 20,
+        clientY: 200,
+      });
+      fireEvent.pointerUp(view.container.querySelector('.aw-exercise-list'), {
+        pointerId: 7,
+        pointerType: 'touch',
+      });
+      fireEvent.click(exerciseRow('Bench Press'));
+
+      expect(Array.from(view.container.querySelectorAll('.aw-exercise-name')).map((node) => node.textContent))
+        .toEqual(['Squat', 'Deadlift', 'Bench Press']);
+      expect(screen.queryByRole('dialog', { name: 'Log Bench Press' })).not.toBeInTheDocument();
+      expect(JSON.parse(localStorage.getItem('activeWorkoutSession')).exerciseOrder)
+        .toEqual(['squat:0', 'deadlift:2', 'bench:1']);
+    } finally {
+      document.elementFromPoint = originalElementFromPoint;
+      jest.useRealTimers();
+    }
+  });
+
+  test('keeps dragging the original exercise when one persistence attempt fails', () => {
+    jest.useFakeTimers();
+    const planExercises = [
+      { exerciseId: 'squat', prescribedSets: 1, prescribedReps: 5 },
+      { exerciseId: 'bench', prescribedSets: 1, prescribedReps: 5 },
+      { exerciseId: 'deadlift', prescribedSets: 1, prescribedReps: 5 },
+    ];
+    const view = setup({ planExercises });
+    const originalElementFromPoint = document.elementFromPoint;
+    let hoveredRow = exerciseRow('Deadlift');
+    document.elementFromPoint = jest.fn(() => hoveredRow);
+    saveActiveWorkoutSession.mockImplementationOnce(() => null);
+
+    try {
+      const benchHandle = screen.getByRole('spinbutton', { name: /Reorder Bench Press/ });
+      fireEvent.pointerDown(benchHandle, {
+        pointerId: 9,
+        pointerType: 'touch',
+        clientX: 20,
+        clientY: 100,
+      });
+      act(() => jest.advanceTimersByTime(500));
+
+      fireEvent.pointerMove(view.container.querySelector('.aw-exercise-list'), {
+        pointerId: 9,
+        pointerType: 'touch',
+        clientX: 20,
+        clientY: 200,
+      });
+      expect(Array.from(view.container.querySelectorAll('.aw-exercise-name')).map((node) => node.textContent))
+        .toEqual(['Squat', 'Bench Press', 'Deadlift']);
+
+      hoveredRow = exerciseRow('Squat');
+      fireEvent.pointerMove(view.container.querySelector('.aw-exercise-list'), {
+        pointerId: 9,
+        pointerType: 'touch',
+        clientX: 20,
+        clientY: 50,
+      });
+      fireEvent.pointerUp(view.container.querySelector('.aw-exercise-list'), {
+        pointerId: 9,
+        pointerType: 'touch',
+      });
+
+      expect(Array.from(view.container.querySelectorAll('.aw-exercise-name')).map((node) => node.textContent))
+        .toEqual(['Bench Press', 'Squat', 'Deadlift']);
+      expect(JSON.parse(localStorage.getItem('activeWorkoutSession')).exerciseOrder)
+        .toEqual(['bench:1', 'squat:0', 'deadlift:2']);
+    } finally {
+      document.elementFromPoint = originalElementFromPoint;
+      jest.useRealTimers();
+    }
+  });
+
+  test('keeps duplicate exercise entries distinct while reordering and resuming', () => {
+    const view = setup({
+      planExercises: [
+        { exerciseId: 'squat', prescribedSets: 1, prescribedReps: 5 },
+        { exerciseId: 'bench', prescribedSets: 1, prescribedReps: 5 },
+        { exerciseId: 'squat', prescribedSets: 3, prescribedReps: 8 },
+      ],
+    });
+
+    const squatHandles = screen.getAllByRole('spinbutton', { name: /Reorder Squat/ });
+    fireEvent.keyDown(squatHandles[1], { key: 'ArrowUp', altKey: true });
+
+    expect(Array.from(view.container.querySelectorAll('.aw-exercise-name')).map((node) => node.textContent))
+      .toEqual(['Squat', 'Squat', 'Bench Press']);
+    expect(JSON.parse(localStorage.getItem('activeWorkoutSession')).exerciseOrder)
+      .toEqual(['squat:0', 'squat:2', 'bench:1']);
+
+    view.unmount();
+    const resumed = render(<ActiveWorkout />);
+    expect(Array.from(resumed.container.querySelectorAll('.aw-exercise-name')).map((node) => node.textContent))
+      .toEqual(['Squat', 'Squat', 'Bench Press']);
   });
 
   test('a failed local end releases the busy guard and one retry succeeds', () => {
