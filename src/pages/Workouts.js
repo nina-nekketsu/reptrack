@@ -435,6 +435,7 @@ export default function Workouts() {
         action: 'start',
         planId: currentPlan.id,
         planName: currentPlan.name,
+        planExercises: currentPlan.exercises,
         now,
       });
       if (!session) {

@@ -23,6 +23,7 @@ import {
   generateSessionSummary,
 } from '../lib/coachEngine';
 import {
+  createSessionPlanExerciseSnapshot,
   getStoredVisibleActiveWorkoutSession,
   saveActiveWorkoutSession,
 } from '../lib/activeWorkoutSession';
@@ -86,7 +87,7 @@ function loadExercises() {
 function orderPlanExercises(planExercises, exerciseOrder) {
   const keyedExercises = planExercises.map((entry, planIndex) => ({
     ...entry,
-    sessionOrderKey: `${entry.exerciseId}:${planIndex}`,
+    sessionOrderKey: entry.sessionOrderKey || `${entry.exerciseId}:${planIndex}`,
   }));
   if (!Array.isArray(exerciseOrder)) return keyedExercises;
   const byKey = new Map(keyedExercises.map((entry) => [entry.sessionOrderKey, entry]));
@@ -132,8 +133,11 @@ export default function ActiveWorkout() {
   completedExerciseIdsRef.current = completedExerciseIds;
 
   const plan = plans.find((p) => p.id === planId);
+  const sessionPlanExercises = Array.isArray(activeSession?.planExerciseSnapshot)
+    ? activeSession.planExerciseSnapshot
+    : (plan?.exercises || []);
   const orderedPlanExercises = plan
-    ? orderPlanExercises(plan.exercises, activeSession?.exerciseOrder)
+    ? orderPlanExercises(sessionPlanExercises, activeSession?.exerciseOrder)
     : [];
 
   // Activate coach when workout starts
@@ -170,6 +174,7 @@ export default function ActiveWorkout() {
         action: 'start',
         planId: plan.id,
         planName: plan.name,
+        planExercises: plan.exercises,
         now,
       });
       pushActiveWorkoutSession(user?.id);
@@ -445,11 +450,19 @@ export default function ActiveWorkout() {
     const reordered = [...orderedPlanExercises];
     const [moved] = reordered.splice(index, 1);
     reordered.splice(destination, 0, moved);
-    const updatedSession = saveActiveWorkoutSession({
-      action: 'update',
-      patch: { exerciseOrder: reordered.map((entry) => entry.sessionOrderKey) },
-      now: new Date().toISOString(),
-    });
+    let updatedSession;
+    try {
+      updatedSession = saveActiveWorkoutSession({
+        action: 'update',
+        patch: {
+          planExerciseSnapshot: createSessionPlanExerciseSnapshot(sessionPlanExercises),
+          exerciseOrder: reordered.map((entry) => entry.sessionOrderKey),
+        },
+        now: new Date().toISOString(),
+      });
+    } catch {
+      return false;
+    }
     if (!updatedSession) return false;
     setActiveSession(updatedSession);
     setCompletionAnnouncement('');

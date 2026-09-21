@@ -27,7 +27,16 @@ export function normalizeActiveWorkoutSession(session) {
   };
 }
 
-export function createActiveWorkoutSession({ planId, planName, now, deviceId }) {
+export function createSessionPlanExerciseSnapshot(planExercises) {
+  if (!Array.isArray(planExercises)) return [];
+  return planExercises.map((entry, planIndex) => ({
+    ...entry,
+    sessionOrderKey: entry.sessionOrderKey || `${entry.exerciseId}:${planIndex}`,
+  }));
+}
+
+export function createActiveWorkoutSession({ planId, planName, planExercises, now, deviceId }) {
+  const planExerciseSnapshot = createSessionPlanExerciseSnapshot(planExercises);
   return normalizeActiveWorkoutSession({
     planId,
     planName,
@@ -37,6 +46,7 @@ export function createActiveWorkoutSession({ planId, planName, now, deviceId }) 
     endedAt: null,
     deviceId,
     completedExerciseIds: [],
+    ...(planExerciseSnapshot.length > 0 ? { planExerciseSnapshot } : {}),
   });
 }
 
@@ -148,6 +158,7 @@ export function saveActiveWorkoutSession(command, storage = defaultStorage()) {
     const session = createActiveWorkoutSession({
       planId: command.planId,
       planName: command.planName,
+      planExercises: command.planExercises,
       now,
       deviceId: command.deviceId || getOrCreateDeviceId(storage),
     });

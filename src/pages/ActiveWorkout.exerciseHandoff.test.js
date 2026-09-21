@@ -417,7 +417,9 @@ describe('ActiveWorkout P1.5 exercise completion handoff', () => {
     const originalElementFromPoint = document.elementFromPoint;
     let hoveredRow = exerciseRow('Deadlift');
     document.elementFromPoint = jest.fn(() => hoveredRow);
-    saveActiveWorkoutSession.mockImplementationOnce(() => null);
+    saveActiveWorkoutSession.mockImplementationOnce(() => {
+      throw new Error('storage blocked');
+    });
 
     try {
       const benchHandle = screen.getByRole('spinbutton', { name: /Reorder Bench Press/ });
@@ -481,6 +483,29 @@ describe('ActiveWorkout P1.5 exercise completion handoff', () => {
     const resumed = render(<ActiveWorkout />);
     expect(Array.from(resumed.container.querySelectorAll('.aw-exercise-name')).map((node) => node.textContent))
       .toEqual(['Squat', 'Squat', 'Bench Press']);
+  });
+
+  test('keeps the session snapshot stable when the plan is edited after reordering', () => {
+    const originalSnapshot = [
+      { exerciseId: 'squat', prescribedSets: 1, prescribedReps: 5, sessionOrderKey: 'squat:0' },
+      { exerciseId: 'bench', prescribedSets: 1, prescribedReps: 5, sessionOrderKey: 'bench:1' },
+    ];
+    const view = setup({
+      planExercises: [
+        { exerciseId: 'deadlift', prescribedSets: 1, prescribedReps: 5 },
+        { exerciseId: 'bench', prescribedSets: 4, prescribedReps: 8 },
+        { exerciseId: 'squat', prescribedSets: 2, prescribedReps: 10 },
+      ],
+      session: {
+        planExerciseSnapshot: originalSnapshot,
+        exerciseOrder: ['bench:1', 'squat:0'],
+      },
+    });
+
+    expect(Array.from(view.container.querySelectorAll('.aw-exercise-name')).map((node) => node.textContent))
+      .toEqual(['Bench Press', 'Squat']);
+    expect(exerciseRow('Bench Press')).toHaveTextContent('Chest · 1×5');
+    expect(screen.queryByText('Deadlift')).not.toBeInTheDocument();
   });
 
   test('a failed local end releases the busy guard and one retry succeeds', () => {
