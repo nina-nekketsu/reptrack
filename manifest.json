@@ -1,0 +1,25 @@
+{
+  "short_name": "RepTrack",
+  "name": "RepTrack",
+  "description": "Private, reliable workout tracking for the gym floor.",
+  "icons": [
+    {
+      "src": "reptrack-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "reptrack-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "id": "/reptrack/",
+  "start_url": "/reptrack/",
+  "scope": "/reptrack/",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#0F1216",
+  "background_color": "#0F1216"
+}
