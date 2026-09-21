@@ -203,13 +203,26 @@
 
 /* ── Status indicator ── */
 .aw-exercise-status {
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  margin: -6px;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+
+.aw-exercise-status:focus-visible {
+  outline: 2px solid var(--go);
+  outline-offset: 2px;
+}
+
+.aw-exercise-row--dragging .aw-exercise-status {
+  cursor: grabbing;
 }
 
 .aw-check {
@@ -298,6 +311,15 @@
 /* ── Action button ── */
 .aw-exercise-action {
   flex-shrink: 0;
+}
+
+.aw-exercise-row--dragging {
+  z-index: 2;
+  border-color: var(--go);
+  box-shadow: var(--shadow-e2);
+  opacity: 0.82;
+  touch-action: none;
+  user-select: none;
 }
 
 .aw-log-btn {
