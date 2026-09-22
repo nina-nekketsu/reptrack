@@ -577,6 +577,41 @@
   text-align: center;
 }
 
+.set-reorder-hint {
+  margin: 4px 0 6px;
+  color: var(--ink-mid);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.set-reorder-handle {
+  width: 100%;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  touch-action: auto;
+  cursor: grab;
+  user-select: none;
+}
+
+.set-reorder-handle:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.set-row--dragging {
+  border-color: var(--go);
+  box-shadow: var(--shadow-e2);
+  opacity: 0.82;
+}
+
+.set-row--dragging .set-reorder-handle {
+  cursor: grabbing;
+}
+
 .set-input {
   padding: 10px 10px;
   border-radius: 10px;
@@ -2053,7 +2088,7 @@
 /* === Canonical June/July logging recovery overrides === */
 .sets-header,
 .set-row {
-  grid-template-columns: 28px minmax(144px, 1fr) minmax(144px, 1fr) 48px 44px 44px;
+  grid-template-columns: 44px minmax(144px, 1fr) minmax(144px, 1fr) 48px 44px 44px;
   gap: 6px;
 }
 
@@ -2141,7 +2176,7 @@
   }
 
   .set-row {
-    grid-template-columns: 24px minmax(132px, 1fr) minmax(132px, 1fr);
+    grid-template-columns: 44px minmax(0, 1fr) minmax(0, 1fr);
     grid-template-rows: auto 44px;
     column-gap: clamp(4px, 1.4vw, 6px);
     row-gap: 4px;
@@ -2231,12 +2266,12 @@
 @media (max-width: 360px) {
   .modal--log .log-scroll-body { padding-inline: 4px; }
   .set-row {
-    grid-template-columns: 20px minmax(132px, 1fr) minmax(132px, 1fr);
+    grid-template-columns: 44px minmax(0, 1fr) minmax(0, 1fr);
     column-gap: 4px;
   }
 
   .set-stepper {
-    grid-template-columns: 44px minmax(44px, 1fr) 44px;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
     gap: 3px;
   }
 
