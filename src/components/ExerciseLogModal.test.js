@@ -136,6 +136,287 @@ describe('ExerciseLogModal session identity', () => {
   });
 });
 
+describe('ExerciseLogModal set reordering', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    HTMLElement.prototype.scrollTo = jest.fn();
+  });
+
+  test('moves a set with the keyboard while keeping its values together', () => {
+    render(
+      <ExerciseLogModal
+        exercise={{ id: 'squat', name: 'Squat', muscleGroup: 'Legs' }}
+        logs={{}}
+        onClose={() => {}}
+        onSaved={() => {}}
+        prescribedSets={3}
+        stayOpenOnSave
+      />
+    );
+
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 reps' }), { target: { value: '5' } });
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 weight' }), { target: { value: '100' } });
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 2 reps' }), { target: { value: '8' } });
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 2 weight' }), { target: { value: '80' } });
+
+    fireEvent.keyDown(screen.getByRole('button', { name: /Reorder set 1/i }), { key: 'ArrowDown' });
+
+    expect(screen.getByRole('spinbutton', { name: 'Set 1 reps' })).toHaveValue(8);
+    expect(screen.getByRole('spinbutton', { name: 'Set 1 weight' })).toHaveValue(80);
+    expect(screen.getByRole('spinbutton', { name: 'Set 2 reps' })).toHaveValue(5);
+    expect(screen.getByRole('spinbutton', { name: 'Set 2 weight' })).toHaveValue(100);
+  });
+
+  test('long-press drag moves a set to the touched row', () => {
+    jest.useFakeTimers();
+    const originalElementFromPoint = document.elementFromPoint;
+    const view = render(
+      <ExerciseLogModal
+        exercise={{ id: 'squat', name: 'Squat', muscleGroup: 'Legs' }}
+        logs={{}}
+        onClose={() => {}}
+        onSaved={() => {}}
+        prescribedSets={3}
+        stayOpenOnSave
+      />
+    );
+
+    try {
+      fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 reps' }), { target: { value: '5' } });
+      fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 2 reps' }), { target: { value: '8' } });
+      document.elementFromPoint = jest.fn(() => (
+        screen.getByRole('spinbutton', { name: 'Set 2 reps' }).closest('.set-row')
+      ));
+
+      const reorderHandle = screen.getByRole('button', { name: /Reorder set 1/i });
+      const scroller = view.container.querySelector('.log-scroll-body');
+      scroller.getBoundingClientRect = () => ({ top: 0, bottom: 100, left: 0, right: 320, width: 320, height: 100 });
+      Object.defineProperty(scroller, 'scrollTop', { configurable: true, writable: true, value: 0 });
+      reorderHandle.setPointerCapture = jest.fn();
+      reorderHandle.releasePointerCapture = jest.fn();
+      reorderHandle.hasPointerCapture = jest.fn(() => true);
+      fireEvent.pointerDown(reorderHandle, {
+        pointerId: 7,
+        pointerType: 'touch',
+        button: 0,
+        clientX: 10,
+        clientY: 10,
+      });
+      expect(reorderHandle.setPointerCapture).toHaveBeenCalledTimes(1);
+      act(() => jest.advanceTimersByTime(450));
+      const pointerMove = new Event('pointermove', { bubbles: true, cancelable: true });
+      Object.defineProperties(pointerMove, {
+        pointerId: { value: 7 },
+        pointerType: { value: 'mouse' },
+        clientX: { value: 10 },
+        clientY: { value: 80 },
+      });
+      fireEvent(scroller, pointerMove);
+      expect(scroller.scrollTop).toBeGreaterThan(0);
+      fireEvent.pointerUp(scroller, { pointerId: 7 });
+      expect(reorderHandle.releasePointerCapture).toHaveBeenCalledTimes(1);
+
+      expect(screen.getByRole('spinbutton', { name: 'Set 1 reps' })).toHaveValue(8);
+      expect(screen.getByRole('spinbutton', { name: 'Set 2 reps' })).toHaveValue(5);
+    } finally {
+      document.elementFromPoint = originalElementFromPoint;
+      jest.useRealTimers();
+    }
+  });
+
+  test('allows pre-hold touch scrolling, then reorders and auto-scrolls after activation', () => {
+    jest.useFakeTimers();
+    const originalElementFromPoint = document.elementFromPoint;
+    const view = render(
+      <ExerciseLogModal
+        exercise={{ id: 'squat', name: 'Squat', muscleGroup: 'Legs' }}
+        logs={{}}
+        onClose={() => {}}
+        onSaved={() => {}}
+        prescribedSets={3}
+      />
+    );
+    const handle = screen.getByRole('button', { name: /Reorder set 1/i });
+    const scroller = view.container.querySelector('.log-scroll-body');
+    scroller.getBoundingClientRect = () => ({ top: 0, bottom: 200, left: 0, right: 320, width: 320, height: 200 });
+    Object.defineProperty(scroller, 'scrollTop', { configurable: true, writable: true, value: 0 });
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 reps' }), { target: { value: '5' } });
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 2 reps' }), { target: { value: '8' } });
+    document.elementFromPoint = jest.fn(() => (
+      screen.getByRole('spinbutton', { name: 'Set 2 reps' }).closest('.set-row')
+    ));
+
+    try {
+      fireEvent.touchStart(handle, {
+        touches: [{ identifier: 21, clientX: 10, clientY: 100 }],
+      });
+      const earlyMove = new Event('touchmove', { bubbles: true, cancelable: true });
+      Object.defineProperty(earlyMove, 'touches', {
+        value: [{ identifier: 21, clientX: 10, clientY: 120 }],
+      });
+      document.dispatchEvent(earlyMove);
+      expect(earlyMove.defaultPrevented).toBe(false);
+
+      fireEvent.touchStart(handle, {
+        touches: [{ identifier: 22, clientX: 10, clientY: 100 }],
+      });
+      act(() => jest.advanceTimersByTime(450));
+      const activeMove = new Event('touchmove', { bubbles: true, cancelable: true });
+      Object.defineProperty(activeMove, 'touches', {
+        value: [{ identifier: 22, clientX: 10, clientY: 190 }],
+      });
+      act(() => {
+        document.dispatchEvent(activeMove);
+      });
+
+      expect(activeMove.defaultPrevented).toBe(true);
+      expect(scroller.scrollTop).toBeGreaterThan(0);
+      expect(screen.getByRole('spinbutton', { name: 'Set 1 reps' })).toHaveValue(8);
+      expect(screen.getByRole('spinbutton', { name: 'Set 2 reps' })).toHaveValue(5);
+      act(() => {
+        document.dispatchEvent(new Event('touchend', { bubbles: true }));
+      });
+    } finally {
+      document.elementFromPoint = originalElementFromPoint;
+      jest.useRealTimers();
+    }
+  });
+
+  test('moves a dropset parent together with its child rows', () => {
+    const view = render(
+      <ExerciseLogModal
+        exercise={{ id: 'squat', name: 'Squat', muscleGroup: 'Legs' }}
+        logs={{}}
+        onClose={() => {}}
+        onSaved={() => {}}
+        prescribedSets={2}
+        stayOpenOnSave
+      />
+    );
+
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 reps' }), { target: { value: '8' } });
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 weight' }), { target: { value: '100' } });
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 2 reps' }), { target: { value: '5' } });
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 2 weight' }), { target: { value: '120' } });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Set 1 type' }), { target: { value: 'dropset' } });
+
+    const dropsetHandle = screen.getByRole('button', { name: /Reorder set 1\./i });
+    expect(screen.getAllByRole('button', { name: /Reorder set/i })).toHaveLength(2);
+    expect(dropsetHandle).toHaveAccessibleName(/Position 1 of 2/i);
+    fireEvent.keyDown(dropsetHandle, { key: 'ArrowDown' });
+
+    const rows = Array.from(view.container.querySelectorAll('.set-row'));
+    expect(rows[0].querySelector('input[aria-label$="reps"]')).toHaveValue(5);
+    expect(rows[1].querySelector('select')).toHaveValue('dropset');
+    expect(rows[1].querySelector('input[aria-label$="reps"]')).toHaveValue(8);
+    expect(rows[2]).toHaveClass('set-row--dropset-child');
+    expect(rows[3]).toHaveClass('set-row--dropset-child');
+  });
+
+  test('keeps dragging the same set across differently sized set groups', () => {
+    jest.useFakeTimers();
+    const originalElementFromPoint = document.elementFromPoint;
+    const view = render(
+      <ExerciseLogModal
+        exercise={{ id: 'squat', name: 'Squat', muscleGroup: 'Legs' }}
+        logs={{}}
+        onClose={() => {}}
+        onSaved={() => {}}
+        prescribedSets={3}
+      />
+    );
+
+    try {
+      fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 reps' }), { target: { value: '8' } });
+      fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 weight' }), { target: { value: '100' } });
+      fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 2 reps' }), { target: { value: '5' } });
+      fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 3 reps' }), { target: { value: '3' } });
+      fireEvent.change(screen.getByRole('combobox', { name: 'Set 1 type' }), { target: { value: 'dropset' } });
+
+      let hoveredRow = view.container.querySelector('.set-row--dropset-child');
+      document.elementFromPoint = jest.fn(() => hoveredRow);
+      fireEvent.pointerDown(screen.getByRole('button', { name: /Reorder set 3\./i }), {
+        pointerId: 11,
+        pointerType: 'touch',
+        button: 0,
+        clientX: 10,
+        clientY: 200,
+      });
+      act(() => jest.advanceTimersByTime(450));
+      fireEvent.pointerMove(view.container.querySelector('.log-scroll-body'), {
+        pointerId: 11,
+        pointerType: 'touch',
+        clientX: 10,
+        clientY: 80,
+      });
+
+      hoveredRow = Array.from(view.container.querySelectorAll('.set-row')).find((row) => (
+        row.querySelector('input[aria-label$="reps"]')?.value === '5'
+      ));
+      fireEvent.pointerMove(view.container.querySelector('.log-scroll-body'), {
+        pointerId: 11,
+        pointerType: 'touch',
+        clientX: 10,
+        clientY: 180,
+      });
+      fireEvent.pointerUp(view.container.querySelector('.log-scroll-body'), { pointerId: 11 });
+
+      const primaryReps = Array.from(view.container.querySelectorAll('.set-row:not(.set-row--dropset-child)'))
+        .map((row) => row.querySelector('input[aria-label$="reps"]')?.value);
+      expect(primaryReps).toEqual(['8', '5', '3']);
+    } finally {
+      document.elementFromPoint = originalElementFromPoint;
+      jest.useRealTimers();
+    }
+  });
+
+  test('persists the reordered set sequence when the log is saved', async () => {
+    render(
+      <ExerciseLogModal
+        exercise={{ id: 'squat', name: 'Squat', muscleGroup: 'Legs' }}
+        logs={{}}
+        onClose={() => {}}
+        onSaved={() => {}}
+        prescribedSets={2}
+        stayOpenOnSave
+      />
+    );
+
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 reps' }), { target: { value: '5' } });
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 weight' }), { target: { value: '100' } });
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 2 reps' }), { target: { value: '8' } });
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 2 weight' }), { target: { value: '80' } });
+    fireEvent.keyDown(screen.getByRole('button', { name: /Reorder set 1/i }), { key: 'ArrowDown' });
+
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Done' })));
+
+    const saved = JSON.parse(localStorage.getItem('exerciseLogs'));
+    expect(saved.squat[0].sets.map(({ reps, weight }) => [reps, weight]))
+      .toEqual([['8', '80'], ['5', '100']]);
+  });
+
+  test('shows a visible touch instruction and a touch-safe reorder handle', () => {
+    render(
+      <ExerciseLogModal
+        exercise={{ id: 'squat', name: 'Squat', muscleGroup: 'Legs' }}
+        logs={{}}
+        onClose={() => {}}
+        onSaved={() => {}}
+        prescribedSets={2}
+      />
+    );
+
+    expect(screen.getByText('Hold a set number, then drag to move it.')).toBeInTheDocument();
+    expect(readCssRule('.set-reorder-handle')).toContain('touch-action: auto');
+    expect(readCssRule('.set-reorder-handle')).toContain('min-width: 44px');
+    expect(readCssRule('.set-reorder-handle')).toContain('min-height: 44px');
+    expect(readExercisesCss()).toContain('grid-template-columns: 44px minmax(0, 1fr) minmax(0, 1fr);');
+    expect(readExercisesCss()).toContain('grid-template-columns: 44px minmax(0, 1fr) 44px;');
+    expect(readExercisesCss()).not.toContain('grid-template-columns: 44px minmax(132px, 1fr) minmax(132px, 1fr);');
+    expect(readCssRule('.set-row--dragging')).toContain('border-color: var(--go)');
+  });
+});
+
 describe('ExerciseLogModal Done button state contract', () => {
   beforeEach(() => {
     localStorage.clear();

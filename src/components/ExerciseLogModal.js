@@ -217,6 +217,36 @@ function getLogicalSetNumber(rows, index) {
   return rows.slice(0, index + 1).filter((set) => !isDropsetChild(set) && !isWarmupRow(set)).length;
 }
 
+function getSetGroups(rows = []) {
+  const groups = [];
+  for (let index = 0; index < rows.length;) {
+    const start = index;
+    index += 1;
+    if (isParentDropset(rows[start])) {
+      while (index < rows.length && isDropsetChild(rows[index])) index += 1;
+    }
+    groups.push({ start, end: index, rows: rows.slice(start, index) });
+  }
+  return groups;
+}
+
+function getMovableSetGroups(rows = []) {
+  return getSetGroups(rows).filter((group) => group.rows[0]?.automaticPlaceholder !== true);
+}
+
+export function reorderSetGroups(rows = [], sourceIndex, destinationIndex) {
+  const groups = getSetGroups(rows);
+  const sourceGroupIndex = groups.findIndex((group) => sourceIndex >= group.start && sourceIndex < group.end);
+  const destinationGroupIndex = groups.findIndex((group) => destinationIndex >= group.start && destinationIndex < group.end);
+  if (sourceGroupIndex < 0 || destinationGroupIndex < 0 || sourceGroupIndex === destinationGroupIndex) return rows;
+  if (groups[sourceGroupIndex].rows[0]?.automaticPlaceholder === true
+      || groups[destinationGroupIndex].rows[0]?.automaticPlaceholder === true) return rows;
+  const nextGroups = [...groups];
+  const [moved] = nextGroups.splice(sourceGroupIndex, 1);
+  nextGroups.splice(destinationGroupIndex, 0, moved);
+  return nextGroups.flatMap((group) => group.rows);
+}
+
 function removeDropsetChildrenAfter(rows, parentIndex) {
   const next = [...rows];
   let removeCount = 0;
@@ -300,6 +330,8 @@ export default function ExerciseLogModal({
 
   const [activeTab, setActiveTab] = useState(initialTab); // 'log' | 'overview'
   const [sets, setSets] = useState([emptySetRow()]);
+  const setsRef = useRef(sets);
+  setsRef.current = sets;
   const [editingSession, setEditingSession] = useState(null);
   const [confirmDeleteSession, setConfirmDeleteSession] = useState(null);
   const [intensity, setIntensity] = useState('moderate');
@@ -314,6 +346,7 @@ export default function ExerciseLogModal({
   const [undoRemoval, setUndoRemoval] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [localSaveStatus, setLocalSaveStatus] = useState('');
+  const [setReorderAnnouncement, setSetReorderAnnouncement] = useState('');
   const [showExerciseCompleteCue, setShowExerciseCompleteCue] = useState(false);
   const [positioningRevision, setPositioningRevision] = useState(0);
   const [draftInitializedExerciseId, setDraftInitializedExerciseId] = useState(null);
@@ -324,9 +357,14 @@ export default function ExerciseLogModal({
   const weightInputRefs = useRef([]);
   const mountedRef = useRef(true);
   const lastDraftProgressSignatureRef = useRef('');
+  const setDragRef = useRef({ active: false, index: -1, pointerId: null, timer: null });
+  const setTouchCleanupRef = useRef(null);
+  const [draggedSetId, setDraggedSetId] = useState(null);
 
   useEffect(() => () => {
     mountedRef.current = false;
+    cancelPendingSetLongPress();
+    setTouchCleanupRef.current?.();
   }, []);
 
 
@@ -362,6 +400,9 @@ export default function ExerciseLogModal({
     setBestRecordExcludedSession(null);
     setLastSavedCoachContext(null);
     setLocalSaveStatus('');
+    cancelPendingSetLongPress();
+    setDraggedSetId(null);
+    setSetReorderAnnouncement('');
 
     // Check if this exercise was already logged during the current active workout session
     let initialSets = [emptySetRow()];
@@ -532,6 +573,147 @@ export default function ExerciseLogModal({
     });
   }
 
+  function moveSetTo(index, destination) {
+    const currentSets = setsRef.current;
+    const movedId = currentSets[index]?.clientSetId;
+    const next = reorderSetGroups(currentSets, index, destination);
+    if (next === currentSets) return -1;
+    setSavedSetFeedback([]);
+    setLocalSaveStatus('');
+    setsRef.current = next;
+    setSets(next);
+    const groups = getMovableSetGroups(next);
+    const position = groups.findIndex((group) => group.rows.some((row) => row.clientSetId === movedId));
+    setSetReorderAnnouncement(`Set moved to position ${position + 1} of ${groups.length}`);
+    return next.findIndex((row) => row.clientSetId === movedId);
+  }
+
+  function moveSet(index, direction) {
+    const groups = getMovableSetGroups(sets);
+    const sourceGroupIndex = groups.findIndex((group) => index >= group.start && index < group.end);
+    const destinationGroup = groups[sourceGroupIndex + direction];
+    if (!destinationGroup) return;
+    moveSetTo(index, destinationGroup.start);
+  }
+
+  function cancelPendingSetLongPress() {
+    if (setDragRef.current.timer) clearTimeout(setDragRef.current.timer);
+    setDragRef.current.timer = null;
+  }
+
+  function handleSetPointerDown(event, index, setId) {
+    if (event.pointerType === 'touch') return;
+    if ((event.button ?? 0) !== 0) return;
+    cancelPendingSetLongPress();
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    setDragRef.current = {
+      active: false,
+      index,
+      setId,
+      pointerId: event.pointerId,
+      captureTarget: event.currentTarget,
+      startX: event.clientX,
+      startY: event.clientY,
+      timer: setTimeout(() => {
+        setDragRef.current.active = true;
+        setDraggedSetId(setId);
+      }, 450),
+    };
+  }
+
+  function handleSetPointerMove(event) {
+    const drag = setDragRef.current;
+    if (drag.pointerId != null && event.pointerId !== drag.pointerId) return;
+    if (!drag.active) {
+      const moved = Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY);
+      if (Number.isFinite(moved) && moved > 8) cancelPendingSetLongPress();
+      return;
+    }
+    event.preventDefault();
+    autoScrollSetList(event.clientY);
+    const target = document.elementFromPoint?.(event.clientX, event.clientY)
+      ?.closest('[data-set-index]');
+    const destination = Number(target?.dataset.setIndex);
+    const sourceIndex = setsRef.current.findIndex((row) => row.clientSetId === drag.setId);
+    if (sourceIndex < 0 || !Number.isInteger(destination) || destination === sourceIndex) return;
+    const movedIndex = moveSetTo(sourceIndex, destination);
+    if (movedIndex >= 0) drag.index = movedIndex;
+  }
+
+  function handleSetPointerEnd() {
+    const drag = setDragRef.current;
+    cancelPendingSetLongPress();
+    setTouchCleanupRef.current?.();
+    setTouchCleanupRef.current = null;
+    if (drag.captureTarget?.hasPointerCapture?.(drag.pointerId)) {
+      drag.captureTarget.releasePointerCapture?.(drag.pointerId);
+    }
+    setDragRef.current.active = false;
+    setDragRef.current.index = -1;
+    setDragRef.current.setId = null;
+    setDragRef.current.pointerId = null;
+    setDragRef.current.captureTarget = null;
+    setDraggedSetId(null);
+  }
+
+  function autoScrollSetList(clientY) {
+    const scroller = logScrollRef.current;
+    if (!scroller) return;
+    const bounds = scroller.getBoundingClientRect();
+    const edge = 48;
+    if (clientY < bounds.top + edge) scroller.scrollTop -= 18;
+    else if (clientY > bounds.bottom - edge) scroller.scrollTop += 18;
+  }
+
+  function handleNativeSetTouchMove(event) {
+    const drag = setDragRef.current;
+    const touch = Array.from(event.touches || []).find((item) => item.identifier === drag.touchId);
+    if (!touch) return;
+    if (!drag.active) {
+      const moved = Math.hypot(touch.clientX - drag.startX, touch.clientY - drag.startY);
+      if (Number.isFinite(moved) && moved > 8) handleSetPointerEnd();
+      return;
+    }
+    event.preventDefault();
+    autoScrollSetList(touch.clientY);
+    const target = document.elementFromPoint?.(touch.clientX, touch.clientY)
+      ?.closest('[data-set-index]');
+    const destination = Number(target?.dataset.setIndex);
+    const sourceIndex = setsRef.current.findIndex((row) => row.clientSetId === drag.setId);
+    if (sourceIndex < 0 || !Number.isInteger(destination) || destination === sourceIndex) return;
+    const movedIndex = moveSetTo(sourceIndex, destination);
+    if (movedIndex >= 0) drag.index = movedIndex;
+  }
+
+  function handleSetTouchStart(event, index, setId) {
+    if (event.touches.length !== 1) return;
+    const touch = event.touches[0];
+    handleSetPointerEnd();
+    const onMove = (nativeEvent) => handleNativeSetTouchMove(nativeEvent);
+    const onEnd = () => handleSetPointerEnd();
+    const cleanup = () => {
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', onEnd);
+      document.removeEventListener('touchcancel', onEnd);
+    };
+    setTouchCleanupRef.current = cleanup;
+    setDragRef.current = {
+      active: false,
+      index,
+      setId,
+      touchId: touch.identifier,
+      startX: touch.clientX,
+      startY: touch.clientY,
+      timer: setTimeout(() => {
+        setDragRef.current.active = true;
+        setDraggedSetId(setId);
+      }, 450),
+    };
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend', onEnd);
+    document.addEventListener('touchcancel', onEnd);
+  }
+
   function addSet() {
     setSavedSetFeedback([]);
     setLocalSaveStatus('');
@@ -591,6 +773,8 @@ export default function ExerciseLogModal({
   }
 
   function closeModal() {
+    cancelPendingSetLongPress();
+    setDraggedSetId(null);
     setEditingSession(null);
     setBestRecordExcludedSession(null);
     setSets([emptySetRow()]);
@@ -598,6 +782,7 @@ export default function ExerciseLogModal({
     setSavedSetFeedback([]);
     setLastSavedCoachContext(null);
     setLocalSaveStatus('');
+    setSetReorderAnnouncement('');
     onClose();
   }
 
@@ -838,6 +1023,7 @@ export default function ExerciseLogModal({
   const hasHistory = sessionsDesc.length > 0;
   const records = getRecords(sessionsDesc);
   const liveTotals = calcTotals(sets);
+  const movableSetGroups = getMovableSetGroups(sets);
   const draftProgress = deriveExerciseDraftProgress({
     exerciseId: exercise.id,
     rows: sets,
@@ -894,7 +1080,13 @@ export default function ExerciseLogModal({
           </div>
         </div>
 
-        <div className="log-scroll-body" ref={logScrollRef}>
+        <div
+          className="log-scroll-body"
+          ref={logScrollRef}
+          onPointerMove={handleSetPointerMove}
+          onPointerUp={handleSetPointerEnd}
+          onPointerCancel={handleSetPointerEnd}
+        >
           {activeTab === 'log' ? (
             <>
               <div className="modal-divider" />
@@ -917,6 +1109,16 @@ export default function ExerciseLogModal({
                 <span></span>
               </div>
 
+              {movableSetGroups.length > 1 && (
+                <p className="set-reorder-hint">Hold a set number, then drag to move it.</p>
+              )}
+
+              {setReorderAnnouncement && (
+                <p className="sr-only" role="status" aria-live="polite">
+                  {setReorderAnnouncement}
+                </p>
+              )}
+
               {sets.map((s, i) => {
                 const feedback = savedSetFeedback[i] || null;
                 const feedbackId = feedback ? `set-feedback-${i}` : undefined;
@@ -925,15 +1127,37 @@ export default function ExerciseLogModal({
                 const validation = getSetValidation(s, i + 1);
                 const validationId = validation ? `set-validation-${i}` : undefined;
                 const describedBy = [feedbackId, validationId].filter(Boolean).join(' ') || undefined;
+                const reorderPosition = movableSetGroups.findIndex((group) => i >= group.start && i < group.end);
                 return (
                   <React.Fragment key={s.clientSetId || i}>
                     <div
-                      className={`set-row ${s.done ? 'set-row--checked' : ''} ${feedback ? `set-row--${feedback.state}` : ''} ${isWarmupRow(s) ? 'set-row--warmup' : ''} ${isParentDropset(s) ? 'set-row--dropset' : ''} ${childRow ? 'set-row--dropset-child' : ''}`}
+                      className={`set-row ${s.done ? 'set-row--checked' : ''} ${feedback ? `set-row--${feedback.state}` : ''} ${isWarmupRow(s) ? 'set-row--warmup' : ''} ${isParentDropset(s) ? 'set-row--dropset' : ''} ${childRow ? 'set-row--dropset-child' : ''} ${draggedSetId === s.clientSetId ? 'set-row--dragging' : ''}`}
                       data-set-id={s.clientSetId}
                       data-set-index={i}
                       data-anchor-set={i === anchorSetIndex ? 'true' : undefined}
                     >
-                      <span className={`set-num ${childRow ? 'set-num--dropset-child' : ''}`}>{getSetLabel(sets, i)}</span>
+                      {childRow ? (
+                        <span className="set-num set-num--dropset-child" aria-hidden="true">
+                          {getSetLabel(sets, i)}
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          className="set-num set-reorder-handle"
+                          aria-keyshortcuts="ArrowUp ArrowDown"
+                          aria-label={`Reorder set ${getSetLabel(sets, i)}. Position ${Math.max(1, reorderPosition + 1)} of ${Math.max(1, movableSetGroups.length)}. Hold and drag, or use Arrow Up and Arrow Down.`}
+                          disabled={reorderPosition < 0 || movableSetGroups.length < 2}
+                          onPointerDown={(event) => handleSetPointerDown(event, i, s.clientSetId)}
+                          onTouchStart={(event) => handleSetTouchStart(event, i, s.clientSetId)}
+                          onKeyDown={(event) => {
+                            if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+                            event.preventDefault();
+                            moveSet(i, event.key === 'ArrowUp' ? -1 : 1);
+                          }}
+                        >
+                          <span aria-hidden="true">{getSetLabel(sets, i)}</span>
+                        </button>
+                      )}
                       <div className="set-stepper set-stepper--reps">
                         <span className="set-stepper__label" aria-hidden="true">Reps</span>
                         <button type="button" className="set-stepper__button" data-testid="set-stepper-button" aria-hidden="true" tabIndex={-1} aria-label={`Decrease set ${i + 1} reps`} onClick={() => stepSetValue(i, 'reps', -1)}>−</button>
