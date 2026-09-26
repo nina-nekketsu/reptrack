@@ -332,6 +332,7 @@ export default function ExerciseLogModal({
   const [sets, setSets] = useState([emptySetRow()]);
   const setsRef = useRef(sets);
   setsRef.current = sets;
+  const [restStartRequest, setRestStartRequest] = useState(0);
   const [editingSession, setEditingSession] = useState(null);
   const [confirmDeleteSession, setConfirmDeleteSession] = useState(null);
   const [intensity, setIntensity] = useState('moderate');
@@ -558,6 +559,18 @@ export default function ExerciseLogModal({
     setSavedSetFeedback([]);
     setLocalSaveStatus('');
     setSets((prev) => applySetUpdate(prev, index, field, value));
+  }
+
+  function toggleSetDone(index) {
+    const current = setsRef.current[index];
+    if (!current) return;
+    const completing = !current.done;
+    const next = applySetUpdate(setsRef.current, index, 'done', completing);
+    setsRef.current = next;
+    setSavedSetFeedback([]);
+    setLocalSaveStatus('');
+    setSets(next);
+    if (completing && liveTrainingSheet) setRestStartRequest((request) => request + 1);
   }
 
   function stepSetValue(index, field, delta) {
@@ -1054,7 +1067,7 @@ export default function ExerciseLogModal({
               <p className="modal-sub">{exercise.muscleGroup} · Log your sets</p>
             </div>
 
-            <SetTimer exerciseId={exercise.id} />
+            <SetTimer exerciseId={exercise.id} restStartRequest={restStartRequest} />
           </div>
           <div className="log-tabs-wrapper">
             <div className="log-tabs" role="tablist" aria-label="Exercise tabs">
@@ -1222,7 +1235,7 @@ export default function ExerciseLogModal({
                         <button
                           type="button"
                           className={`set-done-btn ${s.done ? 'set-done-btn--active' : ''}`}
-                          onClick={() => updateSet(i, 'done', !s.done)}
+                          onClick={() => toggleSetDone(i)}
                           disabled={childRow || !meaningful}
                           aria-pressed={Boolean(s.done)}
                           aria-label={`Mark set ${getSetLabel(sets, i)} ${s.done ? 'not done' : 'done'}`}

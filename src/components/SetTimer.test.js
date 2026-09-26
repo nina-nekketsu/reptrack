@@ -20,6 +20,7 @@ const timerDefaults = {
   exerciseElapsedMs: 0,
   restRemainingMs: 0,
   restDurationMs: 90000,
+  restStartCount: 0,
   flashIdx: 0,
   setExerciseId: jest.fn(),
   setRestDuration: jest.fn(),
@@ -60,7 +61,8 @@ describe('SetTimer DS-11 redesign', () => {
     expect(inactivePhase).toHaveTextContent('0:00');
     expect(activePhase).toHaveClass('timer-phase--rest');
     expect(inactivePhase).toHaveClass('timer-phase--exercise');
-    expect(screen.getByText('Rest started, 90 seconds')).toHaveClass('sr-only');
+    expect(screen.getByTestId('rest-announcement')).toHaveClass('sr-only');
+    expect(screen.getByTestId('rest-announcement')).toBeEmptyDOMElement();
     expect(screen.queryAllByText(/^Rest$/i)).toHaveLength(0);
   });
 
@@ -136,6 +138,6 @@ describe('SetTimer DS-11 redesign', () => {
 
     expect(screen.queryByTestId('timer-flash-overlay')).not.toBeInTheDocument();
     expect(screen.getByTestId('timer-active-phase')).toHaveClass('timer-phase--pulse');
-    expect(screen.getByText('Rest started, 90 seconds')).toHaveClass('sr-only');
+    expect(screen.getByTestId('rest-announcement')).toBeEmptyDOMElement();
   });
 });

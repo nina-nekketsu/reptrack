@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTimer } from '../context/TimerContext';
 import Sheet from './Sheet';
 import {
@@ -11,13 +11,15 @@ import {
 
 const QUICK_REST_OPTIONS = [30, 60, 90, 120, 180, 240];
 
-export default function SetTimer({ exerciseId }) {
+export default function SetTimer({ exerciseId, restStartRequest = 0 }) {
   const timer = useTimer();
+  const { startRest } = timer;
   const [restSeconds, setRestSeconds] = useState(() => loadRestDefault(exerciseId));
   const [autoStart, setAutoStart] = useState(loadAutoStart);
   const [restSheetOpen, setRestSheetOpen] = useState(false);
   const [controlsOpen, setControlsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const lastRestStartRequest = useRef(restStartRequest);
 
   useEffect(() => {
     if (!exerciseId) return;
@@ -26,6 +28,12 @@ export default function SetTimer({ exerciseId }) {
     setRestSeconds(defaultRest);
     timer.setRestDuration(defaultRest * 1000);
   }, [exerciseId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (lastRestStartRequest.current === restStartRequest) return;
+    lastRestStartRequest.current = restStartRequest;
+    startRest(restSeconds * 1000);
+  }, [restStartRequest, restSeconds, startRest]);
 
   function updateRestSeconds(value) {
     const seconds = Math.max(5, Math.min(600, Number(value) || 90));
@@ -66,7 +74,11 @@ export default function SetTimer({ exerciseId }) {
 
   return (
     <section className={`set-timer set-timer--ds11 ${timer.isAlert ? 'set-timer--alert' : ''}`} aria-label="Set timer">
-      <p className="sr-only" aria-live="polite">Rest started, {restSeconds} seconds</p>
+      <p className="sr-only" role="status" aria-live="polite" data-testid="rest-announcement">
+        {timer.isResting && timer.restStartCount > 0 && (
+          <span key={timer.restStartCount}>Rest started, {Math.round(timer.restDurationMs / 1000)} seconds</span>
+        )}
+      </p>
 
       <div
         className={`timer-phase timer-phase--active ${activePhaseClass} ${timer.isAlert ? 'timer-phase--alert-feedback timer-phase--pulse' : ''}`}

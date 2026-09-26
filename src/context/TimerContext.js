@@ -205,6 +205,7 @@ export function TimerProvider({ children }) {
   // Display values updated by tick
   const [exerciseDisplay, setExerciseDisplay] = React.useState('0:00');
   const [restDisplay, setRestDisplay]         = React.useState('0:00');
+  const [restStartCount, setRestStartCount]    = React.useState(0);
   const [flashIdx, setFlashIdx]               = React.useState(0);
 
   const stateRef     = useRef(state);
@@ -243,14 +244,19 @@ export function TimerProvider({ children }) {
     });
   }, []);
 
-  // Sync to Supabase on phase transitions (debounced)
-  const prevPhaseRef = useRef(state.phase);
+  // Sync persistent timer transitions, including a fresh deadline while still resting.
+  // Elapsed/display ticks do not change this identity and never trigger remote writes.
+  const syncKey = state.phase === PHASE_IDLE ? PHASE_IDLE : [
+    state.phase, state.exerciseId, state.exerciseStartedAt,
+    state.restEndAt, state.restDurationMs,
+  ].join('|');
+  const prevSyncKeyRef = useRef(syncKey);
   useEffect(() => {
-    if (state.phase !== prevPhaseRef.current) {
-      prevPhaseRef.current = state.phase;
+    if (syncKey !== prevSyncKeyRef.current) {
+      prevSyncKeyRef.current = syncKey;
       syncToSupabase(state);
     }
-  }, [state, syncToSupabase]);
+  }, [syncKey, state, syncToSupabase]);
 
   // ── Flash animation for alert phase ──
   const startFlash = useCallback(() => {
@@ -356,8 +362,11 @@ export function TimerProvider({ children }) {
 
   const startRest = useCallback((durationMs) => {
     const ms = durationMs || stateRef.current?.restDurationMs || 90000;
+    stopFlash();
+    setRestDisplay(formatMs(ms));
+    setRestStartCount((count) => count + 1);
     dispatch({ type: 'START_REST', durationMs: ms });
-  }, []);
+  }, [stopFlash]);
 
   const reset = useCallback(() => {
     stopFlash();
@@ -392,6 +401,7 @@ export function TimerProvider({ children }) {
     // Display values (formatted strings, updated at 100ms)
     exerciseDisplay,
     restDisplay,
+    restStartCount,
     flashIdx,
 
     // Raw ms values for components that need them
