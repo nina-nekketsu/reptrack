@@ -5,7 +5,7 @@
 - [x] Connect the green set-completion transition to the existing rest timer; preserve manual controls and non-live behavior.
 - [x] Cover uncheck/recheck, consecutive sets, alert-phase restart, configured duration, remote deadline sync, persistence, and accessible announcements. Independent read-only review found no blocking issues; both non-blocking issues were fixed.
 - [x] Verify lint, full test suite, production build, and PRD/release contracts (62 suites / 351 tests pass; build and contracts pass).
-- [ ] Exercise the authenticated live-workout flow in a real browser before release (browser tool blocked the local/private development URL).
-- [ ] Deploy to the live site only after Lloyd explicitly approves that action.
+- [ ] Exercise the authenticated live-workout flow in a real browser. The public Pages URL and bundle were verified, but browser automation could not complete an authenticated set click.
+- [x] Publish after Lloyd's explicit approval. CI run `36227917150` deployed commit `ddf8082e`; live `build-info.json`, service worker, and main bundle were fetched and matched that release.
 
 Local implementation: `src/components/ExerciseLogModal.js`, `src/components/SetTimer.js`, `src/context/TimerContext.js`; regression tests: `src/components/ExerciseLogModal.autoRest.test.js`.
