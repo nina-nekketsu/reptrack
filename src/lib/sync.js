@@ -35,12 +35,26 @@ let _pausedReason = null;
 
 export function serializeSessionBestSet(session = {}) {
   const targetSetCount = Number(session.targetSetCount);
-  if (!Number.isFinite(targetSetCount) || targetSetCount < 1) {
+  const metadata = {
+    ...(Number.isFinite(targetSetCount) && targetSetCount >= 1
+      ? { sessionTargetSetCount: Math.floor(targetSetCount) }
+      : {}),
+    ...(typeof session.clientSessionId === 'string' && session.clientSessionId
+      ? { sessionClientSessionId: session.clientSessionId }
+      : {}),
+    ...(typeof session.workoutSessionStartedAt === 'string' && session.workoutSessionStartedAt
+      ? { sessionWorkoutSessionStartedAt: session.workoutSessionStartedAt }
+      : {}),
+    ...(typeof session.workoutSessionOrderKey === 'string' && session.workoutSessionOrderKey
+      ? { sessionWorkoutSessionOrderKey: session.workoutSessionOrderKey }
+      : {}),
+  };
+  if (Object.keys(metadata).length === 0) {
     return session.bestSet || null;
   }
   return {
     ...(session.bestSet || {}),
-    sessionTargetSetCount: Math.floor(targetSetCount),
+    ...metadata,
   };
 }
 
@@ -48,12 +62,27 @@ export function deserializeSessionBestSet(remoteBestSet) {
   if (!remoteBestSet || typeof remoteBestSet !== 'object' || Array.isArray(remoteBestSet)) {
     return { bestSet: remoteBestSet || null };
   }
-  const { sessionTargetSetCount, ...bestSet } = remoteBestSet;
+  const {
+    sessionTargetSetCount,
+    sessionClientSessionId,
+    sessionWorkoutSessionStartedAt,
+    sessionWorkoutSessionOrderKey,
+    ...bestSet
+  } = remoteBestSet;
   const targetSetCount = Number(sessionTargetSetCount);
   return {
     bestSet: Object.keys(bestSet).length > 0 ? bestSet : null,
     ...(Number.isFinite(targetSetCount) && targetSetCount >= 1
       ? { targetSetCount: Math.floor(targetSetCount) }
+      : {}),
+    ...(typeof sessionClientSessionId === 'string' && sessionClientSessionId
+      ? { clientSessionId: sessionClientSessionId }
+      : {}),
+    ...(typeof sessionWorkoutSessionStartedAt === 'string' && sessionWorkoutSessionStartedAt
+      ? { workoutSessionStartedAt: sessionWorkoutSessionStartedAt }
+      : {}),
+    ...(typeof sessionWorkoutSessionOrderKey === 'string' && sessionWorkoutSessionOrderKey
+      ? { workoutSessionOrderKey: sessionWorkoutSessionOrderKey }
       : {}),
   };
 }
@@ -98,6 +127,14 @@ function canonicalJSON(value) {
   return value;
 }
 
+function comparableSessionBestSet(remoteBestSet) {
+  const { bestSet, targetSetCount } = deserializeSessionBestSet(remoteBestSet);
+  return {
+    bestSet,
+    targetSetCount: targetSetCount || null,
+  };
+}
+
 function equivalentSessionRow(payload, remote) {
   if (!remote) return false;
   const localComparable = {
@@ -105,7 +142,7 @@ function equivalentSessionRow(payload, remote) {
     exercise_id: payload.exercise_id,
     date: payload.date,
     sets: payload.sets || [],
-    best_set: payload.best_set || null,
+    best_set: comparableSessionBestSet(payload.best_set),
     total_reps: payload.total_reps || 0,
     total_volume: payload.total_volume || 0,
   };
@@ -114,7 +151,7 @@ function equivalentSessionRow(payload, remote) {
     exercise_id: remote.exercise_id,
     date: remote.date,
     sets: remote.sets || [],
-    best_set: remote.best_set || null,
+    best_set: comparableSessionBestSet(remote.best_set),
     total_reps: remote.total_reps || 0,
     total_volume: remote.total_volume || 0,
   };
@@ -236,11 +273,12 @@ function attachRemoteSessionId(payload, remoteId) {
   const logs = safeParseJSON(localStorage.getItem('exerciseLogs'), {});
   const sessions = logs[payload.exercise_id] || [];
   let changed = false;
-  const targetIndex = sessions.findIndex((session) => !session.remoteId && (
-    payload._client_session_id
-      ? session.clientSessionId === payload._client_session_id
-      : session.date === payload.date
-  ));
+  const payloadIdentity = {
+    date: payload.date,
+    ...deserializeSessionBestSet(payload.best_set),
+    ...(payload._client_session_id ? { clientSessionId: payload._client_session_id } : {}),
+  };
+  const targetIndex = findLatestSessionIndex(sessions, payloadIdentity, true);
   const nextSessions = sessions.map((session, index) => {
     if (index !== targetIndex) return session;
     changed = true;
@@ -254,6 +292,28 @@ function attachRemoteSessionId(payload, remoteId) {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new Event('exerciseLogged'));
   }
+}
+
+function sameLocalSessionIdentity(candidate, identity) {
+  if (identity.clientSessionId) {
+    return candidate.clientSessionId === identity.clientSessionId;
+  }
+  if (identity.workoutSessionStartedAt || identity.workoutSessionOrderKey) {
+    return (!identity.workoutSessionStartedAt
+      || candidate.workoutSessionStartedAt === identity.workoutSessionStartedAt)
+      && (!identity.workoutSessionOrderKey
+        || candidate.workoutSessionOrderKey === identity.workoutSessionOrderKey);
+  }
+  return candidate.date === identity.date;
+}
+
+function findLatestSessionIndex(sessions, identity, requireUnattached = false) {
+  for (let index = sessions.length - 1; index >= 0; index -= 1) {
+    const candidate = sessions[index];
+    if ((!requireUnattached || !candidate.remoteId)
+      && sameLocalSessionIdentity(candidate, identity)) return index;
+  }
+  return -1;
 }
 
 export function listPendingMutations() {
@@ -802,10 +862,9 @@ export async function pushSession(exerciseId, session, userId) {
   });
   await flushPendingMutations();
   const latestLogs = safeParseJSON(localStorage.getItem('exerciseLogs'), {});
-  const matched = (latestLogs[String(exerciseId)] || latestLogs[exerciseId] || [])
-    .find((candidate) => session.clientSessionId
-      ? candidate.clientSessionId === session.clientSessionId
-      : candidate.date === session.date);
+  const latestSessions = latestLogs[String(exerciseId)] || latestLogs[exerciseId] || [];
+  const matchedIndex = findLatestSessionIndex(latestSessions, session);
+  const matched = matchedIndex >= 0 ? latestSessions[matchedIndex] : null;
   return matched?.remoteId || null;
 }
 
