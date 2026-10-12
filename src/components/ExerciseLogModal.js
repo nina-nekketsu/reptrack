@@ -1,10 +1,11 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import SetTimer from './SetTimer';
 import RecordBadges from './RecordBadges';
 import VolumeGraph from './VolumeGraph';
 import CoachFeedback from './CoachFeedback';
 import RestAdvisor from './RestAdvisor';
 import Toast from './Toast';
+import Dialog from './ui/Dialog';
 import { CheckIcon, ClipboardIcon, EmptyIcon, TrashIcon } from './icons';
 import { formatBuildId } from '../utils/buildInfo';
 import {
@@ -378,6 +379,8 @@ export default function ExerciseLogModal({
   const logScrollRef = useRef(null);
   const weightInputRefs = useRef([]);
   const mountedRef = useRef(true);
+  const dialogCloseRef = useRef(null);
+  const handleDialogClose = useCallback(() => dialogCloseRef.current?.(), []);
   const lastDraftProgressSignatureRef = useRef('');
   const setDragRef = useRef({ active: false, index: -1, pointerId: null, timer: null });
   const setTouchCleanupRef = useRef(null);
@@ -823,6 +826,7 @@ export default function ExerciseLogModal({
     setSetReorderAnnouncement('');
     onClose();
   }
+  dialogCloseRef.current = confirmDeleteSession ? handleCancelDelete : closeModal;
 
   function handleBackToLog() {
     setActiveTab('log');
@@ -1106,13 +1110,15 @@ export default function ExerciseLogModal({
   const last5 = sessionsDesc.slice(0, 5);
 
   return (
-    <div className="modal-overlay" onClick={closeModal}>
-      <div
-        className={`modal modal--log${liveTrainingSheet ? ' modal--live-training' : ''}`}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="exercise-log-title"
-        onClick={(e) => e.stopPropagation()}
+    <>
+      <Dialog
+        open
+        onClose={handleDialogClose}
+        title={exercise.name}
+        className="modal-overlay"
+        panelClassName={`modal modal--log${liveTrainingSheet ? ' modal--live-training' : ''}`}
+        labelledBy="exercise-log-title"
+        renderHeader={false}
       >
         <div className="log-sticky-top">
           <div id="log-timer-top" className="log-timer-zone">
@@ -1572,29 +1578,34 @@ export default function ExerciseLogModal({
             </>
           )}
         </div>
-      </div>
+      </Dialog>
       <Toast
         open={Boolean(undoRemoval)}
         message="Set removed"
         actionLabel="Undo"
         onAction={undoRemoveSet}
       />
-      {confirmDeleteSession && (
-        <div className="confirm-overlay" onClick={handleCancelDelete}>
-          <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="confirm-icon" aria-hidden="true"><TrashIcon /></div>
-            <p className="confirm-message">Delete this session? This cannot be undone.</p>
-            <div className="confirm-actions">
-              <button className="btn-danger" onClick={handleConfirmDelete}>
-                Delete
-              </button>
-              <button className="btn-secondary" onClick={handleCancelDelete}>
-                Cancel
-              </button>
-            </div>
-          </div>
+      <Dialog
+        open={Boolean(confirmDeleteSession)}
+        onClose={handleCancelDelete}
+        title="Delete this session?"
+        className="confirm-overlay"
+        panelClassName="confirm-modal"
+        labelledBy="delete-session-title"
+        renderHeader={false}
+      >
+        <div className="confirm-icon" aria-hidden="true"><TrashIcon /></div>
+        <h2 id="delete-session-title" className="sr-only">Delete this session?</h2>
+        <p className="confirm-message">Delete this session? This cannot be undone.</p>
+        <div className="confirm-actions">
+          <button className="btn-danger" onClick={handleConfirmDelete}>
+            Delete
+          </button>
+          <button className="btn-secondary" onClick={handleCancelDelete}>
+            Cancel
+          </button>
         </div>
-      )}
-    </div>
+      </Dialog>
+    </>
   );
 }

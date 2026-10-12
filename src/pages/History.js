@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import ExerciseLogModal from '../components/ExerciseLogModal';
+import Dialog from '../components/ui/Dialog';
 import { buildHistoryModel, formatVolume } from './productSurfaceData';
 import './Page.css';
 
@@ -41,6 +42,7 @@ export default function History() {
 
   const model = useMemo(() => buildHistoryModel({ logs, exercises, limit }), [logs, exercises, limit]);
   const selectedDay = model.days.find((day) => day.key === selectedDayKey) || null;
+  const closeDayDetail = useCallback(() => setSelectedDayKey(null), []);
 
   function openExerciseHistory(exerciseId) {
     const exercise = exercises.find((candidate) => String(candidate.id) === String(exerciseId));
@@ -86,35 +88,41 @@ export default function History() {
       )}
 
       {selectedDay && !editingExercise && (
-        <div className="history-detail-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setSelectedDayKey(null)}>
-          <section className="history-detail" role="dialog" aria-modal="true" aria-labelledby="history-detail-title">
-            <header>
-              <div>
-                <span className="page-overline">Day detail</span>
-                <h2 id="history-detail-title">{formatDay(selectedDay.date)}</h2>
-              </div>
-              <button type="button" className="history-detail__close" aria-label="Close day detail" onClick={() => setSelectedDayKey(null)}>×</button>
-            </header>
-            <div className="history-detail__summary">
-              <span>{selectedDay.setCount} sets</span>
-              <span>{formatVolume(selectedDay.volume)} volume</span>
+        <Dialog
+          open
+          onClose={closeDayDetail}
+          title={formatDay(selectedDay.date)}
+          className="history-detail-backdrop"
+          panelClassName="history-detail"
+          labelledBy="history-detail-title"
+          renderHeader={false}
+        >
+          <header>
+            <div>
+              <span className="page-overline">Day detail</span>
+              <h2 id="history-detail-title">{formatDay(selectedDay.date)}</h2>
             </div>
-            <div className="history-detail__sessions">
-              {selectedDay.sessions.map((session) => (
-                <article className="history-session" key={session.sessionKey}>
-                  <div>
-                    <span>{formatTime(session.date)}</span>
-                    <strong>{session.exerciseName}</strong>
-                    <small>{session.setCount} sets · {session.totalReps} reps · {formatVolume(session.totalVolume)}</small>
-                  </div>
-                  <button type="button" onClick={() => openExerciseHistory(session.exerciseId)}>
-                    Edit or delete
-                  </button>
-                </article>
-              ))}
-            </div>
-          </section>
-        </div>
+            <button type="button" className="history-detail__close" aria-label="Close day detail" onClick={closeDayDetail}>×</button>
+          </header>
+          <div className="history-detail__summary">
+            <span>{selectedDay.setCount} sets</span>
+            <span>{formatVolume(selectedDay.volume)} volume</span>
+          </div>
+          <div className="history-detail__sessions">
+            {selectedDay.sessions.map((session) => (
+              <article className="history-session" key={session.sessionKey}>
+                <div>
+                  <span>{formatTime(session.date)}</span>
+                  <strong>{session.exerciseName}</strong>
+                  <small>{session.setCount} sets · {session.totalReps} reps · {formatVolume(session.totalVolume)}</small>
+                </div>
+                <button type="button" onClick={() => openExerciseHistory(session.exerciseId)}>
+                  Edit or delete
+                </button>
+              </article>
+            ))}
+          </div>
+        </Dialog>
       )}
 
       {editingExercise && (
