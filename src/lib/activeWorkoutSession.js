@@ -120,6 +120,12 @@ function announceStoredSessionChange() {
   }
 }
 
+function matchesExpectedSession(session, expectedSession) {
+  if (!expectedSession) return true;
+  return String(session?.planId) === String(expectedSession.planId)
+    && String(session?.startedAt) === String(expectedSession.startedAt);
+}
+
 export function readStoredActiveWorkoutSession(storage = defaultStorage()) {
   if (!storage) return null;
 
@@ -168,7 +174,7 @@ export function saveActiveWorkoutSession(command, storage = defaultStorage()) {
 
   if (command?.action === 'end') {
     const current = readStoredActiveWorkoutSession(storage);
-    if (!current) return null;
+    if (!current || !matchesExpectedSession(current, command.expectedSession)) return null;
     const sessionWithDeviceId = {
       ...current,
       deviceId: current.deviceId || getOrCreateDeviceId(storage),
@@ -181,7 +187,9 @@ export function saveActiveWorkoutSession(command, storage = defaultStorage()) {
 
   if (command?.action === 'update') {
     const current = readStoredActiveWorkoutSession(storage);
-    if (!current || current.status !== ACTIVE_STATUS) return null;
+    if (!current
+      || current.status !== ACTIVE_STATUS
+      || !matchesExpectedSession(current, command.expectedSession)) return null;
     const patch = command.patch && typeof command.patch === 'object' ? command.patch : {};
     return writeStoredActiveWorkoutSession({
       ...current,

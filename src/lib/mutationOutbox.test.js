@@ -52,6 +52,40 @@ describe('mutation outbox storage safety', () => {
     expect(reloaded.listPending()).toEqual(outbox.listPending());
   });
 
+  test('retains the latest edit in memory and throws when it cannot be durably queued', () => {
+    let failWrites = false;
+    const storage = {
+      getItem: (key) => localStorage.getItem(key),
+      setItem: (key, value) => {
+        if (failWrites) throw new Error('quota exceeded');
+        localStorage.setItem(key, value);
+      },
+    };
+    const outbox = createMutationOutbox({ storage, now: () => 101 });
+    outbox.enqueue({
+      kind: 'exercise/update',
+      entityId: 'exercise-1',
+      idempotencyKey: 'exercise-1',
+      payload: { name: 'OLD' },
+    });
+
+    failWrites = true;
+    expect(() => outbox.enqueue({
+      kind: 'exercise/update',
+      entityId: 'exercise-1',
+      idempotencyKey: 'exercise-1',
+      payload: { name: 'NEW' },
+    })).toThrow(expect.objectContaining({
+      code: 'SYNC_STORAGE_ERROR',
+      message: 'Unable to persist pending sync changes',
+    }));
+
+    expect(outbox.listPending()).toEqual([
+      expect.objectContaining({ status: 'pending', payload: { name: 'NEW' } }),
+    ]);
+    expect(JSON.parse(localStorage.getItem(MUTATION_OUTBOX_STORAGE_KEY))[0].payload).toEqual({ name: 'OLD' });
+  });
+
   test('flushes in order, retains sanitized failures, and removes successful operations', async () => {
     const outbox = createMutationOutbox({ storage: localStorage, now: () => 123 });
     outbox.enqueue({
@@ -89,6 +123,35 @@ describe('mutation outbox storage safety', () => {
       }),
     ]);
     expect(localStorage.getItem(MUTATION_OUTBOX_STORAGE_KEY)).not.toContain('must-not-persist');
+  });
+
+  test('does not acknowledge remote success when removing it from durable storage fails', async () => {
+    let writes = 0;
+    const storage = {
+      getItem: (key) => localStorage.getItem(key),
+      setItem: (key, value) => {
+        writes += 1;
+        if (writes === 3) throw new Error('quota exceeded');
+        localStorage.setItem(key, value);
+      },
+    };
+    const outbox = createMutationOutbox({ storage, now: () => 222 });
+    outbox.enqueue({
+      kind: 'exercise/update',
+      entityId: 'exercise-1',
+      idempotencyKey: 'exercise-1',
+      payload: { name: 'Bench' },
+    });
+
+    const executor = jest.fn().mockResolvedValue(undefined);
+    await expect(outbox.flush(executor)).rejects.toEqual(expect.objectContaining({
+      code: 'SYNC_STORAGE_ERROR',
+    }));
+
+    expect(executor).toHaveBeenCalledTimes(1);
+    expect(outbox.listPending()).toEqual([
+      expect.objectContaining({ idempotencyKey: 'exercise-1', status: 'pending' }),
+    ]);
   });
 
   test('retry makes a failed operation pending and a successful replay removes it', async () => {

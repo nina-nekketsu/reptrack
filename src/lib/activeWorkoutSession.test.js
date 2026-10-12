@@ -193,6 +193,46 @@ describe('active workout session local store', () => {
     expect(readStoredActiveWorkoutSession()).toEqual(updated);
   });
 
+  test.each(['update', 'end'])('rejects a stale %s command without writing or announcing', (action) => {
+    const listener = jest.fn();
+    window.addEventListener(ACTIVE_WORKOUT_CHANGED_EVENT, listener);
+    const original = active();
+    localStorage.setItem(ACTIVE_WORKOUT_KEY, JSON.stringify(original));
+
+    const result = saveActiveWorkoutSession({
+      action,
+      expectedSession: {
+        planId: 'different-plan',
+        startedAt: original.startedAt,
+      },
+      ...(action === 'update' ? { patch: { completedExerciseIds: ['squat'] } } : {}),
+      now: '2026-07-14T09:00:00.000Z',
+    });
+
+    expect(result).toBeNull();
+    expect(JSON.parse(localStorage.getItem(ACTIVE_WORKOUT_KEY))).toEqual(original);
+    expect(listener).not.toHaveBeenCalled();
+    window.removeEventListener(ACTIVE_WORKOUT_CHANGED_EVENT, listener);
+  });
+
+  test.each(['update', 'end'])('accepts a matching expected session for %s', (action) => {
+    const original = active();
+    localStorage.setItem(ACTIVE_WORKOUT_KEY, JSON.stringify(original));
+
+    const result = saveActiveWorkoutSession({
+      action,
+      expectedSession: {
+        planId: original.planId,
+        startedAt: original.startedAt,
+      },
+      ...(action === 'update' ? { patch: { completedExerciseIds: ['squat'] } } : {}),
+      now: '2026-07-14T09:00:00.000Z',
+    });
+
+    expect(result).not.toBeNull();
+    expect(result.updatedAt).toBe('2026-07-14T09:00:00.000Z');
+  });
+
   test('ending a legacy session backfills its persistent browser device id', () => {
     getOrCreateDeviceId(localStorage, () => 'device-generated');
     localStorage.setItem(ACTIVE_WORKOUT_KEY, JSON.stringify({

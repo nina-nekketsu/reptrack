@@ -87,6 +87,53 @@ function getMutationOutbox() {
   return _mutationOutbox;
 }
 
+function canonicalJSON(value) {
+  if (Array.isArray(value)) return value.map(canonicalJSON);
+  if (value && typeof value === 'object') {
+    return Object.keys(value).sort().reduce((result, key) => ({
+      ...result,
+      [key]: canonicalJSON(value[key]),
+    }), {});
+  }
+  return value;
+}
+
+function equivalentSessionRow(payload, remote) {
+  if (!remote) return false;
+  const localComparable = {
+    user_id: payload.user_id,
+    exercise_id: payload.exercise_id,
+    date: payload.date,
+    sets: payload.sets || [],
+    best_set: payload.best_set || null,
+    total_reps: payload.total_reps || 0,
+    total_volume: payload.total_volume || 0,
+  };
+  const remoteComparable = {
+    user_id: remote.user_id,
+    exercise_id: remote.exercise_id,
+    date: remote.date,
+    sets: remote.sets || [],
+    best_set: remote.best_set || null,
+    total_reps: remote.total_reps || 0,
+    total_volume: remote.total_volume || 0,
+  };
+  return JSON.stringify(canonicalJSON(localComparable)) === JSON.stringify(canonicalJSON(remoteComparable));
+}
+
+async function recoverEquivalentSessionConflict(payload, insertError) {
+  if (String(insertError?.code) !== '23505') throw insertError;
+  const { data, error } = await supabase
+    .from('exercise_logs')
+    .select('*')
+    .eq('user_id', payload.user_id)
+    .eq('exercise_id', payload.exercise_id)
+    .eq('date', payload.date)
+    .maybeSingle();
+  if (error || !equivalentSessionRow(payload, data)) throw insertError;
+  return data;
+}
+
 async function executePendingMutation(operation) {
   if (operation.kind === 'exercise/update') {
     const { error } = await supabase
@@ -145,8 +192,10 @@ async function executePendingMutation(operation) {
       .insert(remotePayload)
       .select()
       .single();
-    if (error) throw error;
-    attachRemoteSessionId(operation.payload, data?.id);
+    const inserted = error
+      ? await recoverEquivalentSessionConflict(remotePayload, error)
+      : data;
+    attachRemoteSessionId(operation.payload, inserted?.id);
     return;
   }
 
@@ -354,6 +403,19 @@ export async function pullAll(userId) {
   setStatus('syncing');
 
   try {
+    await flushPendingMutations();
+    const actionable = getMutationOutbox().listPending()
+      .filter((operation) => operation.payload?.user_id === userId);
+    const pendingEntityIds = (kind) => new Set(actionable
+      .filter((operation) => operation.kind === kind)
+      .map((operation) => String(operation.entityId)));
+    const pendingExerciseUpdates = pendingEntityIds('exercise/update');
+    const pendingExerciseDeletes = pendingEntityIds('exercise/delete');
+    const pendingPlanUpdates = pendingEntityIds('plan/update');
+    const pendingSessionDeletes = pendingEntityIds('session/delete');
+    const pendingCoachUpdates = pendingEntityIds('coach_state/update');
+    const hasPendingSettings = actionable.some((operation) => operation.kind === 'settings/update');
+
     const [exRes, plansRes, logsRes, settingsRes, timerRes, coachStateRes] = await Promise.all([
       supabase.from('exercises').select('*').eq('user_id', userId),
       supabase.from('workout_plans').select('*').eq('user_id', userId),
@@ -373,7 +435,9 @@ export async function pullAll(userId) {
 
     // ── Merge exercises ──
     if (exRes.data && exRes.data.length > 0) {
-      const remote = exRes.data.map(row => ({
+      const remote = exRes.data
+        .filter((row) => !pendingExerciseDeletes.has(String(row.id)))
+        .map(row => ({
         id: row.id,
         name: row.name,
         muscleGroup: row.muscle_group,
@@ -381,7 +445,8 @@ export async function pullAll(userId) {
       }));
       // Merge: remote wins for matching IDs, keep local-only exercises
       const local = safeParseJSON(localStorage.getItem('exercises'), []);
-      const merged = mergeById(local, remote);
+      const pendingLocal = local.filter((exercise) => pendingExerciseUpdates.has(String(exercise.id)));
+      const merged = mergeById(mergeById(local, remote), pendingLocal);
       localStorage.setItem('exercises', JSON.stringify(merged));
     }
 
@@ -394,7 +459,8 @@ export async function pullAll(userId) {
         createdAt: row.created_at,
       }));
       const local = safeParseJSON(localStorage.getItem('workoutPlans'), []);
-      const merged = mergeById(local, remote);
+      const pendingLocal = local.filter((plan) => pendingPlanUpdates.has(String(plan.id)));
+      const merged = mergeById(mergeById(local, remote), pendingLocal);
       localStorage.setItem('workoutPlans', JSON.stringify(merged));
     }
 
@@ -406,6 +472,8 @@ export async function pullAll(userId) {
       const remoteMap = {};
 
       for (const row of logsRes.data) {
+        if (pendingSessionDeletes.has(String(row.id))
+          || pendingExerciseDeletes.has(String(row.exercise_id))) continue;
         const exId = row.exercise_id;
         if (!remoteMap[exId]) remoteMap[exId] = [];
         const decodedBestSet = deserializeSessionBestSet(row.best_set);
@@ -435,7 +503,7 @@ export async function pullAll(userId) {
     }
 
     // ── Merge user settings ──
-    if (settingsRes.data && settingsRes.data.settings) {
+    if (!hasPendingSettings && settingsRes.data && settingsRes.data.settings) {
       const settings = settingsRes.data.settings;
       // Restore individual localStorage keys from the settings blob
       if (settings.currentPlanId) {
@@ -462,7 +530,11 @@ export async function pullAll(userId) {
     }
 
     if (coachStateRes.data && coachStateRes.data.length > 0) {
-      applyRemoteCoachStateRows(coachStateRes.data, userId, localStorage);
+      applyRemoteCoachStateRows(
+        coachStateRes.data.filter((row) => !pendingCoachUpdates.has(String(row.key))),
+        userId,
+        localStorage
+      );
     }
 
     await pullActiveWorkoutSession(supabase, userId);

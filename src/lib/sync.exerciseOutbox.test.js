@@ -231,6 +231,95 @@ describe('exercise mutation outbox integration', () => {
     ]);
   });
 
+  test('recovers a crash-retried insert conflict only when the remote row is equivalent', async () => {
+    const session = {
+      date: '2026-07-28T12:00:00.000Z',
+      clientSessionId: 'retry-a',
+      sets: [{ reps: 5, weight: 50 }],
+      bestSet: { reps: 5, weight: 50 },
+      totalReps: 5,
+      totalVolume: 250,
+    };
+    localStorage.setItem('exerciseLogs', JSON.stringify({ bench: [session] }));
+    const uniqueConflict = Object.assign(new Error('duplicate key'), { code: '23505' });
+    const insert = jest.fn(() => ({
+      select: () => ({ single: async () => ({ data: null, error: uniqueConflict }) }),
+    }));
+    const maybeSingle = jest.fn(async () => ({
+      data: {
+        id: 'existing-remote',
+        user_id: 'user-1',
+        exercise_id: 'bench',
+        date: session.date,
+        sets: session.sets,
+        best_set: session.bestSet,
+        total_reps: session.totalReps,
+        total_volume: session.totalVolume,
+      },
+      error: null,
+    }));
+    const select = jest.fn(() => {
+      const query = { eq: jest.fn(() => query), maybeSingle };
+      return query;
+    });
+    mockFrom
+      .mockImplementationOnce(() => ({ insert }))
+      .mockImplementationOnce(() => ({ select }));
+    const { listPendingMutations, pushSession } = loadSyncModule();
+
+    await expect(pushSession('bench', session, 'user-1')).resolves.toBe('existing-remote');
+
+    expect(listPendingMutations()).toEqual([]);
+    expect(JSON.parse(localStorage.getItem('exerciseLogs')).bench[0].remoteId).toBe('existing-remote');
+  });
+
+  test('retains a same-timestamp conflict when the remote row belongs to a distinct session', async () => {
+    const session = {
+      date: '2026-07-28T12:00:00.000Z',
+      clientSessionId: 'local-distinct',
+      sets: [{ reps: 5, weight: 50 }],
+      totalReps: 5,
+      totalVolume: 250,
+    };
+    localStorage.setItem('exerciseLogs', JSON.stringify({ bench: [session] }));
+    const uniqueConflict = Object.assign(new Error('duplicate key'), { code: '23505' });
+    const insert = jest.fn(() => ({
+      select: () => ({ single: async () => ({ data: null, error: uniqueConflict }) }),
+    }));
+    const maybeSingle = jest.fn(async () => ({
+      data: {
+        id: 'different-remote',
+        user_id: 'user-1',
+        exercise_id: 'bench',
+        date: session.date,
+        sets: [{ reps: 10, weight: 100 }],
+        best_set: null,
+        total_reps: 10,
+        total_volume: 1000,
+      },
+      error: null,
+    }));
+    const select = jest.fn(() => {
+      const query = { eq: jest.fn(() => query), maybeSingle };
+      return query;
+    });
+    mockFrom
+      .mockImplementationOnce(() => ({ insert }))
+      .mockImplementationOnce(() => ({ select }));
+    const { listPendingMutations, pushSession } = loadSyncModule();
+
+    await expect(pushSession('bench', session, 'user-1')).resolves.toBeNull();
+
+    expect(listPendingMutations()).toEqual([
+      expect.objectContaining({
+        kind: 'session/insert',
+        status: 'failed',
+        lastError: expect.objectContaining({ code: '23505' }),
+      }),
+    ]);
+    expect(JSON.parse(localStorage.getItem('exerciseLogs')).bench[0].remoteId).toBeUndefined();
+  });
+
   test('round-trips a session target through the remote best-set JSON field', () => {
     const { deserializeSessionBestSet, serializeSessionBestSet } = loadSyncModule();
 

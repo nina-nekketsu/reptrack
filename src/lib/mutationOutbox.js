@@ -51,15 +51,21 @@ export function createMutationOutbox({
     });
   }
 
-  function persist() {
+  function persist({ throwOnError = true } = {}) {
+    let storageError = null;
     if (storage) {
       try {
         storage.setItem(MUTATION_OUTBOX_STORAGE_KEY, JSON.stringify(operations));
-      } catch {
-        // The in-memory queue remains usable when browser storage is unavailable.
+      } catch (cause) {
+        storageError = Object.assign(
+          new Error('Unable to persist pending sync changes'),
+          { code: 'SYNC_STORAGE_ERROR', cause }
+        );
       }
     }
     notify();
+    if (storageError && throwOnError) throw storageError;
+    return !storageError;
   }
 
   function load() {
@@ -79,12 +85,12 @@ export function createMutationOutbox({
       }));
       if (valid.length !== parsed.length || parsed.some((item) => item.status === 'syncing')) {
         operations = valid;
-        persist();
+        persist({ throwOnError: false });
       }
       return valid;
     } catch {
       operations = [];
-      persist();
+      persist({ throwOnError: false });
       return [];
     }
   }
@@ -181,34 +187,59 @@ export function createMutationOutbox({
       if (index < 0 || operations[index].status !== 'pending') continue;
 
       processed += 1;
+      const pendingOperation = operations[index];
       operations[index] = {
-        ...operations[index],
+        ...pendingOperation,
         status: 'syncing',
-        attempts: operations[index].attempts + 1,
+        attempts: pendingOperation.attempts + 1,
         updatedAt: now(),
       };
-      persist();
+      try {
+        persist();
+      } catch (error) {
+        operations[index] = pendingOperation;
+        notify();
+        throw error;
+      }
 
+      let executionError = null;
       try {
         await executor(clone(operations[index]));
-        const completedIndex = operations.findIndex((operation) => operation.id === id);
-        if (completedIndex >= 0 && operations[completedIndex].status === 'syncing') {
-          operations = operations.filter((operation) => operation.id !== id);
-        }
-        succeeded += 1;
       } catch (error) {
+        executionError = error;
+      }
+
+      if (executionError) {
         const failedIndex = operations.findIndex((operation) => operation.id === id);
         if (failedIndex >= 0 && operations[failedIndex].status === 'syncing') {
           operations[failedIndex] = {
             ...operations[failedIndex],
             status: 'failed',
-            lastError: sanitizeError(error),
+            lastError: sanitizeError(executionError),
             updatedAt: now(),
           };
         }
         failed += 1;
+        persist();
+        continue;
       }
-      persist();
+
+      const completedIndex = operations.findIndex((operation) => operation.id === id);
+      if (completedIndex >= 0 && operations[completedIndex].status === 'syncing') {
+        const completedOperation = operations[completedIndex];
+        operations = operations.filter((operation) => operation.id !== id);
+        try {
+          persist();
+        } catch (error) {
+          operations.splice(completedIndex, 0, {
+            ...completedOperation,
+            status: 'pending',
+          });
+          notify();
+          throw error;
+        }
+      }
+      succeeded += 1;
     }
 
     return { processed, succeeded, failed, pending: operations.length };
