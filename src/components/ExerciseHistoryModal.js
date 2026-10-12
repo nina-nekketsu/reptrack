@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import RecordBadges from './RecordBadges';
 import VolumeGraph from './VolumeGraph';
 import {
@@ -11,6 +11,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import useOnlineStatus from '../hooks/useOnlineStatus';
 import { TrashIcon } from './icons';
+import Dialog from './ui/Dialog';
 
 /**
  * Full exercise history/detail modal.
@@ -26,6 +27,11 @@ export default function ExerciseHistoryModal({ exercise, logs, onClose, onOpenLo
   const { user } = useAuth();
   const isOnline = useOnlineStatus();
   const [confirmSession, setConfirmSession] = useState(null);
+  const confirmSessionRef = useRef(confirmSession);
+  confirmSessionRef.current = confirmSession;
+  const handleClose = useCallback(() => {
+    if (!confirmSessionRef.current) onClose();
+  }, [onClose]);
 
   const logsResolved = logs !== undefined && logs !== null;
   const safeLogs = logsResolved && typeof logs === 'object' ? logs : {};
@@ -53,12 +59,21 @@ export default function ExerciseHistoryModal({ exercise, logs, onClose, onOpenLo
   // Re-derive after potential deletion
   const displaySessions = graphError ? [] : getSessionsDesc(safeLogs, exercise.id);
 
+  const titleId = `exercise-history-${exercise.id}-title`;
+
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal modal--tall" onClick={(e) => e.stopPropagation()}>
+    <Dialog
+      open
+      onClose={handleClose}
+      title={exercise.name}
+      labelledBy={titleId}
+      className="modal-overlay"
+      panelClassName="modal modal--tall"
+      renderHeader={false}
+    >
         <div className="detail-header">
           <div>
-            <h3 className="modal-title">{exercise.name}</h3>
+            <h3 id={titleId} className="modal-title">{exercise.name}</h3>
             <p className="modal-sub">
               {exercise.muscleGroup} · {displaySessions.length} session{displaySessions.length !== 1 ? 's' : ''}
             </p>
@@ -146,25 +161,26 @@ export default function ExerciseHistoryModal({ exercise, logs, onClose, onOpenLo
         <button className="btn-secondary" onClick={onClose}>
           Close
         </button>
-      </div>
 
       {/* ── Delete confirm modal ── */}
-      {confirmSession && (
-        <div className="confirm-overlay" onClick={handleCancelDelete}>
-          <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="confirm-icon" aria-hidden="true"><TrashIcon /></div>
-            <p className="confirm-message">Delete this session? This cannot be undone.</p>
-            <div className="confirm-actions">
-              <button className="btn-danger" onClick={handleConfirmDelete}>
-                Delete
-              </button>
-              <button className="btn-secondary" onClick={handleCancelDelete}>
-                Cancel
-              </button>
-            </div>
-          </div>
+      <Dialog
+        open={Boolean(confirmSession)}
+        onClose={handleCancelDelete}
+        title="Delete session?"
+        description="This cannot be undone."
+        className="confirm-overlay"
+        panelClassName="confirm-modal"
+      >
+        <div className="confirm-icon" aria-hidden="true"><TrashIcon /></div>
+        <div className="confirm-actions">
+          <button className="btn-danger" onClick={handleConfirmDelete}>
+            Delete
+          </button>
+          <button className="btn-secondary" onClick={handleCancelDelete}>
+            Cancel
+          </button>
         </div>
-      )}
-    </div>
+      </Dialog>
+    </Dialog>
   );
 }

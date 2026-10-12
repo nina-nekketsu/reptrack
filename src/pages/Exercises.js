@@ -12,6 +12,7 @@ import {
 } from '../utils/exerciseHelpers';
 import { useAuth } from '../context/AuthContext';
 import { TrashIcon, WarningIcon } from '../components/icons';
+import Dialog from '../components/ui/Dialog';
 
 const MUSCLE_GROUPS = ['All', 'Chest', 'Back', 'Legs', 'Shoulders', 'Arms', 'Core'];
 
@@ -216,31 +217,26 @@ export default function Exercises() {
       )}
 
       {/* ── Delete exercise confirm modal ── */}
-      {deleteExId && deleteExercise && (
-        <div className="confirm-overlay" onClick={handleCancelDeleteExercise}>
-          <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="confirm-icon" aria-hidden="true"><WarningIcon /></div>
-            <p className="confirm-message">
-              Delete <strong>{deleteExercise.name}</strong>?
-            </p>
-            {deleteExSessions > 0 ? (
-              <p className="confirm-sub">
-                This will also delete {deleteExSessions} logged session{deleteExSessions !== 1 ? 's' : ''}. This cannot be undone.
-              </p>
-            ) : (
-              <p className="confirm-sub">This cannot be undone.</p>
-            )}
-            <div className="confirm-actions">
-              <button className="btn-danger" onClick={handleConfirmDeleteExercise}>
-                Delete
-              </button>
-              <button className="btn-secondary" onClick={handleCancelDeleteExercise}>
-                Cancel
-              </button>
-            </div>
-          </div>
+      <Dialog
+        open={Boolean(deleteExId && deleteExercise)}
+        onClose={handleCancelDeleteExercise}
+        title={`Delete ${deleteExercise?.name || 'exercise'}?`}
+        description={deleteExSessions > 0
+          ? `This will also delete ${deleteExSessions} logged session${deleteExSessions !== 1 ? 's' : ''}. This cannot be undone.`
+          : 'This cannot be undone.'}
+        className="confirm-overlay"
+        panelClassName="confirm-modal"
+      >
+        <div className="confirm-icon" aria-hidden="true"><WarningIcon /></div>
+        <div className="confirm-actions">
+          <button className="btn-danger" onClick={handleConfirmDeleteExercise}>
+            Delete
+          </button>
+          <button className="btn-secondary" onClick={handleCancelDeleteExercise}>
+            Cancel
+          </button>
         </div>
-      )}
+      </Dialog>
     </div>
   );
 }

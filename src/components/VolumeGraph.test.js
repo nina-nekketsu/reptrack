@@ -278,7 +278,7 @@ describe('ProgressGraphBlock V1 placement', () => {
     render(<ProgressGraphBlock logs={{
       bench: baseSessions,
       squat: [session({ id: 'squat-1', date: '2026-07-01T08:00:00.000Z', sets: [{ weight: 100, reps: 5 }] }), session({ id: 'squat-2', date: '2026-07-15T08:00:00.000Z', sets: [{ weight: 110, reps: 5 }] })],
-    }} exerciseId="squat" />);
+    }} exerciseId="squat" now={NOW} />);
 
     fireEvent.click(screen.getByRole('button', { name: /Show progress graph/i }));
     const graph = screen.getByRole('img', { name: /Exercise progress graph/i });

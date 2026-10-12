@@ -71,6 +71,7 @@ function AppContent() {
                 <Route path="/profile"       element={<Profile />} />
                 <Route path="/coach"         element={<Coach />} />
                 <Route path="/coach/settings" element={<CoachSettings />} />
+                <Route path="*" element={<Navigate to="/today" replace />} />
               </Routes>
             </RouteContentTransition>
           </main>

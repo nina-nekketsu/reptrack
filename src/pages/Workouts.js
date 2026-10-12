@@ -9,6 +9,7 @@ import {
   saveActiveWorkoutSession,
 } from '../lib/activeWorkoutSession';
 import Sheet from '../components/Sheet';
+import Dialog from '../components/ui/Dialog';
 import { BoltIcon, CheckIcon, DumbbellIcon, RepeatIcon, TimerIcon, TrendIcon } from '../components/icons';
 import './Page.css';
 import './Workouts.css';
@@ -194,10 +195,17 @@ function EditExerciseModal({ planEx, exercise, onSave, onClose }) {
   }
 
   return (
-    <div className="workout-modal-overlay" onClick={onClose}>
-      <div className="workout-modal" onClick={e => e.stopPropagation()}>
+    <Dialog
+      open
+      onClose={onClose}
+      title={exercise?.name || 'Exercise'}
+      labelledBy="edit-exercise-title"
+      className="workout-modal-overlay"
+      panelClassName="workout-modal"
+      renderHeader={false}
+    >
         <div>
-          <h3 className="workout-modal__title">{exercise?.name || 'Exercise'}</h3>
+          <h3 id="edit-exercise-title" className="workout-modal__title">{exercise?.name || 'Exercise'}</h3>
           <p className="workout-modal__sub">{exercise?.muscleGroup} · Edit prescription</p>
         </div>
 
@@ -212,7 +220,6 @@ function EditExerciseModal({ planEx, exercise, onSave, onClose }) {
                 max="20"
                 value={sets}
                 onChange={e => setSets(e.target.value)}
-                autoFocus
               />
             </div>
             <div className="prescription-x">×</div>
@@ -239,8 +246,7 @@ function EditExerciseModal({ planEx, exercise, onSave, onClose }) {
           <button className="btn-primary" onClick={handleSave}>Save</button>
           <button className="btn-secondary" onClick={onClose}>Cancel</button>
         </div>
-      </div>
-    </div>
+    </Dialog>
   );
 }
 
@@ -280,10 +286,17 @@ function AddExerciseModal({ allExercises, planExerciseIds, onAdd, onClose }) {
   }
 
   return (
-    <div className="workout-modal-overlay" onClick={onClose}>
-      <div className="workout-modal" onClick={e => e.stopPropagation()}>
+    <Dialog
+      open
+      onClose={onClose}
+      title="Add Exercise"
+      labelledBy="add-exercise-title"
+      className="workout-modal-overlay"
+      panelClassName="workout-modal"
+      renderHeader={false}
+    >
         <div>
-          <h3 className="workout-modal__title">Add Exercise</h3>
+          <h3 id="add-exercise-title" className="workout-modal__title">Add Exercise</h3>
           <p className="workout-modal__sub">Search or create a new one</p>
         </div>
 
@@ -292,7 +305,6 @@ function AddExerciseModal({ allExercises, planExerciseIds, onAdd, onClose }) {
           placeholder="Search exercises…"
           value={query}
           onChange={e => setQuery(e.target.value)}
-          autoFocus
         />
 
         <div className="exercise-search-results">
@@ -333,8 +345,7 @@ function AddExerciseModal({ allExercises, planExerciseIds, onAdd, onClose }) {
         </div>
 
         <button className="btn-secondary" onClick={onClose}>Cancel</button>
-      </div>
-    </div>
+    </Dialog>
   );
 }
 
@@ -351,10 +362,17 @@ function NewPlanModal({ onSave, onClose }) {
   }
 
   return (
-    <div className="workout-modal-overlay" onClick={onClose}>
-      <div className="workout-modal" onClick={e => e.stopPropagation()}>
+    <Dialog
+      open
+      onClose={onClose}
+      title="New Plan"
+      labelledBy="new-plan-title"
+      className="workout-modal-overlay"
+      panelClassName="workout-modal"
+      renderHeader={false}
+    >
         <div>
-          <h3 className="workout-modal__title">New Plan</h3>
+          <h3 id="new-plan-title" className="workout-modal__title">New Plan</h3>
           <p className="workout-modal__sub">Give your workout plan a name</p>
         </div>
         <input
@@ -363,7 +381,6 @@ function NewPlanModal({ onSave, onClose }) {
           value={name}
           onChange={e => setName(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleSave()}
-          autoFocus
         />
         <div className="workout-modal__actions">
           <button className="btn-primary" onClick={handleSave} disabled={!name.trim()}>
@@ -371,8 +388,7 @@ function NewPlanModal({ onSave, onClose }) {
           </button>
           <button className="btn-secondary" onClick={onClose}>Cancel</button>
         </div>
-      </div>
-    </div>
+    </Dialog>
   );
 }
 
@@ -695,7 +711,15 @@ export default function Workouts() {
                 <div
                   key={`${planEx.exerciseId}-${i}`}
                   className="plan-exercise-row"
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Edit ${ex.name} prescription`}
                   onClick={() => setEditingPlanEx(i)}
+                  onKeyDown={(event) => {
+                    if (event.target !== event.currentTarget || (event.key !== 'Enter' && event.key !== ' ')) return;
+                    event.preventDefault();
+                    setEditingPlanEx(i);
+                  }}
                 >
                   {editMode && (
                     <span className="plan-reorder-controls" aria-label={`Reorder ${ex.name}`}>

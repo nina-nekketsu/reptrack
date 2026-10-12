@@ -174,6 +174,14 @@ export default function Profile() {
         <div className="profile-avatar" aria-hidden="true"><DumbbellIcon /></div>
       </div>
 
+      <nav className="profile-auth-section" aria-label="Training insights">
+        <h3>Training insights</h3>
+        <div className="profile-data-actions">
+          <a className="btn-secondary" href="#/history">Training history</a>
+          <a className="btn-secondary" href="#/progress">Progress overview</a>
+        </div>
+      </nav>
+
       {/* Timer Defaults */}
       <div className="profile-auth-section">
         <h3><TimerIcon /> Timer Defaults</h3>

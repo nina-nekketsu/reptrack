@@ -3,7 +3,7 @@ import { getLogsLoadError, getSessionsAsc, getSessionsDesc } from '../utils/exer
 import VolumeGraph from './VolumeGraph';
 import useOnlineStatus from '../hooks/useOnlineStatus';
 
-export default function ProgressGraphBlock({ logs, exerciseId }) {
+export default function ProgressGraphBlock({ logs, exerciseId, now }) {
   const [open, setOpen] = useState(false);
   const isOnline = useOnlineStatus();
   const logsResolved = logs !== undefined && logs !== null;
@@ -34,6 +34,7 @@ export default function ProgressGraphBlock({ logs, exerciseId }) {
           <VolumeGraph
             sessions={sessionsAsc}
             exerciseId={exerciseId}
+            now={now}
             loading={!logsResolved}
             offline={!isOnline}
             error={graphError}

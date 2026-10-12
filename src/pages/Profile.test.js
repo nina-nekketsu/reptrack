@@ -29,6 +29,13 @@ describe('Profile data and privacy controls', () => {
     expect(screen.getByText(/stored on this device/i)).toBeInTheDocument();
   });
 
+  test('offers discoverable links to history and progress without relying on bottom navigation', () => {
+    render(<Profile />);
+
+    expect(screen.getByRole('link', { name: 'Training history' })).toHaveAttribute('href', '#/history');
+    expect(screen.getByRole('link', { name: 'Progress overview' })).toHaveAttribute('href', '#/progress');
+  });
+
   test('downloads a versioned JSON export', () => {
     localStorage.setItem('exercises', JSON.stringify([{ id: 'squat', name: 'Squat' }]));
     const click = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
