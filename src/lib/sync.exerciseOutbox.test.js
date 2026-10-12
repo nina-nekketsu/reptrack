@@ -231,7 +231,7 @@ describe('exercise mutation outbox integration', () => {
     ]);
   });
 
-  test('recovers a crash-retried insert conflict only when the remote row is equivalent', async () => {
+  test('recovers an equivalent crash replay against a legacy row without identity metadata', async () => {
     const session = {
       date: '2026-07-28T12:00:00.000Z',
       clientSessionId: 'retry-a',
@@ -273,7 +273,118 @@ describe('exercise mutation outbox integration', () => {
     expect(JSON.parse(localStorage.getItem('exerciseLogs')).bench[0].remoteId).toBe('existing-remote');
   });
 
-  test('retains a same-timestamp conflict when the remote row belongs to a distinct session', async () => {
+  test('recovers an equivalent crash replay when serialized session identity matches', async () => {
+    const session = {
+      date: '2026-07-28T12:00:00.000Z',
+      clientSessionId: 'retry-a',
+      workoutSessionStartedAt: '2026-07-28T11:30:00.000Z',
+      workoutSessionOrderKey: 'bench:1',
+      sets: [{ reps: 5, weight: 50 }],
+      bestSet: { reps: 5, weight: 50 },
+      totalReps: 5,
+      totalVolume: 250,
+    };
+    localStorage.setItem('exerciseLogs', JSON.stringify({ bench: [session] }));
+    const uniqueConflict = Object.assign(new Error('duplicate key'), { code: '23505' });
+    const insert = jest.fn(() => ({
+      select: () => ({ single: async () => ({ data: null, error: uniqueConflict }) }),
+    }));
+    const maybeSingle = jest.fn(async () => ({
+      data: {
+        id: 'existing-remote',
+        user_id: 'user-1',
+        exercise_id: 'bench',
+        date: session.date,
+        sets: session.sets,
+        best_set: {
+          ...session.bestSet,
+          sessionClientSessionId: session.clientSessionId,
+          sessionWorkoutSessionStartedAt: session.workoutSessionStartedAt,
+          sessionWorkoutSessionOrderKey: session.workoutSessionOrderKey,
+        },
+        total_reps: session.totalReps,
+        total_volume: session.totalVolume,
+      },
+      error: null,
+    }));
+    const select = jest.fn(() => {
+      const query = { eq: jest.fn(() => query), maybeSingle };
+      return query;
+    });
+    mockFrom
+      .mockImplementationOnce(() => ({ insert }))
+      .mockImplementationOnce(() => ({ select }));
+    const { listPendingMutations, pushSession } = loadSyncModule();
+
+    await expect(pushSession('bench', session, 'user-1')).resolves.toBe('existing-remote');
+
+    expect(listPendingMutations()).toEqual([]);
+    expect(JSON.parse(localStorage.getItem('exerciseLogs')).bench[0].remoteId).toBe('existing-remote');
+  });
+
+  test('retains an identical same-timestamp conflict when both rows have different session identity', async () => {
+    const session = {
+      date: '2026-07-28T12:00:00.000Z',
+      clientSessionId: 'local-distinct',
+      workoutSessionStartedAt: '2026-07-28T11:30:00.000Z',
+      workoutSessionOrderKey: 'bench:1',
+      sets: [{ reps: 5, weight: 50 }],
+      bestSet: { reps: 5, weight: 50 },
+      totalReps: 5,
+      totalVolume: 250,
+    };
+    localStorage.setItem('exerciseLogs', JSON.stringify({ bench: [session] }));
+    const uniqueConflict = Object.assign(new Error('duplicate key'), { code: '23505' });
+    const insert = jest.fn(() => ({
+      select: () => ({ single: async () => ({ data: null, error: uniqueConflict }) }),
+    }));
+    const maybeSingle = jest.fn(async () => ({
+      data: {
+        id: 'different-remote',
+        user_id: 'user-1',
+        exercise_id: 'bench',
+        date: session.date,
+        sets: session.sets,
+        best_set: {
+          ...session.bestSet,
+          sessionClientSessionId: 'remote-distinct',
+          sessionWorkoutSessionStartedAt: '2026-07-28T11:00:00.000Z',
+          sessionWorkoutSessionOrderKey: 'bench:0',
+        },
+        total_reps: session.totalReps,
+        total_volume: session.totalVolume,
+      },
+      error: null,
+    }));
+    const select = jest.fn(() => {
+      const query = { eq: jest.fn(() => query), maybeSingle };
+      return query;
+    });
+    mockFrom
+      .mockImplementationOnce(() => ({ insert }))
+      .mockImplementationOnce(() => ({ select }));
+    const {
+      listPendingMutations,
+      pushSession,
+      retryPendingMutation,
+    } = loadSyncModule();
+
+    await expect(pushSession('bench', session, 'user-1')).resolves.toBeNull();
+
+    const [failed] = listPendingMutations();
+    expect(failed).toEqual(expect.objectContaining({
+      kind: 'session/insert',
+      status: 'failed',
+      lastError: expect.objectContaining({ code: '23505' }),
+    }));
+    expect(JSON.parse(localStorage.getItem('exerciseLogs')).bench[0].remoteId).toBeUndefined();
+    expect(retryPendingMutation(failed.id)).toEqual(expect.objectContaining({
+      status: 'pending',
+      lastError: null,
+    }));
+  });
+
+  test('retains a same-timestamp conflict when the remote row has different workout data', async () => {
     const session = {
       date: '2026-07-28T12:00:00.000Z',
       clientSessionId: 'local-distinct',

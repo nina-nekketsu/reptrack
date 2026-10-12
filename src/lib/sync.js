@@ -135,8 +135,30 @@ function comparableSessionBestSet(remoteBestSet) {
   };
 }
 
+function sessionIdentity(remoteBestSet) {
+  const {
+    clientSessionId,
+    workoutSessionStartedAt,
+    workoutSessionOrderKey,
+  } = deserializeSessionBestSet(remoteBestSet);
+  return {
+    ...(clientSessionId ? { clientSessionId } : {}),
+    ...(workoutSessionStartedAt ? { workoutSessionStartedAt } : {}),
+    ...(workoutSessionOrderKey ? { workoutSessionOrderKey } : {}),
+  };
+}
+
+function hasConflictingSessionIdentity(localBestSet, remoteBestSet) {
+  const localIdentity = sessionIdentity(localBestSet);
+  const remoteIdentity = sessionIdentity(remoteBestSet);
+  if (Object.keys(localIdentity).length === 0 || Object.keys(remoteIdentity).length === 0) {
+    return false;
+  }
+  return JSON.stringify(canonicalJSON(localIdentity)) !== JSON.stringify(canonicalJSON(remoteIdentity));
+}
+
 function equivalentSessionRow(payload, remote) {
-  if (!remote) return false;
+  if (!remote || hasConflictingSessionIdentity(payload.best_set, remote.best_set)) return false;
   const localComparable = {
     user_id: payload.user_id,
     exercise_id: payload.exercise_id,
