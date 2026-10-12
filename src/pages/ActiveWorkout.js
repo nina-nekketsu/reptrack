@@ -25,6 +25,7 @@ import {
 import {
   createSessionPlanExerciseSnapshot,
   getStoredVisibleActiveWorkoutSession,
+  readStoredActiveWorkoutSession,
   saveActiveWorkoutSession,
 } from '../lib/activeWorkoutSession';
 import { pushActiveWorkoutSession } from '../lib/sync';
@@ -96,6 +97,22 @@ function orderPlanExercises(planExercises, exerciseOrder) {
   return [...ordered, ...keyedExercises.filter((entry) => !orderedKeys.has(entry.sessionOrderKey))];
 }
 
+function getExerciseEntryCount(planExercises, exerciseId) {
+  return planExercises.filter((entry) => entry.exerciseId === exerciseId).length;
+}
+
+function isPlanExerciseCompleted(completedIds, planExercise, planExercises) {
+  if (completedIds.includes(planExercise.sessionOrderKey)) return true;
+  return getExerciseEntryCount(planExercises, planExercise.exerciseId) === 1
+    && completedIds.includes(planExercise.exerciseId);
+}
+
+function getPlanExerciseCompletionId(planExercise, planExercises) {
+  return getExerciseEntryCount(planExercises, planExercise.exerciseId) > 1
+    ? planExercise.sessionOrderKey
+    : planExercise.exerciseId;
+}
+
 export default function ActiveWorkout() {
   const { planId } = useParams();
   const navigate = useNavigate();
@@ -110,7 +127,7 @@ export default function ActiveWorkout() {
   const [elapsed, setElapsed] = useState('0:00');
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [selectedPlanExercise, setSelectedPlanExercise] = useState(null);
-  const [draftProgressByExerciseId, setDraftProgressByExerciseId] = useState({});
+  const [draftProgressByEntryKey, setDraftProgressByEntryKey] = useState({});
   const [completedExerciseIds, setCompletedExerciseIds] = useState(
     () => getStoredVisibleActiveWorkoutSession()?.completedExerciseIds || []
   );
@@ -129,6 +146,10 @@ export default function ActiveWorkout() {
   const completedExerciseIdsRef = useRef(completedExerciseIds);
   const dragRef = useRef({ active: false, index: -1, pointerId: null, timer: null });
   const suppressExerciseClickUntilRef = useRef(0);
+  const renderedSessionIdentityRef = useRef(activeSession ? {
+    planId: activeSession.planId,
+    startedAt: activeSession.startedAt,
+  } : null);
   const [draggedExerciseId, setDraggedExerciseId] = useState(null);
   completedExerciseIdsRef.current = completedExerciseIds;
 
@@ -139,6 +160,41 @@ export default function ActiveWorkout() {
   const orderedPlanExercises = plan
     ? orderPlanExercises(sessionPlanExercises, activeSession?.exerciseOrder)
     : [];
+
+  useEffect(() => {
+    const refreshActiveSession = (event) => {
+      if (event?.type === 'storage' && event.key && event.key !== 'activeWorkoutSession') return;
+      const renderedIdentity = renderedSessionIdentityRef.current;
+      if (!renderedIdentity) return;
+      const storedSession = readStoredActiveWorkoutSession();
+      const isSameSession = storedSession
+        && storedSession.status === 'active'
+        && storedSession.planId === renderedIdentity.planId
+        && storedSession.startedAt === renderedIdentity.startedAt;
+      if (!isSameSession) {
+        const isExpectedLocalEnd = endingRef.current
+          && storedSession?.status === 'ended'
+          && storedSession.planId === renderedIdentity.planId
+          && storedSession.startedAt === renderedIdentity.startedAt;
+        if (isExpectedLocalEnd) return;
+        workoutEndedRef.current = true;
+        setSelectedExercise(null);
+        setSelectedPlanExercise(null);
+        setActiveSession(null);
+        navigate('/workouts', { replace: true });
+        return;
+      }
+      setActiveSession(storedSession);
+      completedExerciseIdsRef.current = storedSession.completedExerciseIds || [];
+      setCompletedExerciseIds(completedExerciseIdsRef.current);
+    };
+    window.addEventListener('activeWorkoutSessionChanged', refreshActiveSession);
+    window.addEventListener('storage', refreshActiveSession);
+    return () => {
+      window.removeEventListener('activeWorkoutSessionChanged', refreshActiveSession);
+      window.removeEventListener('storage', refreshActiveSession);
+    };
+  }, [navigate]);
 
   // Activate coach when workout starts
   useEffect(() => {
@@ -178,6 +234,10 @@ export default function ActiveWorkout() {
         now,
       });
       pushActiveWorkoutSession(user?.id);
+      renderedSessionIdentityRef.current = {
+        planId: session.planId,
+        startedAt: session.startedAt,
+      };
       setActiveSession(session);
       completedExerciseIdsRef.current = session.completedExerciseIds || [];
       setCompletedExerciseIds(completedExerciseIdsRef.current);
@@ -218,7 +278,8 @@ export default function ActiveWorkout() {
     [allExercises]
   );
 
-  function getPersistedExerciseProgress(exerciseId, prescribedSets) {
+  function getPersistedExerciseProgress(planExercise, prescribedSets) {
+    const { exerciseId, sessionOrderKey } = planExercise;
     const fallback = {
       completedPrimarySets: 0,
       targetPrimarySets: prescribedSets || 1,
@@ -227,8 +288,18 @@ export default function ActiveWorkout() {
     const sessions = logs[exerciseId];
     if (!sessions || sessions.length === 0) return fallback;
     const sessionStart = new Date(activeSession.startedAt).getTime();
-    const latestSession = sessions
-      .filter((session) => new Date(session.workoutSessionStartedAt || session.date).getTime() >= sessionStart)
+    const sessionsDuringWorkout = sessions.filter(
+      (session) => new Date(session.workoutSessionStartedAt || session.date).getTime() >= sessionStart
+    );
+    const exactEntrySessions = sessionsDuringWorkout.filter(
+      (session) => session.workoutSessionOrderKey === sessionOrderKey
+    );
+    const eligibleSessions = exactEntrySessions.length > 0
+      ? exactEntrySessions
+      : getExerciseEntryCount(orderedPlanExercises, exerciseId) === 1
+        ? sessionsDuringWorkout.filter((session) => !session.workoutSessionOrderKey)
+        : [];
+    const latestSession = eligibleSessions
       .sort((a, b) => (
         new Date(b.date).getTime() - new Date(a.date).getTime()
       ))[0];
@@ -253,18 +324,15 @@ export default function ActiveWorkout() {
     ? orderedPlanExercises.map((planExercise, index) => {
         const exercise = getExercise(planExercise.exerciseId);
         const prescribedTarget = planExercise.prescribedSets || 1;
-        const persistedProgress = getPersistedExerciseProgress(
-          planExercise.exerciseId,
-          prescribedTarget
-        );
-        const draftProgress = selectedExercise?.id === planExercise.exerciseId
-          ? draftProgressByExerciseId[planExercise.exerciseId]
+        const persistedProgress = getPersistedExerciseProgress(planExercise, prescribedTarget);
+        const draftProgress = selectedPlanExercise?.sessionOrderKey === planExercise.sessionOrderKey
+          ? draftProgressByEntryKey[planExercise.sessionOrderKey]
           : null;
         const setsLogged = draftProgress?.completedPrimarySets
           ?? persistedProgress.completedPrimarySets;
         const targetSets = draftProgress?.targetPrimarySets
           ?? persistedProgress.targetPrimarySets;
-        const persistedDone = completedExerciseIds.includes(planExercise.exerciseId)
+        const persistedDone = isPlanExerciseCompleted(completedExerciseIds, planExercise, orderedPlanExercises)
           || (
             persistedProgress.targetPrimarySets > 0
             && persistedProgress.completedPrimarySets >= persistedProgress.targetPrimarySets
@@ -295,11 +363,8 @@ export default function ActiveWorkout() {
   function getCompletionAnnouncement(nextCompletedExerciseIds) {
     const projectedProgress = orderedPlanExercises.map((planExercise) => {
       const exercise = getExercise(planExercise.exerciseId);
-      const persistedProgress = getPersistedExerciseProgress(
-        planExercise.exerciseId,
-        planExercise.prescribedSets || 1
-      );
-      const done = nextCompletedExerciseIds.includes(planExercise.exerciseId)
+      const persistedProgress = getPersistedExerciseProgress(planExercise, planExercise.prescribedSets || 1);
+      const done = isPlanExerciseCompleted(nextCompletedExerciseIds, planExercise, orderedPlanExercises)
         || (
           persistedProgress.targetPrimarySets > 0
           && persistedProgress.completedPrimarySets >= persistedProgress.targetPrimarySets
@@ -377,7 +442,10 @@ export default function ActiveWorkout() {
     }
 
     try {
-      const endedSession = saveActiveWorkoutSession({ action: 'end', now: new Date().toISOString() });
+      const endedSession = saveActiveWorkoutSession({ action: 'end',
+        expectedSession: renderedSessionIdentityRef.current,
+        now: new Date().toISOString(),
+      });
       if (!endedSession) {
         releaseEndAction();
         return;
@@ -414,25 +482,27 @@ export default function ActiveWorkout() {
     navigate('/workouts', { replace: true });
   }
 
-  function clearDraftProgress(exerciseId) {
-    setDraftProgressByExerciseId((current) => {
-      if (!current[exerciseId]) return current;
+  function clearDraftProgress(entryKey) {
+    setDraftProgressByEntryKey((current) => {
+      if (!current[entryKey]) return current;
       const next = { ...current };
-      delete next[exerciseId];
+      delete next[entryKey];
       return next;
     });
   }
 
-  function handleLogSaved(exerciseId, updatedLogs) {
+  function handleLogSaved(entryKey, updatedLogs) {
     setLogs(updatedLogs);
-    clearDraftProgress(exerciseId);
+    clearDraftProgress(entryKey);
   }
 
   function handleDraftProgressChange(progress) {
     if (!progress?.exerciseId || progress.exerciseId !== selectedExercise?.id) return;
-    setDraftProgressByExerciseId((current) => ({
+    const entryKey = selectedPlanExercise?.sessionOrderKey;
+    if (!entryKey) return;
+    setDraftProgressByEntryKey((current) => ({
       ...current,
-      [progress.exerciseId]: progress,
+      [entryKey]: progress,
     }));
   }
 
@@ -454,6 +524,7 @@ export default function ActiveWorkout() {
     try {
       updatedSession = saveActiveWorkoutSession({
         action: 'update',
+        expectedSession: renderedSessionIdentityRef.current,
         patch: {
           planExerciseSnapshot: createSessionPlanExerciseSnapshot(sessionPlanExercises),
           exerciseOrder: reordered.map((entry) => entry.sessionOrderKey),
@@ -529,21 +600,24 @@ export default function ActiveWorkout() {
   }
 
   function closeExerciseLog() {
-    if (selectedExercise?.id) clearDraftProgress(selectedExercise.id);
+    if (selectedPlanExercise?.sessionOrderKey) clearDraftProgress(selectedPlanExercise.sessionOrderKey);
     setSelectedExercise(null);
     setSelectedPlanExercise(null);
   }
 
-  function handleExerciseCompletion(exerciseId, done) {
+  function handleExerciseCompletion(planExercise, done) {
+    const entryKey = planExercise.sessionOrderKey;
+    const completionId = getPlanExerciseCompletionId(planExercise, orderedPlanExercises);
     const current = completedExerciseIdsRef.current;
-    const isAlreadyComplete = current.includes(exerciseId);
+    const isAlreadyComplete = isPlanExerciseCompleted(current, planExercise, orderedPlanExercises);
     if (done === isAlreadyComplete) return;
 
     const next = done
-      ? [...new Set([...current, exerciseId])]
-      : current.filter((id) => id !== exerciseId);
+      ? [...new Set([...current, completionId])]
+      : current.filter((id) => id !== completionId);
     const updatedSession = saveActiveWorkoutSession({
       action: 'update',
+      expectedSession: renderedSessionIdentityRef.current,
       patch: { completedExerciseIds: next },
       now: new Date().toISOString(),
     });
@@ -553,7 +627,7 @@ export default function ActiveWorkout() {
     setCompletedExerciseIds(next);
     setActiveSession(updatedSession);
     if (done) {
-      setAcknowledgedExerciseId(exerciseId);
+      setAcknowledgedExerciseId(entryKey);
       setReorderAnnouncement('');
       setCompletionAnnouncement(getCompletionAnnouncement(next));
     } else {
@@ -704,7 +778,7 @@ export default function ActiveWorkout() {
             <div
               key={planEx.sessionOrderKey}
               data-exercise-index={i}
-              className={`aw-exercise-row aw-exercise-row--${progressState} ${planEx.superset ? 'aw-exercise-row--superset' : ''} ${isNext ? 'aw-exercise-row--next' : ''} ${acknowledgedExerciseId === planEx.exerciseId ? 'aw-exercise-row--ack' : ''} ${draggedExerciseId === planEx.sessionOrderKey ? 'aw-exercise-row--dragging' : ''}`}
+              className={`aw-exercise-row aw-exercise-row--${progressState} ${planEx.superset ? 'aw-exercise-row--superset' : ''} ${isNext ? 'aw-exercise-row--next' : ''} ${acknowledgedExerciseId === planEx.sessionOrderKey ? 'aw-exercise-row--ack' : ''} ${draggedExerciseId === planEx.sessionOrderKey ? 'aw-exercise-row--dragging' : ''}`}
               onClick={() => {
                 if (Date.now() < suppressExerciseClickUntilRef.current) return;
                 openExerciseLog(ex, planEx);
@@ -811,16 +885,21 @@ export default function ActiveWorkout() {
           exercise={selectedExercise}
           logs={logs}
           onClose={closeExerciseLog}
-          onSaved={(updatedLogs) => handleLogSaved(selectedExercise.id, updatedLogs)}
+          onSaved={(updatedLogs) => handleLogSaved(selectedPlanExercise.sessionOrderKey, updatedLogs)}
           onDraftProgressChange={handleDraftProgressChange}
           stayOpenOnSave
           liveTrainingSheet
           prescribedSets={selectedPlanExercise?.prescribedSets || 1}
           prescribedReps={selectedPlanExercise?.prescribedReps || null}
+          workoutSessionEntryKey={selectedPlanExercise?.sessionOrderKey}
+          allowLegacyWorkoutSessionMatch={getExerciseEntryCount(
+            orderedPlanExercises,
+            selectedExercise.id
+          ) === 1}
           isExerciseDone={exerciseProgress.find(
-            ({ planExercise }) => planExercise.exerciseId === selectedExercise.id
+            ({ planExercise }) => planExercise.sessionOrderKey === selectedPlanExercise?.sessionOrderKey
           )?.done === true}
-          onCompletionChange={(done) => handleExerciseCompletion(selectedExercise.id, done)}
+          onCompletionChange={(done) => handleExerciseCompletion(selectedPlanExercise, done)}
         />
       )}
 

@@ -67,6 +67,25 @@ function getSessionTargetSetCount(session, fallback) {
   return normalizeTargetSetCount(session?.targetSetCount, fallback);
 }
 
+function getCurrentWorkoutEntrySessions({
+  allLogs,
+  exerciseId,
+  workoutSessionEntryKey,
+  allowLegacyWorkoutSessionMatch,
+}) {
+  const activeWorkoutSession = getStoredVisibleActiveWorkoutSession();
+  if (!activeWorkoutSession?.startedAt || !exerciseId) return [];
+  const sessionStart = new Date(activeWorkoutSession.startedAt);
+  const sessionsDuringWorkout = (allLogs[exerciseId] || [])
+    .filter((item) => new Date(item.workoutSessionStartedAt || item.date) >= sessionStart);
+  if (!workoutSessionEntryKey) return sessionsDuringWorkout;
+  const exactMatches = sessionsDuringWorkout.filter(
+    (item) => item.workoutSessionOrderKey === workoutSessionEntryKey
+  );
+  if (exactMatches.length > 0 || !allowLegacyWorkoutSessionMatch) return exactMatches;
+  return sessionsDuringWorkout.filter((item) => !item.workoutSessionOrderKey);
+}
+
 export function isDropsetChild(set = {}) {
   return set.dropSetChild === true || set.setType === 'dropset_child';
 }
@@ -324,6 +343,8 @@ export default function ExerciseLogModal({
   prescribedReps = null,
   initialTab = 'log',
   liveTrainingSheet = false,
+  workoutSessionEntryKey = null,
+  allowLegacyWorkoutSessionMatch = true,
 }) {
   const { user } = useAuth();
   const coach = useCoach();
@@ -422,8 +443,12 @@ export default function ExerciseLogModal({
         if (sessionStart) {
 
           // Find sessions logged after the workout started (most recent first)
-          const sessionsDuringWorkout = exerciseSessions
-            .filter((s) => new Date(s.workoutSessionStartedAt || s.date) >= sessionStart)
+          const sessionsDuringWorkout = getCurrentWorkoutEntrySessions({
+            allLogs: currentLogs,
+            exerciseId: exercise.id,
+            workoutSessionEntryKey,
+            allowLegacyWorkoutSessionMatch,
+          })
             .sort((a, b) => new Date(b.date) - new Date(a.date));
           if (sessionsDuringWorkout.length > 0) {
             // Reopen the current workout's latest log in edit mode so saving
@@ -462,7 +487,7 @@ export default function ExerciseLogModal({
     setSets(initialSets);
     setDraftInitializedExerciseId(exercise?.id || null);
     setPositioningRevision((revision) => revision + 1);
-  }, [exercise?.id, prescribedSets]);
+  }, [exercise?.id, prescribedSets, workoutSessionEntryKey, allowLegacyWorkoutSessionMatch]);
 
   useEffect(() => {
     if (!onDraftProgressChange || draftInitializedExerciseId !== exercise?.id) return;
@@ -850,6 +875,23 @@ export default function ExerciseLogModal({
     }
     window.dispatchEvent(new Event('exerciseLogged'));
     if (onSaved) onSaved(updatedLogs);
+    if (onCompletionChange) {
+      const latestRemaining = getCurrentWorkoutEntrySessions({
+        allLogs: updatedLogs,
+        exerciseId: exercise.id,
+        workoutSessionEntryKey,
+        allowLegacyWorkoutSessionMatch,
+      })
+        .sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+      const remainingProgress = latestRemaining
+        ? deriveExerciseDraftProgress({
+            exerciseId: exercise.id,
+            rows: latestRemaining.sets || [],
+            prescribedSets: getSessionTargetSetCount(latestRemaining, prescribedSets),
+          })
+        : null;
+      onCompletionChange(Boolean(remainingProgress?.isExplicitlyComplete));
+    }
   }
 
   async function saveSession() {
@@ -883,6 +925,7 @@ export default function ExerciseLogModal({
       ...(activeWorkoutSession?.startedAt
         ? { workoutSessionStartedAt: activeWorkoutSession.startedAt }
         : {}),
+      ...(workoutSessionEntryKey ? { workoutSessionOrderKey: workoutSessionEntryKey } : {}),
     };
 
     // Track last saved set for coach feedback
@@ -918,6 +961,7 @@ export default function ExerciseLogModal({
         [exercise.id]: [...existingSessions, persistedSession],
       };
     }
+    const persistedStableIdentity = sessionIdentity(persistedSession);
 
     // Local-first: make the completed set/session durable before waiting on the network.
     if (!saveLogs(updatedLogs)) {
@@ -961,12 +1005,25 @@ export default function ExerciseLogModal({
       if (persistedSession.remoteId || typeof remoteId !== 'string' || !remoteId) {
         return false;
       }
-      persistedSession = { ...persistedSession, remoteId };
       const latestLogs = loadLogs();
+      const latestSessions = latestLogs[exercise.id] || [];
+      let targetIndex = -1;
+      let targetTimestamp = Number.NEGATIVE_INFINITY;
+      latestSessions.forEach((session, index) => {
+        if (sessionIdentity(session) !== persistedStableIdentity) return;
+        const timestamp = new Date(session.date).getTime();
+        const comparableTimestamp = Number.isFinite(timestamp) ? timestamp : Number.NEGATIVE_INFINITY;
+        if (comparableTimestamp >= targetTimestamp) {
+          targetTimestamp = comparableTimestamp;
+          targetIndex = index;
+        }
+      });
+      if (targetIndex < 0) return false;
+      persistedSession = { ...persistedSession, remoteId };
       updatedLogs = {
         ...latestLogs,
-        [exercise.id]: (latestLogs[exercise.id] || []).map((session) =>
-          sessionIdentity(session) === sessionIdentity(persistedSession) ? { ...session, remoteId } : session
+        [exercise.id]: latestSessions.map((session, index) =>
+          index === targetIndex ? { ...session, remoteId } : session
         ),
       };
       saveLogs(updatedLogs);
@@ -993,7 +1050,7 @@ export default function ExerciseLogModal({
           const attachedRemoteId = persistReturnedRemoteId(remoteResult);
           if (attachedRemoteId && mountedRef.current) {
             setEditingSession((current) =>
-              sessionIdentity(current) === sessionIdentity(persistedSession)
+              sessionIdentity(current) === persistedStableIdentity
                 ? { ...current, remoteId: persistedSession.remoteId }
                 : current
             );
