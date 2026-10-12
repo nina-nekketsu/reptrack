@@ -142,6 +142,14 @@ describe('ExerciseLogModal set reordering', () => {
     HTMLElement.prototype.scrollTo = jest.fn();
   });
 
+  function getLogDialog() {
+    return screen.getByRole('dialog');
+  }
+
+  function getLogScroller() {
+    return getLogDialog().querySelector('.log-scroll-body');
+  }
+
   test('moves a set with the keyboard while keeping its values together', () => {
     render(
       <ExerciseLogModal
@@ -170,7 +178,7 @@ describe('ExerciseLogModal set reordering', () => {
   test('long-press drag moves a set to the touched row', () => {
     jest.useFakeTimers();
     const originalElementFromPoint = document.elementFromPoint;
-    const view = render(
+    render(
       <ExerciseLogModal
         exercise={{ id: 'squat', name: 'Squat', muscleGroup: 'Legs' }}
         logs={{}}
@@ -189,7 +197,7 @@ describe('ExerciseLogModal set reordering', () => {
       ));
 
       const reorderHandle = screen.getByRole('button', { name: /Reorder set 1/i });
-      const scroller = view.container.querySelector('.log-scroll-body');
+      const scroller = getLogScroller();
       scroller.getBoundingClientRect = () => ({ top: 0, bottom: 100, left: 0, right: 320, width: 320, height: 100 });
       Object.defineProperty(scroller, 'scrollTop', { configurable: true, writable: true, value: 0 });
       reorderHandle.setPointerCapture = jest.fn();
@@ -227,7 +235,7 @@ describe('ExerciseLogModal set reordering', () => {
   test('allows pre-hold touch scrolling, then reorders and auto-scrolls after activation', () => {
     jest.useFakeTimers();
     const originalElementFromPoint = document.elementFromPoint;
-    const view = render(
+    render(
       <ExerciseLogModal
         exercise={{ id: 'squat', name: 'Squat', muscleGroup: 'Legs' }}
         logs={{}}
@@ -237,7 +245,7 @@ describe('ExerciseLogModal set reordering', () => {
       />
     );
     const handle = screen.getByRole('button', { name: /Reorder set 1/i });
-    const scroller = view.container.querySelector('.log-scroll-body');
+    const scroller = getLogScroller();
     scroller.getBoundingClientRect = () => ({ top: 0, bottom: 200, left: 0, right: 320, width: 320, height: 200 });
     Object.defineProperty(scroller, 'scrollTop', { configurable: true, writable: true, value: 0 });
     fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 reps' }), { target: { value: '5' } });
@@ -283,7 +291,7 @@ describe('ExerciseLogModal set reordering', () => {
   });
 
   test('moves a dropset parent together with its child rows', () => {
-    const view = render(
+    render(
       <ExerciseLogModal
         exercise={{ id: 'squat', name: 'Squat', muscleGroup: 'Legs' }}
         logs={{}}
@@ -305,7 +313,7 @@ describe('ExerciseLogModal set reordering', () => {
     expect(dropsetHandle).toHaveAccessibleName(/Position 1 of 2/i);
     fireEvent.keyDown(dropsetHandle, { key: 'ArrowDown' });
 
-    const rows = Array.from(view.container.querySelectorAll('.set-row'));
+    const rows = Array.from(getLogDialog().querySelectorAll('.set-row'));
     expect(rows[0].querySelector('input[aria-label$="reps"]')).toHaveValue(5);
     expect(rows[1].querySelector('select')).toHaveValue('dropset');
     expect(rows[1].querySelector('input[aria-label$="reps"]')).toHaveValue(8);
@@ -316,7 +324,7 @@ describe('ExerciseLogModal set reordering', () => {
   test('keeps dragging the same set across differently sized set groups', () => {
     jest.useFakeTimers();
     const originalElementFromPoint = document.elementFromPoint;
-    const view = render(
+    render(
       <ExerciseLogModal
         exercise={{ id: 'squat', name: 'Squat', muscleGroup: 'Legs' }}
         logs={{}}
@@ -333,7 +341,7 @@ describe('ExerciseLogModal set reordering', () => {
       fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 3 reps' }), { target: { value: '3' } });
       fireEvent.change(screen.getByRole('combobox', { name: 'Set 1 type' }), { target: { value: 'dropset' } });
 
-      let hoveredRow = view.container.querySelector('.set-row--dropset-child');
+      let hoveredRow = getLogDialog().querySelector('.set-row--dropset-child');
       document.elementFromPoint = jest.fn(() => hoveredRow);
       fireEvent.pointerDown(screen.getByRole('button', { name: /Reorder set 3\./i }), {
         pointerId: 11,
@@ -343,25 +351,25 @@ describe('ExerciseLogModal set reordering', () => {
         clientY: 200,
       });
       act(() => jest.advanceTimersByTime(450));
-      fireEvent.pointerMove(view.container.querySelector('.log-scroll-body'), {
+      fireEvent.pointerMove(getLogScroller(), {
         pointerId: 11,
         pointerType: 'touch',
         clientX: 10,
         clientY: 80,
       });
 
-      hoveredRow = Array.from(view.container.querySelectorAll('.set-row')).find((row) => (
+      hoveredRow = Array.from(getLogDialog().querySelectorAll('.set-row')).find((row) => (
         row.querySelector('input[aria-label$="reps"]')?.value === '5'
       ));
-      fireEvent.pointerMove(view.container.querySelector('.log-scroll-body'), {
+      fireEvent.pointerMove(getLogScroller(), {
         pointerId: 11,
         pointerType: 'touch',
         clientX: 10,
         clientY: 180,
       });
-      fireEvent.pointerUp(view.container.querySelector('.log-scroll-body'), { pointerId: 11 });
+      fireEvent.pointerUp(getLogScroller(), { pointerId: 11 });
 
-      const primaryReps = Array.from(view.container.querySelectorAll('.set-row:not(.set-row--dropset-child)'))
+      const primaryReps = Array.from(getLogDialog().querySelectorAll('.set-row:not(.set-row--dropset-child)'))
         .map((row) => row.querySelector('input[aria-label$="reps"]')?.value);
       expect(primaryReps).toEqual(['8', '5', '3']);
     } finally {

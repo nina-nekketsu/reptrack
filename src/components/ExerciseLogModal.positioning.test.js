@@ -81,12 +81,14 @@ describe('ExerciseLogModal open and reopen positioning', () => {
     anchorRow.getBoundingClientRect = jest.fn(() => ({ top: 420 }));
     Object.defineProperty(anchorRow, 'offsetHeight', { configurable: true, value: 60 });
     Object.defineProperty(body, 'clientHeight', { configurable: true, value: 420 });
+    const focusedBeforePositioning = document.activeElement;
 
     flushPositioning();
 
     expect(anchorRow).toHaveAttribute('data-anchor-set', 'true');
     expect(body.scrollTo).toHaveBeenCalledWith({ top: 232, behavior: 'smooth' });
-    expect(document.activeElement).toBe(document.body);
+    expect(screen.getByRole('dialog')).toContainElement(focusedBeforePositioning);
+    expect(document.activeElement).toBe(focusedBeforePositioning);
   });
 
   test('applies the tall outer-sheet class only when the live-training flow opts in', () => {
@@ -165,12 +167,14 @@ describe('ExerciseLogModal open and reopen positioning', () => {
     const firstBenchRow = document.querySelector('[data-set-index="0"]');
     body.getBoundingClientRect = jest.fn(() => ({ top: 200 }));
     firstBenchRow.getBoundingClientRect = jest.fn(() => ({ top: -64 }));
+    const focusedBeforeRepositioning = document.activeElement;
     flushPositioning();
 
     expect(firstBenchRow).toHaveAttribute('data-anchor-set', 'true');
     expect(body.scrollTop).toBe(88);
     expect(body.scrollTo).toHaveBeenLastCalledWith({ top: 88, behavior: 'smooth' });
-    expect(document.activeElement).toBe(document.body);
+    expect(screen.getByRole('dialog')).toContainElement(focusedBeforeRepositioning);
+    expect(document.activeElement).toBe(focusedBeforeRepositioning);
   });
 
   test('positions immediately for reduced-motion users without moving focus', () => {
@@ -180,11 +184,15 @@ describe('ExerciseLogModal open and reopen positioning', () => {
     outside.focus();
 
     renderExercise('row', [{ clientSetId: 'one', reps: '10', weight: '40', done: false }]);
+    const focusedBeforePositioning = document.activeElement;
+    expect(focusedBeforePositioning).toBe(screen.getByRole('tab', { name: 'Log' }));
+    expect(focusedBeforePositioning).not.toBe(outside);
     flushPositioning();
 
     const body = document.querySelector('.log-scroll-body');
     expect(body.scrollTo).toHaveBeenCalledWith(expect.objectContaining({ behavior: 'auto' }));
-    expect(document.activeElement).toBe(outside);
+    expect(screen.getByRole('dialog')).toContainElement(document.activeElement);
+    expect(document.activeElement).toBe(focusedBeforePositioning);
     outside.remove();
   });
 });
