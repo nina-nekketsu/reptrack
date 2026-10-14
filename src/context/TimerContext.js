@@ -11,7 +11,13 @@
 //   3. Supabase      (cross-device, fire-and-forget)
 
 import React, { createContext, useContext, useReducer, useEffect, useRef, useCallback } from 'react';
-import { formatMs, playBeep, vibrate, loadAutoStart } from '../utils/timer';
+import {
+  formatMs,
+  playBeep,
+  vibrate,
+  loadAutoStart,
+  REST_EXPIRY_VIBRATION_PATTERN,
+} from '../utils/timer';
 import { supabase } from '../lib/supabase';
 import { STORAGE_AVAILABLE } from '../utils/storageCheck';
 
@@ -308,7 +314,7 @@ export function TimerProvider({ children }) {
       if (remaining <= 0 && !restEndedRef.current) {
         restEndedRef.current = true;
         stopFlash();
-        vibrate();
+        vibrate(REST_EXPIRY_VIBRATION_PATTERN);
         playBeep();
         const autoStart = loadAutoStart();
         dispatch({ type: 'REST_ENDED', autoStart });

@@ -143,6 +143,10 @@ export function playBeep() {
   }
 }
 
+export const REST_EXPIRY_VIBRATION_PATTERN = [
+  200, 100, 200, 100, 400, 100, 200, 100, 200, 100, 400,
+];
+
 /** Vibrate device if supported */
 export function vibrate(pattern = [200, 100, 200, 100, 400]) {
   if (!loadHapticsEnabled()) return false;

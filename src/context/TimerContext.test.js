@@ -1,4 +1,5 @@
 import { act, render, screen, waitFor } from '@testing-library/react';
+import { vibrate } from '../utils/timer';
 import { TimerProvider, useTimer } from './TimerContext';
 
 jest.mock('../lib/supabase', () => ({ supabase: null }));
@@ -85,6 +86,36 @@ describe('TimerProvider persistence reconstruction', () => {
     await waitFor(() => expect(screen.getByTestId('phase')).toHaveTextContent('idle'));
     expect(screen.getByTestId('exercise-id')).toHaveTextContent('bench');
     expect(screen.getByTestId('rest-duration')).toHaveTextContent('90000');
+  });
+
+  test('rest expiry emits six vibration pulses exactly once', async () => {
+    localStorage.setItem('workoutTimerState', JSON.stringify({
+      phase: 'resting',
+      exerciseId: 'bench',
+      exerciseStartedAt: null,
+      pausedDuration: 0,
+      exerciseElapsedFrozen: 42000,
+      restEndAt: Date.now() + 300,
+      restDurationMs: 90000,
+    }));
+
+    renderTimer();
+
+    act(() => {
+      jest.advanceTimersByTime(400);
+    });
+
+    await waitFor(() => expect(screen.getByTestId('phase')).toHaveTextContent('idle'));
+    expect(vibrate).toHaveBeenCalledTimes(1);
+    expect(vibrate).toHaveBeenCalledWith([
+      200, 100, 200, 100, 400, 100, 200, 100, 200, 100, 400,
+    ]);
+    expect(vibrate.mock.calls[0][0].filter((_, index) => index % 2 === 0)).toHaveLength(6);
+
+    act(() => {
+      jest.advanceTimersByTime(1000);
+    });
+    expect(vibrate).toHaveBeenCalledTimes(1);
   });
 
   test('completed rest restored after browser close keeps timer metadata instead of discarding it', () => {
