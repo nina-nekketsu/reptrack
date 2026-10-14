@@ -108,7 +108,7 @@ describe('TimerProvider persistence reconstruction', () => {
     await waitFor(() => expect(screen.getByTestId('phase')).toHaveTextContent('idle'));
     expect(vibrate).toHaveBeenCalledTimes(1);
     expect(vibrate).toHaveBeenCalledWith([
-      200, 100, 200, 100, 400, 100, 200, 100, 200, 100, 400,
+      400, 100, 400, 100, 800, 100, 400, 100, 400, 100, 800,
     ]);
     expect(vibrate.mock.calls[0][0].filter((_, index) => index % 2 === 0)).toHaveLength(6);
 

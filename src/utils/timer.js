@@ -144,7 +144,7 @@ export function playBeep() {
 }
 
 export const REST_EXPIRY_VIBRATION_PATTERN = [
-  200, 100, 200, 100, 400, 100, 200, 100, 200, 100, 400,
+  400, 100, 400, 100, 800, 100, 400, 100, 400, 100, 800,
 ];
 
 /** Vibrate device if supported */
