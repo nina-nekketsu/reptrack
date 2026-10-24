@@ -50,8 +50,11 @@ export function AuthProvider({ children }) {
       return;
     }
 
-    // Get initial session
+    let authEventReceived = false;
+
+    // A later auth event is authoritative over this startup snapshot.
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (authEventReceived) return;
       const u = session?.user ?? null;
       setUser(u);
       if (u) syncData(u.id);
@@ -60,8 +63,10 @@ export function AuthProvider({ children }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      authEventReceived = true;
       const u = session?.user ?? null;
       setUser(u);
+      setLoading(false);
       if (u) syncData(u.id);
     });
 
