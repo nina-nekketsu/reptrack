@@ -34,13 +34,13 @@ function renderModal(logs, props = {}) {
   );
 }
 
-describe('ExerciseLogModal exact-match best helper', () => {
+describe('ExerciseLogModal all-time best helper', () => {
   beforeEach(() => {
     localStorage.clear();
     HTMLElement.prototype.scrollTo = jest.fn();
   });
 
-  test('renders the maximum exact-match Best for each logical primary set', () => {
+  test('renders the all-time Best for each logical primary set', () => {
     const logs = { bench: [
       {
         date: '2026-07-01T08:00:00.000Z',
@@ -64,7 +64,23 @@ describe('ExerciseLogModal exact-match best helper', () => {
     expect(screen.queryByText(/^Last:/)).not.toBeInTheDocument();
   });
 
-  test('updates immediately between Best, no-record, and enter-reps copy', () => {
+  test('shows older best reps and weight even when the latest session has different reps', () => {
+    const logs = { bench: [
+      { date: '2026-07-01', sets: [{ reps: 12, weight: 60 }, { reps: 10, weight: 55 }] },
+      { date: '2026-07-02', sets: [{ reps: 9, weight: 50 }, { reps: 5, weight: 60 }] },
+    ] };
+    renderModal(logs);
+    const historyBefore = localStorage.getItem('exerciseLogs');
+    expect(screen.getByRole('spinbutton', { name: 'Set 1 reps' })).toHaveValue(9);
+    expect(screen.getByLabelText('Historical best for set 1')).toHaveTextContent('Best: 12 reps · 60 kg');
+    expect(screen.getByLabelText('Historical best for set 2')).toHaveTextContent('Best: 10 reps · 55 kg');
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 reps' }), { target: { value: '100' } });
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 weight' }), { target: { value: '999' } });
+    expect(screen.getByLabelText('Historical best for set 1')).toHaveTextContent('Best: 12 reps · 60 kg');
+    expect(localStorage.getItem('exerciseLogs')).toBe(historyBefore);
+  });
+
+  test('keeps the historical best independent of edited or empty draft reps', () => {
     const logs = { bench: [{
       date: '2026-07-01T08:00:00.000Z',
       sets: [{ reps: 8, weight: 100 }],
@@ -74,13 +90,12 @@ describe('ExerciseLogModal exact-match best helper', () => {
 
     expect(screen.getByText('Best: 8 reps · 100 kg')).toBeInTheDocument();
     fireEvent.change(repsInput, { target: { value: '9' } });
-    expect(screen.getByText('No record for 9 reps')).toBeInTheDocument();
+    expect(screen.getByText('Best: 8 reps · 100 kg')).toBeInTheDocument();
     fireEvent.change(repsInput, { target: { value: '' } });
-    expect(screen.getByLabelText('Historical best for set 1')).toHaveTextContent('Enter reps to view best');
-    expect(screen.queryByText(/^Best:/)).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Historical best for set 1')).toHaveTextContent('Best: 8 reps · 100 kg');
   });
 
-  test('excludes the session being edited while preserving dropset parent numbering', () => {
+  test('includes saved records while editing and preserves dropset parent numbering', () => {
     const logs = { bench: [
       {
         date: '2026-07-01T08:00:00.000Z',
@@ -105,10 +120,10 @@ describe('ExerciseLogModal exact-match best helper', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Overview' }));
     fireEvent.click(screen.getAllByRole('button', { name: 'Edit' })[0]);
 
-    expect(screen.getByText('Best: 8 reps · 100 kg')).toBeInTheDocument();
-    expect(screen.getByText('Best: 8 reps · 90 kg')).toBeInTheDocument();
+    expect(screen.getByText('Best: 8 reps · 120 kg')).toBeInTheDocument();
+    expect(screen.getByText('Best: 8 reps · 105 kg')).toBeInTheDocument();
     expect(screen.getByText('1↓1')).toBeInTheDocument();
-    expect(screen.queryByText('Best: 8 reps · 120 kg')).not.toBeInTheDocument();
+    expect(screen.queryByText('Best: 8 reps · 90 kg')).not.toBeInTheDocument();
     expect(screen.queryByText('Best: 8 reps · 110 kg')).not.toBeInTheDocument();
   });
 
@@ -146,7 +161,7 @@ describe('ExerciseLogModal exact-match best helper', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Delete session' }));
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
     fireEvent.click(screen.getByRole('button', { name: 'Back to Log' }));
-    expect(screen.getByText('No record for 8 reps')).toBeInTheDocument();
+    expect(screen.getByLabelText('Historical best for set 1')).toHaveTextContent('No saved best yet');
   });
 
   test('includes a newly persisted save without treating the unsaved draft as history', async () => {
@@ -154,7 +169,7 @@ describe('ExerciseLogModal exact-match best helper', () => {
     fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 reps' }), { target: { value: '8' } });
     fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 weight' }), { target: { value: '105' } });
 
-    expect(screen.getByText('No record for 8 reps')).toBeInTheDocument();
+    expect(screen.getByLabelText('Historical best for set 1')).toHaveTextContent('No saved best yet');
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Done' })));
     expect(screen.getByText('Best: 8 reps · 105 kg')).toBeInTheDocument();
   });

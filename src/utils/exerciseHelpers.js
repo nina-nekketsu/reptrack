@@ -210,6 +210,38 @@ export function getBestExactSetRecord({
   return maximumWeight === null ? null : { reps: normalizedReps, weight: maximumWeight };
 }
 
+/** Best saved primary set at this position, across every rep count and session.
+ * Rank by actual set volume (reps × weight), then weight, then reps.
+ * Never combine reps and weight from different historical sets.
+ */
+export function getBestAllTimeSetRecord({ logs, exerciseId, logicalSetNumber }) {
+  const position = Number(logicalSetNumber);
+  if (!Number.isInteger(position) || position <= 0) return null;
+  const sessions = Array.isArray(logs?.[exerciseId]) ? logs[exerciseId] : [];
+  let best = null;
+  sessions.forEach((session) => {
+    if (!session || session.deleted === true || session.isDeleted === true) return;
+    let currentPosition = 0;
+    (Array.isArray(session.sets) ? session.sets : []).forEach((set) => {
+      if (!set || isWarmupSet(set) || isDropsetChild(set)) return;
+      currentPosition += 1;
+      if (currentPosition !== position || set.automaticPlaceholder === true
+        || set.deleted === true || set.isDeleted === true) return;
+      const reps = normalizeValidReps(set.reps);
+      const weight = normalizeValidWeight(set.weight);
+      if (reps === null || weight === null || !Number.isFinite(reps * weight)) return;
+      const volume = reps * weight;
+      const bestVolume = best ? best.reps * best.weight : -1;
+      if (!best || volume > bestVolume
+        || (volume === bestVolume && weight > best.weight)
+        || (volume === bestVolume && weight === best.weight && reps > best.reps)) {
+        best = { reps, weight };
+      }
+    });
+  });
+  return best;
+}
+
 function toFiniteNumber(value) {
   if (value === '' || value === null || value === undefined) return null;
   const parsed = Number(value);

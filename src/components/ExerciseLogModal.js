@@ -12,7 +12,7 @@ import {
   calcTotals,
   bestSet,
   deleteSession,
-  getBestExactSetRecord,
+  getBestAllTimeSetRecord,
   getRecords,
   getLogsLoadError,
   getSessionRepFeedback,
@@ -365,7 +365,6 @@ export default function ExerciseLogModal({
   const [comparisonLogs, setComparisonLogs] = useState(() => (
     logs && typeof logs === 'object' ? logs : loadLogs()
   ));
-  const [bestRecordExcludedSession, setBestRecordExcludedSession] = useState(null);
   const [undoRemoval, setUndoRemoval] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [localSaveStatus, setLocalSaveStatus] = useState('');
@@ -422,7 +421,6 @@ export default function ExerciseLogModal({
     setActiveTab('log');
     setEditingSession(null);
     setSavedSetFeedback([]);
-    setBestRecordExcludedSession(null);
     setLastSavedCoachContext(null);
     setLocalSaveStatus('');
     cancelPendingSetLongPress();
@@ -462,7 +460,6 @@ export default function ExerciseLogModal({
               targetCount: getSessionTargetSetCount(latestSession, prescribedSets),
             });
             setEditingSession({ ...latestSession });
-            setBestRecordExcludedSession({ ...latestSession });
             setSavedSetFeedback(getSessionRepFeedback(currentLogs, exercise.id, latestSession));
           }
         }
@@ -512,32 +509,17 @@ export default function ExerciseLogModal({
   }, [draftInitializedExerciseId, exercise?.id, onDraftProgressChange, prescribedSets, sets]);
 
   const anchorSetIndex = getAnchorSetIndex(sets);
-  const bestRecordQuerySignature = sets.map((set) => [
-    set.reps,
-    set.setType,
-    set.warmup === true,
-    set.dropSetChild === true,
-  ].join(':')).join('|');
   const bestRecordHelpers = useMemo(() => sets.map((set, index) => {
     if (isWarmupRow(set) || isDropsetChild(set)) return null;
-    const normalizedReps = Number(set.reps);
-    if (set.reps === '' || !Number.isFinite(normalizedReps)
-      || !Number.isInteger(normalizedReps) || normalizedReps <= 0) {
-      return 'Enter reps to view best';
-    }
-    const record = getBestExactSetRecord({
+    const record = getBestAllTimeSetRecord({
       logs: comparisonLogs,
       exerciseId: exercise.id,
       logicalSetNumber: getLogicalSetNumber(sets, index),
-      reps: normalizedReps,
-      excludeSession: bestRecordExcludedSession,
     });
     return record
       ? `Best: ${record.reps} reps · ${record.weight} kg`
-      : `No record for ${normalizedReps} reps`;
-  // Weight edits do not change the historical query key.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [bestRecordExcludedSession, bestRecordQuerySignature, comparisonLogs, exercise.id]);
+      : 'No saved best yet';
+  }), [sets, comparisonLogs, exercise.id]);
 
   useEffect(() => {
     if (positioningRevision === 0) return undefined;
@@ -817,7 +799,6 @@ export default function ExerciseLogModal({
     cancelPendingSetLongPress();
     setDraggedSetId(null);
     setEditingSession(null);
-    setBestRecordExcludedSession(null);
     setSets([emptySetRow()]);
     setActiveTab('log');
     setSavedSetFeedback([]);
@@ -839,7 +820,6 @@ export default function ExerciseLogModal({
     });
     setSets(normalizedSets);
     setEditingSession({ ...session });
-    setBestRecordExcludedSession({ ...session });
     setSavedSetFeedback(getSessionRepFeedback(logs, exercise.id, session));
     setLocalSaveStatus('');
     setActiveTab('log');
@@ -849,7 +829,6 @@ export default function ExerciseLogModal({
   function handleLogAsNewSession() {
     const targetSetCount = getSessionTargetSetCount(editingSession, prescribedSets);
     setEditingSession(null);
-    setBestRecordExcludedSession(null);
     setSets(Array.from(
       { length: targetSetCount },
       () => emptySetRow({ planned: true, automaticPlaceholder: false })
@@ -874,7 +853,6 @@ export default function ExerciseLogModal({
     setConfirmDeleteSession(null);
     if (sessionIdentity(editingSession) === sessionIdentity(confirmDeleteSession)) {
       setEditingSession(null);
-      setBestRecordExcludedSession(null);
       setSets([emptySetRow()]);
     }
     window.dispatchEvent(new Event('exerciseLogged'));
@@ -1040,7 +1018,6 @@ export default function ExerciseLogModal({
       // Commit the local UI state immediately. Remote latency must not rehydrate over
       // edits the user makes while the insert is in flight.
       setEditingSession({ ...persistedSession });
-      if (!editingSession) setBestRecordExcludedSession(null);
       setSets(withTrailingEmptyRow(persistedSession.sets, {
         targetCount: persistedSession.targetSetCount,
       }));

@@ -309,7 +309,7 @@ describe('active workout exercise session integrity', () => {
     expect(screen.getByRole('button', { name: 'Mark set 1 done' })).toHaveAttribute('aria-pressed', 'false');
   });
 
-  test('excludes the current session and requires an exact rep match while editing', () => {
+  test('shows the all-time best pair across rep counts without changing the active draft', () => {
     const previous = {
       ...existingSession,
       date: '2026-07-14T08:30:00.000Z',
@@ -336,7 +336,7 @@ describe('active workout exercise session integrity', () => {
     expect(screen.getByText(/Editing session:/)).toBeInTheDocument();
     expect(screen.getByRole('spinbutton', { name: 'Set 1 reps' })).toHaveValue(8);
     expect(screen.getByRole('spinbutton', { name: 'Set 1 weight' })).toHaveValue(110);
-    expect(screen.getByText('No record for 8 reps')).toBeInTheDocument();
+    expect(screen.getByText('Best: 10 reps · 100 kg')).toBeInTheDocument();
   });
 
   test('appends the last meaningful set in one tap, keeps one ready row, and ignores decrement taps on that blank row', () => {
