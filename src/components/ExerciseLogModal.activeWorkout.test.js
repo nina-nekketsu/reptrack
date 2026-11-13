@@ -336,7 +336,7 @@ describe('active workout exercise session integrity', () => {
     expect(screen.getByText(/Editing session:/)).toBeInTheDocument();
     expect(screen.getByRole('spinbutton', { name: 'Set 1 reps' })).toHaveValue(8);
     expect(screen.getByRole('spinbutton', { name: 'Set 1 weight' })).toHaveValue(110);
-    expect(screen.getByText('Best: 10 reps · 100 kg')).toBeInTheDocument();
+    expect(screen.getByText('Best: 8 reps · 110 kg')).toBeInTheDocument();
   });
 
   test('appends the last meaningful set in one tap, keeps one ready row, and ignores decrement taps on that blank row', () => {

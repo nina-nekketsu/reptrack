@@ -6,12 +6,26 @@ const query = (sessions, logicalSetNumber = 1) => getBestAllTimeSetRecord({
 });
 
 describe('all-time best saved primary set', () => {
-  test('returns a real historical pair across rep counts, not the latest or heaviest set', () => {
+  test('returns a real historical pair across rep counts, not the latest or highest-volume set', () => {
     expect(query([
       { sets: [{ reps: 12, weight: 60 }] },
       { sets: [{ reps: 5, weight: 100 }] },
       { sets: [{ reps: 9, weight: 50 }] },
-    ])).toEqual({ reps: 12, weight: 60 });
+    ])).toEqual({ reps: 5, weight: 100 });
+  });
+
+  test('uses most reps only at the heaviest weight, independent of history order', () => {
+    const sessions = [
+      { sets: [{ reps: 12, weight: 60 }] },
+      { sets: [{ reps: 8, weight: 70 }] },
+      { sets: [{ reps: 6, weight: 80 }] },
+      { sets: [{ reps: 7, weight: 80 }] },
+    ];
+    expect(query(sessions)).toEqual({ reps: 7, weight: 80 });
+    expect(query([...sessions].reverse())).toEqual({ reps: 7, weight: 80 });
+    expect(query([...sessions, { sets: [{ reps: 8, weight: 80 }] }])).toEqual({ reps: 8, weight: 80 });
+    expect(query([...sessions, { sets: [{ reps: 4, weight: 85 }] }])).toEqual({ reps: 4, weight: 85 });
+    expect(query([...sessions, { sets: [{ reps: 15, weight: 70 }] }])).toEqual({ reps: 7, weight: 80 });
   });
 
   test('keeps set positions independent and skips warm-ups/drop children', () => {
@@ -37,7 +51,7 @@ describe('all-time best saved primary set', () => {
     ])).toEqual({ reps: 8, weight: 55 });
   });
 
-  test('breaks volume ties deterministically by weight and handles zero-load reps', () => {
+  test('uses weight first regardless of volume and handles zero-load reps', () => {
     const sessions = [{ sets: [{ reps: 10, weight: 60 }] }, { sets: [{ reps: 12, weight: 50 }] }];
     expect(query(sessions)).toEqual({ reps: 10, weight: 60 });
     expect(query([...sessions].reverse())).toEqual({ reps: 10, weight: 60 });

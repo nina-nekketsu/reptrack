@@ -73,7 +73,7 @@ describe('ExerciseLogModal all-time best helper', () => {
     const historyBefore = localStorage.getItem('exerciseLogs');
     expect(screen.getByRole('spinbutton', { name: 'Set 1 reps' })).toHaveValue(9);
     expect(screen.getByLabelText('Historical best for set 1')).toHaveTextContent('Best: 12 reps · 60 kg');
-    expect(screen.getByLabelText('Historical best for set 2')).toHaveTextContent('Best: 10 reps · 55 kg');
+    expect(screen.getByLabelText('Historical best for set 2')).toHaveTextContent('Best: 5 reps · 60 kg');
     fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 reps' }), { target: { value: '100' } });
     fireEvent.change(screen.getByRole('spinbutton', { name: 'Set 1 weight' }), { target: { value: '999' } });
     expect(screen.getByLabelText('Historical best for set 1')).toHaveTextContent('Best: 12 reps · 60 kg');

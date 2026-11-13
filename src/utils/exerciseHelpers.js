@@ -211,7 +211,7 @@ export function getBestExactSetRecord({
 }
 
 /** Best saved primary set at this position, across every rep count and session.
- * Rank by actual set volume (reps × weight), then weight, then reps.
+ * Rank by heaviest weight first, then most reps at that exact weight.
  * Never combine reps and weight from different historical sets.
  */
 export function getBestAllTimeSetRecord({ logs, exerciseId, logicalSetNumber }) {
@@ -229,12 +229,9 @@ export function getBestAllTimeSetRecord({ logs, exerciseId, logicalSetNumber }) 
         || set.deleted === true || set.isDeleted === true) return;
       const reps = normalizeValidReps(set.reps);
       const weight = normalizeValidWeight(set.weight);
-      if (reps === null || weight === null || !Number.isFinite(reps * weight)) return;
-      const volume = reps * weight;
-      const bestVolume = best ? best.reps * best.weight : -1;
-      if (!best || volume > bestVolume
-        || (volume === bestVolume && weight > best.weight)
-        || (volume === bestVolume && weight === best.weight && reps > best.reps)) {
+      if (reps === null || weight === null) return;
+      if (!best || weight > best.weight
+        || (weight === best.weight && reps > best.reps)) {
         best = { reps, weight };
       }
     });
